@@ -331,6 +331,24 @@ python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/claude_bridge.py" \
 - `agent_messages`
 
 
+### 6) 可选：挂载独立协作 Skill
+
+除内置的 `helloagents` 技能包外，仓库还提供了可选的独立协作 Skill：
+
+- `skills/collaborating-with-codex/`
+- `skills/collaborating-with-gemini/`
+- `skills/collaborating-with-claude/`
+
+如需单独挂载，可将目标目录复制到你的 CLI 技能根目录。
+
+**示例（Codex CLI 根目录）：**
+
+```bash
+CLI_CONFIG_ROOT="~/.codex"
+mkdir -p "$CLI_CONFIG_ROOT/skills"
+cp -R "skills/collaborating-with-claude" "$CLI_CONFIG_ROOT/skills/collaborating-with-claude"
+```
+
 <a id="how-it-works"></a>
 
 ## 🔧 工作原理

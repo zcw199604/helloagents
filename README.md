@@ -332,6 +332,24 @@ All bridge tools return structured JSON, including:
 - `agent_messages`
 
 
+### 6) Optional: mount standalone collaboration skills
+
+In addition to the built-in `helloagents` package, this repo now provides optional standalone skills under:
+
+- `skills/collaborating-with-codex/`
+- `skills/collaborating-with-gemini/`
+- `skills/collaborating-with-claude/`
+
+If you want to mount one of them separately, copy the selected folder to your CLI skill root.
+
+**Example (Codex CLI root):**
+
+```bash
+CLI_CONFIG_ROOT="~/.codex"
+mkdir -p "$CLI_CONFIG_ROOT/skills"
+cp -R "skills/collaborating-with-claude" "$CLI_CONFIG_ROOT/skills/collaborating-with-claude"
+```
+
 <a id="how-it-works"></a>
 
 ## 🔧 How It Works
