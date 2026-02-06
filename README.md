@@ -91,7 +91,7 @@ No made-up “50% faster” claims here—just things you can verify in this rep
 | Execution modes | 3 | Tweak / Lite / Standard |
 | Commands | 12 | `{BUNDLE_DIR}/skills/helloagents/SKILL.md` |
 | Reference modules | 23 | `{BUNDLE_DIR}/skills/helloagents/references/` |
-| Automation scripts | 7 | `{BUNDLE_DIR}/skills/helloagents/scripts/` |
+| Automation scripts | 10 | `{BUNDLE_DIR}/skills/helloagents/scripts/` |
 | Bundles in this repo | 5 | `Codex CLI/`, `Claude Code/`, `Gemini CLI/`, `Grok CLI/`, `Qwen CLI/` |
 
 <a id="before-after"></a>
@@ -285,6 +285,52 @@ Expected: a welcome message that starts with something like:
 
 - Try `~help` to see all commands
 - Or just describe what you want; the router will pick the workflow
+
+### 5) Optional: use multi-model bridge tools (Codex / Gemini / Claude)
+
+The `helloagents/scripts/` folder now includes three bridge tools migrated from
+`collaborating-with-codex` and `collaborating-with-gemini` (plus a Claude-compatible implementation):
+
+- `codex_bridge.py`
+- `gemini_bridge.py`
+- `claude_bridge.py`
+
+Use these when you explicitly want to delegate a sub-task to Codex CLI, Gemini CLI, or Claude CLI.
+
+> Prerequisites: Python 3.8+, and the corresponding CLI (`codex` / `gemini` / `claude`) available in PATH.
+
+**Codex example**
+
+```bash
+python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/codex_bridge.py" \
+  --cd "/path/to/project" \
+  --PROMPT "Review auth module and return a unified diff" \
+  --sandbox read-only
+```
+
+**Gemini example**
+
+```bash
+python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/gemini_bridge.py" \
+  --cd "/path/to/project" \
+  --PROMPT "Review auth module and return a unified diff"
+```
+
+**Claude example**
+
+```bash
+python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/claude_bridge.py" \
+  --cd "/path/to/project" \
+  --PROMPT "Review auth module and return a unified diff" \
+  --sandbox read-only
+```
+
+All bridge tools return structured JSON, including:
+
+- `success`
+- `SESSION_ID` (for multi-turn continuation)
+- `agent_messages`
+
 
 <a id="how-it-works"></a>
 

@@ -68,6 +68,9 @@ metadata:
 方案包迁移: python -X utf8 "scripts/migrate_package.py" "<package-name>" [--status <completed|skipped>] [--all]
 方案包列表: python -X utf8 "scripts/list_packages.py" [--format <table|json>]
 项目统计: python -X utf8 "scripts/project_stats.py" [--path <项目路径>]
+多模型委托-Codex: python -X utf8 "scripts/codex_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox <read-only|workspace-write|danger-full-access>] [--SESSION_ID <id>] [--return-all-messages]
+多模型委托-Gemini: python -X utf8 "scripts/gemini_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox] [--SESSION_ID <id>] [--return-all-messages]
+多模型委托-Claude: python -X utf8 "scripts/claude_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox <read-only|workspace-write|danger-full-access>] [--SESSION_ID <id>] [--return-all-messages]
 ```
 
 ---

@@ -90,7 +90,7 @@
 | 执行模式 | 3 | Tweak / Lite / Standard |
 | 命令数量 | 12 | `{BUNDLE_DIR}/skills/helloagents/SKILL.md` |
 | 参考模块 | 23 | `{BUNDLE_DIR}/skills/helloagents/references/` |
-| 自动化脚本 | 7 | `{BUNDLE_DIR}/skills/helloagents/scripts/` |
+| 自动化脚本 | 10 | `{BUNDLE_DIR}/skills/helloagents/scripts/` |
 | 本仓库内置版本 | 5 | `Codex CLI/`、`Claude Code/`、`Gemini CLI/`、`Grok CLI/`、`Qwen CLI/` |
 
 <a id="before-after"></a>
@@ -284,6 +284,52 @@ Copy-Item -Recurse -Force "$BUNDLE_DIR\\skills\\helloagents" "$CLI_CONFIG_ROOT\\
 
 - 输入 `~help` 查看全部命令
 - 或直接描述需求，由路由器选择合适流程
+
+### 5) 可选：使用多模型桥接工具（Codex / Gemini / Claude）
+
+`helloagents/scripts/` 目录现已内置三个桥接工具（迁移自
+`collaborating-with-codex` 和 `collaborating-with-gemini`，并补充了 Claude 兼容实现）：
+
+- `codex_bridge.py`
+- `gemini_bridge.py`
+- `claude_bridge.py`
+
+当你希望把子任务显式委托给 Codex CLI、Gemini CLI 或 Claude CLI 时可直接调用。
+
+> 前置条件：Python 3.8+，且对应 CLI（`codex` / `gemini` / `claude`）已在 PATH 中可用。
+
+**Codex 示例**
+
+```bash
+python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/codex_bridge.py" \
+  --cd "/path/to/project" \
+  --PROMPT "Review auth module and return a unified diff" \
+  --sandbox read-only
+```
+
+**Gemini 示例**
+
+```bash
+python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/gemini_bridge.py" \
+  --cd "/path/to/project" \
+  --PROMPT "Review auth module and return a unified diff"
+```
+
+**Claude 示例**
+
+```bash
+python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/claude_bridge.py" \
+  --cd "/path/to/project" \
+  --PROMPT "Review auth module and return a unified diff" \
+  --sandbox read-only
+```
+
+三者均返回结构化 JSON，核心字段包括：
+
+- `success`
+- `SESSION_ID`（用于多轮续接）
+- `agent_messages`
+
 
 <a id="how-it-works"></a>
 
