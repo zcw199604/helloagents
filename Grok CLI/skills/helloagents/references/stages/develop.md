@@ -196,11 +196,37 @@ KB_SKIPPED 状态来源:
 读取: plan/YYYYMMDDHHMM_{feature}/tasks.md 和 proposal.md
 ```
 
+### 步骤6.5: Phase3 原型获取（开发实施前置）
+
+> 详细规则见 references/rules/multi_model.md
+
+```yaml
+触发条件:
+  - 已通过 Phase2 Hard Stop 且用户明确回复 Y
+  - 当前方案包类型 = implementation
+
+Route A（前端/UI/样式）:
+  - 优先调用 Gemini 获取 CSS/React/Vue 原型
+  - 上下文预算: < 32k
+
+Route B（后端/逻辑/算法）:
+  - 优先调用 Codex 获取逻辑实现原型
+
+通用约束:
+  - 必须在 PROMPT 明确要求 Unified Diff Patch ONLY
+  - 严禁外部模型进行任何真实修改
+  - 产物仅作为“脏原型”，进入 Phase4 前必须重构
+```
+
 ### 步骤7: 按任务清单执行代码改动
 
 ```yaml
 执行规则:
   - 严格按 tasks.md 逐项执行
+  - Phase4 编码实施准则（CRITICAL）:
+    1. 逻辑重构: 基于 Phase3 原型重写为高可读、高可维护、发布级代码
+    2. 注释规范: 在关键位置必须添加中文注释（解释原因/约束/副作用），其余位置保持简洁
+    3. 最小作用域: 仅改动需求范围，强制审查并修复副作用
 
 任务成功处理:
   - 每个任务执行成功后，立即将状态从 [ ] 更新为 [√]

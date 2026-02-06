@@ -51,9 +51,15 @@
 ```yaml
 IF WORKFLOW_MODE = INTERACTIVE:
   输出: 按 G3 场景内容规则（完成）输出方案设计结果
-  **STOP HERE. Do NOT proceed to next stage until user confirms.**
+  Hard Stop（当 PHASE2_HARD_STOP_CONFIRM = 1 且已启用多模型协作时）:
+    - 必须输出最终实施计划（含适度伪代码）
+    - 必须以加粗文本询问: **Shall I proceed with this plan? (Y/N)**
+    - **STOP HERE. Do NOT proceed to Phase3 until user replies Y.**
+    - 未收到Y前: 禁止新增文件读取工具调用
   等待: 用户确认后方可继续
   用户确认后:
+    IF 已触发 Hard Stop 且用户未回复 Y:
+      - 保持等待，不进入下阶段
     IF 方案包类型 = overview:
       说明: overview类型方案包不进入开发实施
       执行: 按 references/rules/package.md "Overview类型方案包生命周期" 处理
@@ -234,13 +240,47 @@ IF WORKFLOW_MODE = AUTO_PLAN:
 
 方案选择后流转:
   交互模式:
-    - 用户选择有效序号(1-N) → 进入步骤5
+    - 用户选择有效序号(1-N) → 进入步骤4.5（如未触发则直接进入步骤5）
     - 用户拒绝所有方案 → 按 G3 场景内容规则（确认）输出
       用户选择处理:
         重新构思: 返回步骤4重新构思
         取消: 按 G7 状态重置协议执行
   静默模式:
-    - 选择推荐方案 → 立即进入步骤5
+    - 选择推荐方案 → 先执行步骤4.5（如未触发则进入步骤5）
+```
+
+### 步骤4.5: Phase2 多模型协作分析（按需）
+
+> 详细规则见 references/rules/multi_model.md
+
+```yaml
+触发条件:
+  - MULTI_MODEL_POLICY = STRICT
+  - 或用户明确要求多模型协作分析
+  - 或任务为高复杂度/高风险
+
+执行内容:
+  1. 输入分发:
+     - 使用 ORIGINAL_REQUIREMENT（用户原始需求，不带预设观点）
+     - 给 Codex / Gemini 提供入口文件路径 + row index（非 snippet）
+
+  2. 方案迭代:
+     - 要求多角度方案
+     - 执行交叉验证与优劣互补
+     - 生成 step-by-step 实施计划（含关键风险控制点）
+
+  3. 交互闸门（INTERACTIVE）:
+     - 输出最终实施计划（含适度伪代码）
+     - 必须加粗询问: **Shall I proceed with this plan? (Y/N)**
+     - 在收到 Y 前，禁止进入 Phase3 与新增文件读取
+
+确认结果处理:
+  - 用户回复 Y: 设置 PHASE2_APPROVED = true，允许进入 Phase3
+  - 用户回复 N: 设置 PHASE2_APPROVED = false，返回步骤4.5调整
+
+输出物:
+  - 经过交叉验证的实施计划
+  - 冲突项仲裁结论（如有）
 ```
 
 ### 步骤5: 详细规划
@@ -346,6 +386,28 @@ IF WORKFLOW_MODE = AUTO_PLAN:
 选项:
   选择方案N: 选择对应序号的方案，进入详细规划
   重新构思: 返回方案构思，重新设计方案
+  取消: 按 G7 状态重置协议执行
+```
+
+### 场景: Phase2 实施计划确认（Hard Stop）
+
+```yaml
+触发条件:
+  - 已执行 Phase2 多模型协作分析
+  - PHASE2_HARD_STOP_CONFIRM = 1
+  - WORKFLOW_MODE = INTERACTIVE
+
+内容要素:
+  - 最终实施计划: step-by-step 任务分解
+  - 适度伪代码: 核心实现逻辑
+  - 交叉验证结论: 共识项与冲突项（如有）
+
+强制询问:
+  - **Shall I proceed with this plan? (Y/N)**
+
+选项:
+  Y: 设置 PHASE2_APPROVED = true，进入 Phase3（开发实施前置原型获取）
+  N: 设置 PHASE2_APPROVED = false，返回步骤4.5调整实施计划
   取消: 按 G7 状态重置协议执行
 ```
 

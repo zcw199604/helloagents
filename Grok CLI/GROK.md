@@ -25,6 +25,7 @@ KB_CREATE_MODE: 2  # 知识库模式: 0=OFF, 1=ON_DEMAND, 2=ON_DEMAND_AUTO_FOR_C
 BILINGUAL_COMMIT: 1  # 双语提交: 0=仅 OUTPUT_LANGUAGE, 1=OUTPUT_LANGUAGE + English
 MULTI_MODEL_POLICY: BALANCED  # 多模型协作策略: BALANCED=按风险触发, STRICT=强制协作优先
 SIMPLE_TASK_NO_COLLAB_CONFIRM: 1  # 简单任务免协作是否需确认: 0=否, 1=是（STRICT下强制）
+PHASE2_HARD_STOP_CONFIRM: 1  # Phase2 结束确认: 0=关闭, 1=强制输出Y/N确认后再进入Phase3
 # SKILL_ROOT: 由 G8 动态解析（优先用户配置目录，其次项目目录）
 ```
 
@@ -41,6 +42,11 @@ MULTI_MODEL_POLICY = STRICT:
 SIMPLE_TASK_NO_COLLAB_CONFIRM = 1:
   - 触发简单任务免协作时，必须输出确认并等待用户同意
   - 未获同意前，禁止进入下一阶段
+
+PHASE2_HARD_STOP_CONFIRM = 1:
+  - Phase2 结束后必须输出最终实施计划（含适度伪代码）
+  - 必须以加粗文本询问: "Shall I proceed with this plan? (Y/N)"
+  - 未收到用户明确 Y 前，禁止进入 Phase3 与新增文件读取
 ```
 
 **语言规则（CRITICAL）:**
@@ -51,7 +57,7 @@ SIMPLE_TASK_NO_COLLAB_CONFIRM = 1:
   - 对话回复
   - 文档内容（知识库、方案包）
   - 输出格式中的自然语言文本
-  - 注释（代码注释可选）
+  - 注释（关键位置必须使用中文注释）
 
 规则文本翻译: 规则/模板中的中文文本是示例，输出时翻译为 {OUTPUT_LANGUAGE}
   包括: 状态提示、标注信息、确认选项、错误消息、欢迎信息
@@ -291,7 +297,7 @@ PowerShell语法规范（Windows原生环境 + 无跨平台Bash工具时）:
   最低覆盖: 正常用例 + 边界情况 + 异常情况（各1个）
 
 风格规范:
-  注释原则: 仅为复杂逻辑添加注释，解释原因而非仅描述操作
+  注释原则: 在关键位置必须添加中文注释，优先解释原因、约束与边界条件
   文档字符串: 为新增函数编写 Google 风格文档字符串注释（简要说明、Args、Returns）
 
 适用范围:
@@ -582,8 +588,14 @@ PowerShell语法规范（Windows原生环境 + 无跨平台Bash工具时）:
   - 明确说明被跳过的 phase 与原因
   - 必须等待用户确认后才能继续下一步
 
+Phase2 → Phase3 闸门（Hard Stop）:
+  - PHASE2_HARD_STOP_CONFIRM = 1 时，Phase2 结束后必须等待用户 Y/N
+  - 未收到明确 Y 前，禁止进入 Phase3
+  - 未收到明确 Y 前，禁止新增文件读取工具调用
+
 确认模板（示例）:
   - "在当前 {phase} 中发现 {原因}。是否同意跳过 {phase} 并继续下一阶段？我会等待你的明确回复。"
+  - "Shall I proceed with this plan? (Y/N)"
 ```
 
 ### Layer 1: 上下文层
@@ -812,9 +824,15 @@ PowerShell语法规范（Windows原生环境 + 无跨平台Bash工具时）:
 **详细规则:** 按需读取并执行 references/stages/evaluate.md → analyze.md → design.md → develop.md
 
 ### 多模型协作分析（可选能力）
-**触发方式:** 用户明确要求，或项目分析阶段命中高复杂度/高风险信号
-**执行阶段:** ANALYZE（优先），必要时延伸到 DESIGN 与 DEVELOP（代码完成后审查）
+**触发方式:** 用户明确要求，或命中高复杂度/高风险信号；STRICT 模式下默认协作
+**执行阶段:**
+- Phase2（DESIGN）：多模型协作分析 + 方案迭代 + Hard Stop 确认
+- Phase3（DEVELOP前置）：原型获取（前端优先 Gemini，后端优先 Codex）
+- Phase4（DEVELOP实施）：基于原型重构为发布级代码
 **执行策略:** 默认 codex + gemini 交叉验证，结论冲突时追加 claude 仲裁
+**关键约束:**
+- 与外部模型交互必须要求 Unified Diff Patch ONLY
+- Hard Stop 未获 Y 前，禁止进入 Phase3 与新增文件读取
 **规则来源:** references/rules/multi_model.md
 
 ### 直接执行（~exec命令）
@@ -902,6 +920,7 @@ Layer 2 工具层检测:
 执行约束:
   - 优先只读参数（如 sandbox=read-only）
   - 长时调用可后台执行，不设置硬超时
+  - 分发上下文时优先传递入口文件路径 + row index，避免粘贴大段 snippet
   - 返回结果仅作为“脏原型”，必须经本地思维沙箱校验后再落地
 
 落地流程:
@@ -1058,6 +1077,16 @@ CURRENT_PACKAGE（当前执行方案包）:
   设置时机: 开发实施阶段选定方案包后
   用途: 执行跟踪、遗留方案包扫描时排除
 
+ORIGINAL_REQUIREMENT（原始需求快照）:
+  值: 用户原始需求文本
+  设置时机: evaluate.md 步骤1
+  用途: Phase2 多模型分发时作为无预设观点输入
+
+PHASE2_APPROVED（Phase2确认标记）:
+  值: true/false
+  设置时机: 用户回复 Y/N 后更新
+  用途: 控制是否允许进入 Phase3
+
 外部工具相关:
   ACTIVE_TOOL: 当前活跃的外部工具名称（无则未设置）
   SUSPENDED_STAGE: 暂存的阶段名称（外部工具执行时保存）
@@ -1132,6 +1161,10 @@ CURRENT_PACKAGE（当前执行方案包）:
     CREATED_PACKAGE: → 清除（无值）
     CURRENT_PACKAGE: → 清除（无值）
 
+  协作流程相关:
+    ORIGINAL_REQUIREMENT: → 清除（无值）
+    PHASE2_APPROVED: → 清除（无值）
+
   知识库相关:
     KB_SKIPPED: → 清除（无值）
 
@@ -1147,6 +1180,8 @@ CURRENT_PACKAGE（当前执行方案包）:
   步骤1: 清除临时变量
     - CREATED_PACKAGE
     - CURRENT_PACKAGE
+    - ORIGINAL_REQUIREMENT
+    - PHASE2_APPROVED
     - KB_SKIPPED
     - ACTIVE_TOOL
     - SUSPENDED_STAGE
@@ -1237,7 +1272,7 @@ CURRENT_PACKAGE（当前执行方案包）:
 | 进入需求评估 | references/stages/evaluate.md |
 | 进入项目分析 | references/stages/analyze.md, references/services/knowledge.md, references/rules/scaling.md, references/rules/multi_model.md |
 | 进入微调模式 | references/stages/tweak.md, references/rules/package.md, references/services/knowledge.md |
-| 进入方案设计 | references/stages/design.md, references/rules/package.md, references/rules/scaling.md, references/services/knowledge.md, references/services/templates.md, references/rules/tools.md |
+| 进入方案设计 | references/stages/design.md, references/rules/package.md, references/rules/scaling.md, references/services/knowledge.md, references/services/templates.md, references/rules/tools.md, references/rules/multi_model.md |
 | 进入开发实施 | references/stages/develop.md, references/rules/package.md, references/services/knowledge.md, references/rules/tools.md, references/rules/multi_model.md |
 | **服务模块** | |
 | 知识库操作 | references/services/knowledge.md |
@@ -1245,7 +1280,7 @@ CURRENT_PACKAGE（当前执行方案包）:
 | **规则模块** | |
 | 方案包生命周期管理 | references/rules/package.md |
 | 大型项目规模判定 | references/rules/scaling.md |
-| 多模型协作分析 | references/rules/multi_model.md |
+| 多模型协作分析与审查 | references/rules/multi_model.md |
 | 状态流转/执行单元管理 | references/rules/state.md |
 | 脚本调用或降级 | references/rules/tools.md |
 | **命令模块** | |

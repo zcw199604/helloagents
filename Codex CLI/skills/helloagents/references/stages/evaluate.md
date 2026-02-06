@@ -132,7 +132,9 @@
 </input_analysis>
 
 ```yaml
-输出: 规范化的需求描述（内部使用，不直接输出给用户）
+输出:
+  - 规范化的需求描述（内部使用，不直接输出给用户）
+  - ORIGINAL_REQUIREMENT: 保存用户原始需求文本（供 Phase2 多模型分发使用，不附加预设观点）
 ```
 
 ### 步骤2: 上下文预检索 + 需求完整性评分
@@ -268,6 +270,10 @@
 处理规则:
   MULTI_MODEL_POLICY = BALANCED:
     - 不额外拦截，继续步骤6
+
+  原始需求传递约束:
+    - 后续 Phase2 分发必须使用 ORIGINAL_REQUIREMENT
+    - 禁止在分发时添加主观预设结论
 
   MULTI_MODEL_POLICY = STRICT:
     - 若非简单任务: 标记"后续阶段默认启用多模型协作"，继续步骤6
