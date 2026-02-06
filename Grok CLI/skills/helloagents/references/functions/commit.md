@@ -25,7 +25,12 @@
   有参数: 使用用户提供的 message 作为 summary
     - 根据语义分析确定 type
     - 如已包含 emoji/type 前缀，直接使用不重复添加
-    - 应用双语规则（BILINGUAL_COMMIT=1 时）
+
+  语言规则（~commit 特化）:
+    - 生成的 summary/body 默认使用中文
+    - 用户输入为英文或混合语言时，语义保持不变并转换为中文表达
+    - type/scope/emoji 保持 Conventional Commits 规范标识（可保留英文 token）
+    - 本命令最终写入 git commit 的信息为中文单语块（不生成双语分隔块）
 ```
 
 ---
@@ -91,7 +96,7 @@ Git 环境检测推理过程:
 2. 识别变更类型（新增/修改/删除）
 3. 提取核心改动点和功能描述
 4. 根据 Conventional Commits 规范生成提交信息
-5. 应用双语模式（如启用）
+5. 执行中文化归一（summary/body 统一中文）
 </commit_message_analysis>
 
 ```yaml
@@ -99,11 +104,12 @@ Git 环境检测推理过程:
 分析内容: 变更内容，提取核心改动点
 
 提交信息生成:
-  无参数时: 根据变更内容确定 type/scope，智能生成 summary 和 body
+  无参数时: 根据变更内容确定 type/scope，智能生成中文 summary 和中文 body
   有参数时: 使用用户提供的 message 作为 summary
     - 根据语义分析确定 type
     - 如已包含 emoji/type 前缀，直接使用不重复添加
-    - body 根据变更内容补充（可选）
+    - summary 非中文时先转换为中文再使用
+    - body 根据变更内容补充（可选，中文）
 ```
 
 ### 步骤3: 触发响应
@@ -240,29 +246,22 @@ body: 说明变更动机（可选），每行≤72字符
 footer: 关联 issue 或 BREAKING CHANGE（可选）
 ```
 
-### 双语模式
+### 提交语言规则（~commit 特化）
 
 ```yaml
-配置: BILINGUAL_COMMIT
+核心原则:
+  - ~commit 生成的提交信息使用中文
+  - 允许保留 emoji/type/scope 等规范标识
+  - 禁止输出双语分隔块（---）作为最终 git commit 内容
 
-BILINGUAL_COMMIT = 0（默认）:
-  仅使用 OUTPUT_LANGUAGE
+与 BILINGUAL_COMMIT 的关系:
+  - 本命令优先级更高，覆盖 BILINGUAL_COMMIT 的双语生成行为
+  - 若用户明确要求英文提交信息，进入"提交确认"场景二次确认后再执行
 
-BILINGUAL_COMMIT = 1:
-  格式: 本地语言块在上，英文块在下，用 --- 分隔
-  结构: 两个块均为完整格式（emoji + type + scope + summary + body）
-  要求: 两个语言块必须是精确互译，语义完全一致
+示例:
+  ✨ feat(auth): 增加用户登录功能
 
-  示例:
-    ✨ feat(auth): 添加用户登录功能
-
-    - 实现基于 JWT 的身份验证
-
-    ---
-
-    ✨ feat(auth): add user login feature
-
-    - Implement JWT-based authentication
+  - 支持 JWT 鉴权并补充登录态校验
 ```
 
 ### 变更分析示例
