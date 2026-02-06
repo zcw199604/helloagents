@@ -331,6 +331,16 @@ All bridge tools return structured JSON, including:
 - `SESSION_ID` (for multi-turn continuation)
 - `agent_messages`
 
+#### Recommended collaboration flow
+
+When you want cross-validation on critical conclusions, use this sequence:
+
+1. Run `codex_bridge.py` for the first-pass analysis.
+2. Run `gemini_bridge.py` with the same PROMPT for cross-checking.
+3. If the two conclusions conflict, run `claude_bridge.py` for arbitration and final recommendation.
+4. After implementation and tests are done, run one more post-implementation multi-model review focusing on security, compatibility, and critical path regressions.
+
+> Keep each returned `SESSION_ID` for follow-up turns.
 
 ### 6) Optional: mount standalone collaboration skills
 

@@ -349,12 +349,39 @@ KB_SKIPPED 状态来源:
 
 </truth_priority_reasoning>
 
-### 步骤13: 代码质量分析（可选）
+### 步骤13: 代码质量分析与多模型协作审查（可选）
 
 ```yaml
-执行内容: 分析代码文件，识别质量问题
+执行内容:
+  - 分析代码文件，识别质量问题
+  - 在代码改动与测试完成后，按风险分级触发多模型协作审查（详见 references/rules/multi_model.md）
 
-如发现问题:
+多模型审查触发（满足任一）:
+  - 用户明确要求"完成后多模型审查"
+  - 跨模块改动、核心链路改动、安全相关改动
+  - 涉及鉴权、支付、权限、数据一致性等高风险逻辑
+
+审查执行策略:
+  - 默认: codex + gemini
+  - 结论冲突: 自动追加 claude 仲裁
+  - 输出分级: P0(Must Fix) / P1(Should Fix) / P2(Note)
+  - 调用方式: 长时任务后台执行（Run in the background），不设置硬 timeout
+  - 会话延续: 后续轮次优先复用 SESSION_ID
+
+Unified Diff ONLY 约束模板（调用桥接脚本时必须追加到 PROMPT）:
+  - "OUTPUT: Unified Diff Patch ONLY. Strictly prohibit any actual modifications."
+  - "Review scope: only files changed in this task."
+  - "Return: Must Fix / Should Fix / Note with evidence."
+
+结果处理:
+  P0（阻断性）:
+    - 交互确认模式: 按 G3 场景内容规则（确认）输出，等待用户选择（修复 / 风险接受继续 / 终止）
+    - AUTO_FULL/AUTO_PLAN: 打破静默并等待用户决策
+
+  P1/P2（非阻断）:
+    - 记录到总结并继续后续步骤
+
+代码质量问题（非多模型结论）处理:
   交互确认模式:
     - 按 G3 场景内容规则（确认）输出优化建议
     - 用户确认 → 执行优化、更新文档、重测
@@ -481,6 +508,20 @@ KB_SKIPPED 状态来源:
 选项:
   修复: 分析错误原因，修复代码
   跳过: 跳过该测试，继续执行
+  终止: 终止当前流程
+```
+
+### 场景: 多模型审查发现阻断问题（P0）
+
+```yaml
+内容要素:
+  - 阻断问题清单: Must Fix 项
+  - 影响范围: 涉及文件、模块、功能链路
+  - 风险说明: 不修复可能导致的后果
+
+选项:
+  修复后重审（推荐）: 修复问题并重新执行多模型审查
+  风险接受继续: 记录用户确认后继续流程
   终止: 终止当前流程
 ```
 

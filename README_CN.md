@@ -330,6 +330,16 @@ python -X utf8 "$BUNDLE_DIR/skills/helloagents/scripts/claude_bridge.py" \
 - `SESSION_ID`（用于多轮续接）
 - `agent_messages`
 
+#### 协作分析建议流程（推荐）
+
+当你希望在关键结论上做交叉验证时，可按下面流程执行：
+
+1. 使用 `codex_bridge.py` 输出首轮分析结论。
+2. 使用 `gemini_bridge.py` 基于同一 PROMPT 做交叉验证。
+3. 若两者存在冲突，再用 `claude_bridge.py` 做仲裁并给出最终建议。
+4. 代码实现与测试完成后，建议再执行一次“完成后多模型审查”，重点检查安全、兼容性与关键链路回归风险。
+
+> 建议保留每次返回的 `SESSION_ID`，用于后续多轮补充追问。
 
 ### 6) 可选：挂载独立协作 Skill
 

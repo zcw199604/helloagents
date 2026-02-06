@@ -71,6 +71,7 @@ metadata:
 多模型委托-Codex: python -X utf8 "scripts/codex_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox <read-only|workspace-write|danger-full-access>] [--SESSION_ID <id>] [--return-all-messages]
 多模型委托-Gemini: python -X utf8 "scripts/gemini_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox] [--SESSION_ID <id>] [--return-all-messages]
 多模型委托-Claude: python -X utf8 "scripts/claude_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox <read-only|workspace-write|danger-full-access>] [--SESSION_ID <id>] [--return-all-messages]
+多模型协作分析流程: 先执行 Codex + Gemini 交叉验证，存在冲突时追加 Claude 仲裁（详见 references/rules/multi_model.md）
 ```
 
 ---

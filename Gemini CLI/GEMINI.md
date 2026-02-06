@@ -23,7 +23,24 @@ OUTPUT_LANGUAGE: zh-CN
 ENCODING: UTF-8 无BOM
 KB_CREATE_MODE: 2  # 知识库模式: 0=OFF, 1=ON_DEMAND, 2=ON_DEMAND_AUTO_FOR_CODING, 3=ALWAYS
 BILINGUAL_COMMIT: 1  # 双语提交: 0=仅 OUTPUT_LANGUAGE, 1=OUTPUT_LANGUAGE + English
+MULTI_MODEL_POLICY: BALANCED  # 多模型协作策略: BALANCED=按风险触发, STRICT=强制协作优先
+SIMPLE_TASK_NO_COLLAB_CONFIRM: 1  # 简单任务免协作是否需确认: 0=否, 1=是（STRICT下强制）
 # SKILL_ROOT: 由 G8 动态解析（优先用户配置目录，其次项目目录）
+```
+
+**多模型协作策略开关（CRITICAL）:**
+```yaml
+MULTI_MODEL_POLICY = BALANCED:
+  - 默认策略: 仅在高风险/高复杂度或用户明确要求时启用多模型协作
+  - 简单任务: 可直接进入单模型流程
+
+MULTI_MODEL_POLICY = STRICT:
+  - 默认策略: 优先启用 Codex + Gemini 协作
+  - 简单任务: 允许免协作，但必须先暂停并获得用户明确许可
+
+SIMPLE_TASK_NO_COLLAB_CONFIRM = 1:
+  - 触发简单任务免协作时，必须输出确认并等待用户同意
+  - 未获同意前，禁止进入下一阶段
 ```
 
 **语言规则（CRITICAL）:**
@@ -548,6 +565,27 @@ PowerShell语法规范（Windows原生环境 + 无跨平台Bash工具时）:
   - 路由判定只需分析用户输入，不预先获取其他信息
 ```
 
+### Phase 完整性与跳过判定（CRITICAL）
+
+```yaml
+核心原则:
+  - 1. Workflow 的 phase 默认必须按顺序执行
+  - 跳过 phase 属于高风险动作，必须判定是否为"设计性跳过"
+
+设计性跳过（允许）:
+  - ~exec 直接执行: 跳过 evaluate/design
+  - 微调模式: 跳过 analyze/design
+  - 其他在流程定义中明确声明的跳过
+
+非设计性跳过（危险级）:
+  - 立即终止当前流程并输出警告
+  - 明确说明被跳过的 phase 与原因
+  - 必须等待用户确认后才能继续下一步
+
+确认模板（示例）:
+  - "在当前 {phase} 中发现 {原因}。是否同意跳过 {phase} 并继续下一阶段？我会等待你的明确回复。"
+```
+
 ### Layer 1: 上下文层
 
 <context_analysis>
@@ -773,11 +811,22 @@ PowerShell语法规范（Windows原生环境 + 无跨平台Bash工具时）:
 **流程:** 需求评估 → 项目分析 → 完整方案设计 → 开发实施 → 知识库(KB)同步 → 输出完成
 **详细规则:** 按需读取并执行 references/stages/evaluate.md → analyze.md → design.md → develop.md
 
+### 多模型协作分析（可选能力）
+**触发方式:** 用户明确要求，或项目分析阶段命中高复杂度/高风险信号
+**执行阶段:** ANALYZE（优先），必要时延伸到 DESIGN 与 DEVELOP（代码完成后审查）
+**执行策略:** 默认 codex + gemini 交叉验证，结论冲突时追加 claude 仲裁
+**规则来源:** references/rules/multi_model.md
+
 ### 直接执行（~exec命令）
 **条件:** 用户通过 ~exec 命令指定执行已有方案包
 **流程:** 方案包选择 → 开发实施 → 知识库(KB)同步 → 输出完成
 **特点:** 跳过需求评估和方案设计，直接执行 plan/ 目录中的方案包
 **详细规则:** 按需读取并执行 references/functions/exec.md → references/stages/develop.md
+
+### Phase 跳过判定（与 G4 联动）
+**核心规则:**
+- 仅允许流程定义中声明的设计性跳过
+- 对非设计性跳过，必须按 G4 "Phase 完整性与跳过判定"执行：先终止并征得用户许可
 
 > 📌 阶段状态变量设置细节见 references/rules/state.md
 
@@ -838,6 +887,27 @@ Layer 2 工具层检测:
     - mcp://server 或 MCP 工具调用 → MCP
     - @agent-name → 子代理
     - 其他模式 → 按 CLI 规则处理
+```
+
+### 多模型协作只读约束（CRITICAL）
+
+```yaml
+适用范围:
+  - 通过 codex_bridge.py / gemini_bridge.py / claude_bridge.py 的多模型协作调用
+
+无写入原则:
+  - 外部模型仅用于分析与审查，不得直接修改本地文件
+  - 提示词必须追加: "OUTPUT: Unified Diff Patch ONLY. Strictly prohibit any actual modifications."
+
+执行约束:
+  - 优先只读参数（如 sandbox=read-only）
+  - 长时调用可后台执行，不设置硬超时
+  - 返回结果仅作为“脏原型”，必须经本地思维沙箱校验后再落地
+
+落地流程:
+  1. 读取 Unified Diff
+  2. 在思维沙箱验证逻辑与风险
+  3. 清理重构后由 HelloAGENTS 本地应用改动
 ```
 
 ### 输出包装规则（默认兜底）
@@ -1165,16 +1235,17 @@ CURRENT_PACKAGE（当前执行方案包）:
 |----------|----------|
 | **阶段模块（按流程顺序）** | |
 | 进入需求评估 | references/stages/evaluate.md |
-| 进入项目分析 | references/stages/analyze.md, references/services/knowledge.md, references/rules/scaling.md |
+| 进入项目分析 | references/stages/analyze.md, references/services/knowledge.md, references/rules/scaling.md, references/rules/multi_model.md |
 | 进入微调模式 | references/stages/tweak.md, references/rules/package.md, references/services/knowledge.md |
 | 进入方案设计 | references/stages/design.md, references/rules/package.md, references/rules/scaling.md, references/services/knowledge.md, references/services/templates.md, references/rules/tools.md |
-| 进入开发实施 | references/stages/develop.md, references/rules/package.md, references/services/knowledge.md, references/rules/tools.md |
+| 进入开发实施 | references/stages/develop.md, references/rules/package.md, references/services/knowledge.md, references/rules/tools.md, references/rules/multi_model.md |
 | **服务模块** | |
 | 知识库操作 | references/services/knowledge.md |
 | 需要模板 | references/services/templates.md |
 | **规则模块** | |
 | 方案包生命周期管理 | references/rules/package.md |
 | 大型项目规模判定 | references/rules/scaling.md |
+| 多模型协作分析 | references/rules/multi_model.md |
 | 状态流转/执行单元管理 | references/rules/state.md |
 | 脚本调用或降级 | references/rules/tools.md |
 | **命令模块** | |
@@ -1273,6 +1344,7 @@ develop（开发实施）:
   验收项:
     - 阻断性测试通过 (阻断性): 核心功能测试
     - 代码安全检查 (阻断性): 无 EHRB
+    - 多模型协作审查 (按风险分级): 高风险任务=阻断性，普通任务=警告性
     - 警告性测试 (警告性): 重要功能测试
     - 一致性审计 (警告性): 文档与代码一致
     - 代码质量 (信息性): 代码质量分析建议
