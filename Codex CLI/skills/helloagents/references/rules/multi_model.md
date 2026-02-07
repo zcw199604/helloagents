@@ -56,10 +56,11 @@ PHASE2_HARD_STOP_CONFIRM = 1:
 
 分发输入:
   - 必须使用用户原始需求（不带预设观点）
-  - 向 Codex / Gemini 分发时，仅提供:
+  - 向 Claude / Gemini 分发时，仅提供:
     - 入口文件路径（entry file）
     - 行号索引（row index）
   - 禁止粘贴大段 snippet 作为主上下文
+  - 优先使用 subagent 并行分发主组合（Claude + Gemini），两路结果返回后再归并交叉验证
 
 方案迭代:
   - 要求模型提供多角度解决方案
@@ -120,6 +121,7 @@ Route B - 后端/逻辑/算法（Codex 优先）:
 
 调用策略:
   - 长时任务使用后台执行（Run in the background）
+  - 优先使用 subagent 并行执行主组合模型，仲裁模型按需追加
   - 不设置硬 timeout
 
 会话连续性:

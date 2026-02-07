@@ -145,6 +145,7 @@ KB_SKIPPED = false: 先检查知识库 → 不足则扫描代码库
 
 多模型协作执行:
   - 默认组合: claude + gemini
+  - 执行方式: 优先通过 subagent 并行调用两路主模型并汇总
   - 冲突仲裁: codex（可选）
   - 详细规则: references/rules/multi_model.md
 
@@ -206,7 +207,7 @@ KB_SKIPPED = false: 先检查知识库 → 不足则扫描代码库
 
 内容要素:
   - 触发原因: 用户需求/风险等级/结论冲突
-  - 推荐组合: claude + gemini（冲突时追加 codex 仲裁）
+  - 推荐组合: claude + gemini（subagent 并行，冲突时追加 codex 仲裁）
 
 选项:
   启用协作分析（推荐）: 按 references/rules/multi_model.md 执行

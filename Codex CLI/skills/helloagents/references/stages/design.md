@@ -262,7 +262,8 @@ IF WORKFLOW_MODE = AUTO_PLAN:
 执行内容:
   1. 输入分发:
      - 使用 ORIGINAL_REQUIREMENT（用户原始需求，不带预设观点）
-     - 给 Codex / Gemini 提供入口文件路径 + row index（非 snippet）
+     - 给 Claude / Gemini 提供入口文件路径 + row index（非 snippet）
+     - 通过 subagent 并行分发两路主模型，等待结果后再归并
 
   2. 方案迭代:
      - 要求多角度方案

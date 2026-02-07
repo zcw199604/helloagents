@@ -829,7 +829,7 @@ Phase2 → Phase3 闸门（Hard Stop）:
 - Phase2（DESIGN）：多模型协作分析 + 方案迭代 + Hard Stop 确认
 - Phase3（DEVELOP前置）：原型获取（前端优先 Gemini，后端优先 Codex）
 - Phase4（DEVELOP实施）：基于原型重构为发布级代码
-**执行策略:** 默认 claude + gemini 交叉验证，结论冲突时追加 codex 仲裁
+**执行策略:** 默认 claude + gemini 交叉验证（优先通过 subagent 并行执行），结论冲突时追加 codex 仲裁
 **关键约束:**
 - 与外部模型交互必须要求 Unified Diff Patch ONLY
 - Hard Stop 未获 Y 前，禁止进入 Phase3 与新增文件读取

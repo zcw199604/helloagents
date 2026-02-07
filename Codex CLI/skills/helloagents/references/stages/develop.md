@@ -215,6 +215,7 @@ Route B（后端/逻辑/算法）:
 通用约束:
   - 必须在 PROMPT 明确要求 Unified Diff Patch ONLY
   - 严禁外部模型进行任何真实修改
+  - 前后端任务可通过 subagent 并行拉取原型，回收后统一重构
   - 产物仅作为“脏原型”，进入 Phase4 前必须重构
 ```
 
@@ -389,9 +390,9 @@ Route B（后端/逻辑/算法）:
 
 审查执行策略:
   - 默认: claude + gemini
+  - 调用方式: 优先通过 subagent 并行发起双模型审查（后台执行，不设置硬 timeout）
   - 结论冲突: 自动追加 codex 仲裁
   - 输出分级: P0(Must Fix) / P1(Should Fix) / P2(Note)
-  - 调用方式: 长时任务后台执行（Run in the background），不设置硬 timeout
   - 会话延续: 后续轮次优先复用 SESSION_ID
 
 Unified Diff ONLY 约束模板（调用桥接脚本时必须追加到 PROMPT）:
