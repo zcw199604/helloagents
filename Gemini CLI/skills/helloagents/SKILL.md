@@ -30,7 +30,7 @@ metadata:
 | 命令 | 功能 |
 |------|------|
 | `~auto` | 全授权命令 |
-| `~plan` | 执行到方案设计 |
+| `~plan` | 执行到方案设计（命中微调默认强制规划并建包，且会确认是否需要其它模型审查） |
 | `~exec` | 执行方案包 |
 | `~init` | 初始化知识库 |
 | `~upgrade` | 升级知识库 |
@@ -71,7 +71,7 @@ metadata:
 多模型委托-Codex: python -X utf8 "scripts/codex_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox <read-only|workspace-write|danger-full-access>] [--SESSION_ID <id>] [--return-all-messages]
 多模型委托-Gemini: python -X utf8 "scripts/gemini_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox] [--SESSION_ID <id>] [--return-all-messages]
 多模型委托-Claude: python -X utf8 "scripts/claude_bridge.py" --cd "<项目路径>" --PROMPT "<任务描述>" [--sandbox <read-only|workspace-write|danger-full-access>] [--SESSION_ID <id>] [--return-all-messages]
-多模型协作分析流程: 先执行 Codex + Claude 交叉验证，存在冲突时追加 Gemini 仲裁（详见 references/rules/multi_model.md）
+多模型协作分析流程: 先通过 subagent 并行执行 Claude + Gemini 交叉验证，存在冲突时追加 Codex 仲裁（详见 references/rules/multi_model.md）
 ```
 
 ---
