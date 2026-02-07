@@ -28,6 +28,7 @@
   - MULTI_MODEL_POLICY（BALANCED / STRICT）
   - SIMPLE_TASK_NO_COLLAB_CONFIRM（0 / 1）
   - PHASE2_HARD_STOP_CONFIRM（0 / 1）
+  - FORCE_MM_LIGHTWEIGHT_MIN_FILES（整数，默认2）
 
 BALANCED:
   - 按风险触发多模型协作
@@ -36,6 +37,11 @@ BALANCED:
 STRICT:
   - 默认强制 Claude + Gemini 协作
   - 简单任务可申请免协作，但必须先暂停并获得用户明确许可
+
+强制升级联动（与 evaluate 阶段联动）:
+  - 当用户已确认启用多模型协作，且预期改动文件数 >= FORCE_MM_LIGHTWEIGHT_MIN_FILES 时：
+    - 复杂度原判定为微调模式时，必须覆盖为轻量迭代
+    - 后续必须进入 ANALYZE → DESIGN，确保创建方案包（proposal.md + tasks.md）
 
 PHASE2_HARD_STOP_CONFIRM = 1:
   - Phase2 结束后必须输出最终实施计划（含适度伪代码）

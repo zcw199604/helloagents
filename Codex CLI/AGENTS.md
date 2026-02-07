@@ -26,6 +26,7 @@ BILINGUAL_COMMIT: 1  # 双语提交: 0=仅 OUTPUT_LANGUAGE, 1=OUTPUT_LANGUAGE + 
 MULTI_MODEL_POLICY: BALANCED  # 多模型协作策略: BALANCED=按风险触发, STRICT=强制协作优先
 SIMPLE_TASK_NO_COLLAB_CONFIRM: 0  # 简单任务免协作是否需确认: 0=否, 1=是（STRICT下强制）
 PHASE2_HARD_STOP_CONFIRM: 0  # Phase2 结束确认: 0=关闭, 1=强制输出Y/N确认后再进入Phase3
+FORCE_MM_LIGHTWEIGHT_MIN_FILES: 2  # 强制升级阈值: 用户确认多模型协作且预期改动文件数>=阈值时，至少进入轻量迭代并创建方案包
 # SKILL_ROOT: 由 G8 动态解析（优先用户配置目录，其次项目目录）
 ```
 
@@ -47,6 +48,12 @@ PHASE2_HARD_STOP_CONFIRM = 1:
   - Phase2 结束后必须输出最终实施计划（含适度伪代码）
   - 必须以加粗文本询问: "Shall I proceed with this plan? (Y/N)"
   - 未收到用户明确 Y 前，禁止进入 Phase3 与新增文件读取
+
+FORCE_MM_LIGHTWEIGHT_MIN_FILES = N:
+  - 触发条件: 用户已确认启用多模型协作，且预期改动文件数 >= N
+  - 执行动作: 若当前判定为微调模式，强制升级为轻量迭代
+  - 结果保障: 必须进入 ANALYZE → DESIGN，并创建方案包（proposal.md + tasks.md）
+  - 边界: 若当前已是标准开发，保持标准开发（禁止降级）
 ```
 
 **语言规则（CRITICAL）:**
@@ -751,6 +758,7 @@ Phase2 → Phase3 闸门（Hard Stop）:
 2. 评估是否需要方案设计（实现方式是否明确）
 3. 推断影响范围（单点/局部/跨模块）
 4. 检查风险等级（是否涉及EHRB）
+5. 检查多模型协作强制升级条件（用户确认协作 + 预期改动文件数阈值）
 </complexity_analysis>
 
 复杂度判定（在需求评估评分≥7分后执行）:
@@ -771,6 +779,10 @@ Phase2 → Phase3 闸门（Hard Stop）:
        - 跨模块影响 → 标准开发
     3. 风险等级:
        - 涉及EHRB → 标准开发
+    4. 多模型协作强制升级:
+       - 用户确认启用多模型协作 + 预期改动文件数 >= FORCE_MM_LIGHTWEIGHT_MIN_FILES:
+         - 若当前判定为微调 → 强制升级为轻量迭代
+         - 若当前判定为标准开发 → 保持标准开发
 
 <project_detection>
 新项目判定推理过程:
@@ -796,6 +808,11 @@ Phase2 → Phase3 闸门（Hard Stop）:
     微调模式: 非新项目 + 实现方式明确 + 单点修改 + 无EHRB
     轻量迭代: 非新项目 + 需要简单设计 + 局部影响 + 无EHRB
     标准开发: 新项目/重大重构 或 需要完整设计 或 跨模块影响 或 涉及EHRB
+
+  强制升级规则（优先于综合判定结果）:
+    触发条件: 用户确认启用多模型协作 + 预期改动文件数 >= FORCE_MM_LIGHTWEIGHT_MIN_FILES
+    执行动作: 微调模式 → 轻量迭代（确保创建方案包）
+    不影响: 已判定为标准开发时保持不变
 ```
 
 ---
@@ -809,6 +826,7 @@ Phase2 → Phase3 闸门（Hard Stop）:
 **条件:** 非新项目，实现方式明确，单点修改，无EHRB
 **流程:** 需求评估 → 定位文件 → 直接修改 → 知识库(KB)同步 → 输出完成
 **升级条件:** 执行过程中实际修改超过1个文件 / 超过10行 / 发现跨模块依赖 / 检测到EHRB → 升级为轻量迭代
+**强制升级条件（前置）:** 用户确认启用多模型协作 + 预期改动文件数 >= FORCE_MM_LIGHTWEIGHT_MIN_FILES → 在需求评估阶段直接升级为轻量迭代（创建方案包）
 **知识库(KB)同步:** 按 G1 "目录/文件自动创建规则" 和 references/services/knowledge.md "微调模式记录规则" 执行
 **详细规则:** 按需读取并执行 references/stages/evaluate.md → tweak.md
 

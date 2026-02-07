@@ -71,16 +71,21 @@
 ```yaml
 用户选择后的流转:
 
+  强制升级前置判定（优先于下方流转）:
+    - 触发条件: 已确认启用多模型协作 + ESTIMATED_CHANGED_FILES >= FORCE_MM_LIGHTWEIGHT_MIN_FILES
+    - 执行动作: 若复杂度原判定为微调模式，覆盖为轻量迭代
+    - 保障结果: 必须进入 ANALYZE → DESIGN，创建方案包（proposal.md + tasks.md）
+
   INTERACTIVE模式:
     确认开始:
-      微调模式: 设置 CURRENT_STAGE = TWEAK，读取并执行 references/stages/tweak.md
+      微调模式（未触发强制升级）: 设置 CURRENT_STAGE = TWEAK，读取并执行 references/stages/tweak.md
       轻量迭代/标准开发: 设置 CURRENT_STAGE = ANALYZE，读取并执行 references/stages/analyze.md
     调整模式: 用户手动选择执行模式后，按上述规则流转
     取消: 按 G7 状态重置协议执行
 
   AUTO_FULL/AUTO_PLAN模式:
     确认执行: 按当前WORKFLOW_MODE静默执行后续流程
-      微调模式: 设置 CURRENT_STAGE = TWEAK，读取并执行 references/stages/tweak.md
+      微调模式（未触发强制升级）: 设置 CURRENT_STAGE = TWEAK，读取并执行 references/stages/tweak.md
       轻量迭代/标准开发: 设置 CURRENT_STAGE = ANALYZE，读取并执行 references/stages/analyze.md
     交互执行: 设置 WORKFLOW_MODE = INTERACTIVE，按INTERACTIVE规则流转
     调整模式: 用户手动选择执行模式后，按上述规则流转
@@ -253,6 +258,26 @@
   微调模式: 非新项目 + 实现方式明确 + 单点修改 + 无EHRB
   轻量迭代: 非新项目 + 需要简单设计 + 局部影响 + 无EHRB
   标准开发: 新项目/重大重构 或 需要完整设计 或 跨模块影响 或 涉及EHRB
+
+多模型协作强制升级（前置覆盖规则）:
+  读取配置:
+    - FORCE_MM_LIGHTWEIGHT_MIN_FILES（默认2）
+
+  判定输入:
+    - MULTI_MODEL_CONFIRMED: 用户已明确确认启用多模型协作（true/false）
+    - ESTIMATED_CHANGED_FILES: 预期改动文件数（整数，来自用户描述或预检索推断）
+
+  触发条件（同时满足）:
+    - MULTI_MODEL_CONFIRMED = true
+    - ESTIMATED_CHANGED_FILES >= FORCE_MM_LIGHTWEIGHT_MIN_FILES
+
+  覆盖动作:
+    - 当前判定=微调模式: 强制覆盖为轻量迭代
+    - 当前判定=轻量迭代/标准开发: 保持原判定
+
+  覆盖说明:
+    - 此规则优先级高于"微调模式"判定
+    - 目标是确保进入方案设计并创建方案包（proposal.md + tasks.md）
 ```
 
 ### 步骤5.5: 简单任务免协作判定（STRICT模式）
@@ -285,6 +310,33 @@
   - 用户同意免协作: 继续步骤6，并标记"本任务免多模型协作"
   - 用户不同意: 继续步骤6，并标记"后续阶段启用多模型协作"
   - 用户取消: 按 G7 状态重置协议执行
+```
+
+### 步骤5.6: 多模型协作强制升级判定（创建方案包保障）
+
+```yaml
+读取配置:
+  - FORCE_MM_LIGHTWEIGHT_MIN_FILES
+
+输入变量:
+  - MULTI_MODEL_CONFIRMED（是否已确认启用多模型协作）
+  - ESTIMATED_CHANGED_FILES（预期改动文件数）
+
+执行规则:
+  IF MULTI_MODEL_CONFIRMED = true AND ESTIMATED_CHANGED_FILES >= FORCE_MM_LIGHTWEIGHT_MIN_FILES:
+    IF 复杂度判定结果 = 微调模式:
+      - 覆盖判定结果为 轻量迭代
+      - 设置标记: FORCE_TO_LIGHTWEIGHT = true
+      - 记录说明: "已触发多模型协作强制升级，后续将创建方案包"
+    ELSE:
+      - 保持原判定（轻量迭代/标准开发）
+
+  ELSE:
+    - 不触发覆盖，保持原判定
+
+校验要求:
+  - 若触发覆盖，步骤6的"复杂度判定"展示必须带上"强制升级"说明
+  - 后续阶段流转禁止进入 tweak.md
 ```
 
 ### 步骤6: 输出触发响应
@@ -344,6 +396,7 @@
   - 需求摘要: 澄清后的完整需求描述
   - 需求评分: 总分（X/10）及各维度得分与依据
   - 复杂度判定: 判定结果（微调/轻量迭代/标准开发）及依据
+  - 强制升级说明（如触发）: 多模型协作已确认 + 预期改动文件数达到阈值，已从微调升级为轻量迭代
   - 后续流程说明: 简要说明后续阶段（每阶段会输出结果并等待确认）
 
 选项:
@@ -363,6 +416,7 @@
   - 需求摘要: 澄清后的完整需求描述
   - 需求评分: 总分（X/10）及各维度得分与依据
   - 复杂度判定: 判定结果（微调/轻量迭代/标准开发）及依据
+  - 强制升级说明（如触发）: 多模型协作已确认 + 预期改动文件数达到阈值，已从微调升级为轻量迭代
   - 执行方式说明: 静默执行与交互执行的区别
 
 选项:
