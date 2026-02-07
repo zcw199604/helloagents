@@ -24,12 +24,14 @@
   无参数: 根据变更内容智能生成提交信息
   有参数: 使用用户提供的 message 作为 summary
     - 根据语义分析确定 type
-    - 如已包含 emoji/type 前缀，直接使用不重复添加
+    - 如已包含 type 前缀，直接使用不重复添加
+    - 如输入包含 emoji 前缀，默认移除 emoji
 
   语言规则（~commit 特化）:
     - 生成的 summary/body 默认使用中文
     - 用户输入为英文或混合语言时，语义保持不变并转换为中文表达
-    - type/scope/emoji 保持 Conventional Commits 规范标识（可保留英文 token）
+    - type/scope 保持 Conventional Commits 规范标识（可保留英文 token）
+    - 默认不添加 emoji 前缀
     - 本命令最终写入 git commit 的信息为中文单语块（不生成双语分隔块）
 ```
 
@@ -107,7 +109,8 @@ Git 环境检测推理过程:
   无参数时: 根据变更内容确定 type/scope，智能生成中文 summary 和中文 body
   有参数时: 使用用户提供的 message 作为 summary
     - 根据语义分析确定 type
-    - 如已包含 emoji/type 前缀，直接使用不重复添加
+    - 如已包含 type 前缀，直接使用不重复添加
+    - 如输入包含 emoji 前缀，默认移除 emoji
     - summary 非中文时先转换为中文再使用
     - body 根据变更内容补充（可选，中文）
 ```
@@ -214,7 +217,7 @@ Git 环境检测推理过程:
 #### 基础格式
 
 ```
-<emoji> <type>[(scope)]: <summary>
+<type>[(scope)]: <summary>
 
 [body]
 
@@ -223,20 +226,20 @@ Git 环境检测推理过程:
 
 #### 类型映射表
 
-| emoji | type | 说明 |
-|-------|------|------|
-| 🎉 | init | 项目初始化 |
-| ✨ | feat | 新功能 |
-| 🐞 | fix | 错误修复 |
-| 📃 | docs | 文档变更 |
-| 🌈 | style | 代码格式化 |
-| 🦄 | refactor | 代码重构 |
-| 🎈 | perf | 性能优化 |
-| 🧪 | test | 测试相关 |
-| 🔧 | build | 构建系统 |
-| 🐎 | ci | CI 配置 |
-| 🐳 | chore | 辅助工具 |
-| ↩ | revert | 撤销提交 |
+| type | 说明 |
+|------|------|
+| init | 项目初始化 |
+| feat | 新功能 |
+| fix | 错误修复 |
+| docs | 文档变更 |
+| style | 代码格式化 |
+| refactor | 代码重构 |
+| perf | 性能优化 |
+| test | 测试相关 |
+| build | 构建系统 |
+| ci | CI 配置 |
+| chore | 辅助工具 |
+| revert | 撤销提交 |
 
 #### 格式规则
 
@@ -251,7 +254,8 @@ footer: 关联 issue 或 BREAKING CHANGE（可选）
 ```yaml
 核心原则:
   - ~commit 生成的提交信息使用中文
-  - 允许保留 emoji/type/scope 等规范标识
+  - 采用 type/scope 等规范标识
+  - 默认不使用 emoji 前缀
   - 禁止输出双语分隔块（---）作为最终 git commit 内容
 
 与 BILINGUAL_COMMIT 的关系:
@@ -259,7 +263,7 @@ footer: 关联 issue 或 BREAKING CHANGE（可选）
   - 若用户明确要求英文提交信息，进入"提交确认"场景二次确认后再执行
 
 示例:
-  ✨ feat(auth): 增加用户登录功能
+  feat(auth): 增加用户登录功能
 
   - 支持 JWT 鉴权并补充登录态校验
 ```
@@ -284,7 +288,7 @@ footer: 关联 issue 或 BREAKING CHANGE（可选）
     4. 生成 summary: "添加用户登录验证功能"
 
   生成提交信息:
-    ✨ feat(auth): 添加用户登录验证功能
+    feat(auth): 添加用户登录验证功能
 
     - 新增 login() 函数实现用户名密码验证
     - 验证成功返回 JWT token
