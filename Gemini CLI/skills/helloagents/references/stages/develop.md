@@ -388,8 +388,8 @@ Route B（后端/逻辑/算法）:
   - 涉及鉴权、支付、权限、数据一致性等高风险逻辑
 
 审查执行策略:
-  - 默认: codex + gemini
-  - 结论冲突: 自动追加 claude 仲裁
+  - 默认: codex + claude
+  - 结论冲突: 自动追加 gemini 仲裁
   - 输出分级: P0(Must Fix) / P1(Should Fix) / P2(Note)
   - 调用方式: 长时任务后台执行（Run in the background），不设置硬 timeout
   - 会话延续: 后续轮次优先复用 SESSION_ID

@@ -144,8 +144,8 @@ KB_SKIPPED = false: 先检查知识库 → 不足则扫描代码库
   - 单模型分析结论出现冲突信号或置信度不足
 
 多模型协作执行:
-  - 默认组合: codex + gemini
-  - 冲突仲裁: claude（可选）
+  - 默认组合: claude + gemini
+  - 冲突仲裁: codex（可选）
   - 详细规则: references/rules/multi_model.md
 
 外部工具调用（如需要）:
@@ -206,7 +206,7 @@ KB_SKIPPED = false: 先检查知识库 → 不足则扫描代码库
 
 内容要素:
   - 触发原因: 用户需求/风险等级/结论冲突
-  - 推荐组合: codex + gemini（冲突时追加 claude 仲裁）
+  - 推荐组合: claude + gemini（冲突时追加 codex 仲裁）
 
 选项:
   启用协作分析（推荐）: 按 references/rules/multi_model.md 执行

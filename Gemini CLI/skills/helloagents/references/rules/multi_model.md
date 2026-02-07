@@ -34,7 +34,7 @@ BALANCED:
   - 简单任务默认可不协作
 
 STRICT:
-  - 默认强制 Codex + Gemini 协作
+  - 默认强制 Codex + Claude 协作
   - 简单任务可申请免协作，但必须先暂停并获得用户明确许可
 
 PHASE2_HARD_STOP_CONFIRM = 1:
@@ -134,8 +134,8 @@ Route B - 后端/逻辑/算法（Codex 优先）:
 ```yaml
 默认组合:
   主分析/主审查模型: codex
-  交叉验证模型: gemini
-  冲突仲裁模型: claude（双模型冲突时触发）
+  交叉验证模型: claude
+  冲突仲裁模型: gemini（双模型冲突时触发）
 
 可选组合:
   - codex + gemini

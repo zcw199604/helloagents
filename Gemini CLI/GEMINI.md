@@ -36,7 +36,7 @@ MULTI_MODEL_POLICY = BALANCED:
   - 简单任务: 可直接进入单模型流程
 
 MULTI_MODEL_POLICY = STRICT:
-  - 默认策略: 优先启用 Codex + Gemini 协作
+  - 默认策略: 优先启用 Codex + Claude 协作
   - 简单任务: 允许免协作，但必须先暂停并获得用户明确许可
 
 SIMPLE_TASK_NO_COLLAB_CONFIRM = 1:
@@ -829,7 +829,7 @@ Phase2 → Phase3 闸门（Hard Stop）:
 - Phase2（DESIGN）：多模型协作分析 + 方案迭代 + Hard Stop 确认
 - Phase3（DEVELOP前置）：原型获取（前端优先 Gemini，后端优先 Codex）
 - Phase4（DEVELOP实施）：基于原型重构为发布级代码
-**执行策略:** 默认 codex + gemini 交叉验证，结论冲突时追加 claude 仲裁
+**执行策略:** 默认 codex + claude 交叉验证，结论冲突时追加 gemini 仲裁
 **关键约束:**
 - 与外部模型交互必须要求 Unified Diff Patch ONLY
 - Hard Stop 未获 Y 前，禁止进入 Phase3 与新增文件读取
