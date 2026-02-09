@@ -436,7 +436,7 @@ Most people only tweak a few global settings:
 OUTPUT_LANGUAGE: zh-CN
 ENCODING: UTF-8
 KB_CREATE_MODE: 2
-BILINGUAL_COMMIT: 1
+BILINGUAL_COMMIT: 0
 ```
 
 **KB_CREATE_MODE** controls knowledge base writes:
