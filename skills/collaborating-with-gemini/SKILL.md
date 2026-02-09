@@ -28,7 +28,7 @@ options:
   --return-all-messages
                         Return all messages (e.g. reasoning, tool calls, etc.) from the gemini session. Set to `False` by default, only the agent's final reply message is
                         returned.
-  --model MODEL         The model to use for the gemini session. This parameter is strictly prohibited unless explicitly specified by the user.
+  --model MODEL         Explicit model override. Defaults to `flash`; if prompt clearly requests opus, auto-switches to `opus`.
 ```
 
 ## Multi-turn Sessions

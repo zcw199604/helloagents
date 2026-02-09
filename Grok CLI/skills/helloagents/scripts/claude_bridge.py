@@ -8,6 +8,7 @@ import argparse
 import json
 import os
 import queue
+import re
 import shutil
 import subprocess
 import sys
@@ -15,6 +16,18 @@ import threading
 import time
 from pathlib import Path
 from typing import Generator, List, Optional
+
+
+DEFAULT_CLAUDE_MODEL = "sonnet"
+OPUS_MODEL = "opus"
+
+OPUS_REQUEST_PATTERNS = (
+    r"(?:^|\s)--model\s+opus(?:\s|$)",
+    r"(?:^|\s)model\s*[:=]\s*opus(?:\s|$)",
+    r"(?:use|using|switch\s+to|set\s+(?:the\s+)?model\s+to)\s+opus(?:\s+model)?",
+    r"(?:使用|用|改用|切换到|设为|设置为|指定为)\s*opus(?:模型)?",
+    r"\bclaude\s+opus\b",
+)
 
 
 def _get_windows_npm_paths() -> List[Path]:
@@ -211,6 +224,24 @@ def _extract_assistant_text(line_dict: dict) -> str:
     return "".join(text_parts)
 
 
+def _prompt_explicitly_requests_opus(prompt: str) -> bool:
+    """Detect whether prompt text explicitly asks to use opus model."""
+    prompt_text = prompt.lower()
+    if re.search(r"\bopus\b", prompt_text) is None:
+        return False
+    return any(re.search(pattern, prompt_text) for pattern in OPUS_REQUEST_PATTERNS)
+
+
+def _resolve_model(explicit_model: str, prompt: str) -> str:
+    """Resolve model priority: explicit --model > explicit opus request > default."""
+    model = explicit_model.strip()
+    if model:
+        return model
+    if _prompt_explicitly_requests_opus(prompt):
+        return OPUS_MODEL
+    return DEFAULT_CLAUDE_MODEL
+
+
 def main() -> None:
     configure_windows_stdio()
 
@@ -229,7 +260,7 @@ def main() -> None:
     parser.add_argument("--skip-git-repo-check", action="store_true", default=True, help="Compatibility option with codex bridge; ignored in claude bridge.")
     parser.add_argument("--return-all-messages", action="store_true", help="Return all messages (e.g. reasoning, tool calls, etc.) from the claude session. Set to `False` by default, only the agent's final reply message is returned.")
     parser.add_argument("--image", action="append", default=[], help="Compatibility option with codex bridge. Currently ignored in claude bridge.")
-    parser.add_argument("--model", default="", help="The model to use for the claude session. This parameter is strictly prohibited unless explicitly specified by the user.")
+    parser.add_argument("--model", default="", help="Explicit model override. Defaults to `sonnet`; if prompt clearly requests opus, auto-switches to `opus`.")
     parser.add_argument("--yolo", action="store_true", help="Run every command without approvals or sandboxing. Use with caution.")
     parser.add_argument("--profile", default="", help="Compatibility option with codex bridge. Currently ignored in claude bridge.")
 
@@ -244,14 +275,16 @@ def main() -> None:
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    prompt = args.PROMPT
+    raw_prompt = args.PROMPT
+    selected_model = _resolve_model(args.model, raw_prompt)
+
+    prompt = raw_prompt
     if os.name == "nt":
         prompt = windows_escape(prompt)
 
     cmd = ["claude", "-p", "--verbose", "--output-format", "stream-json"]
 
-    if args.model:
-        cmd.extend(["--model", args.model])
+    cmd.extend(["--model", selected_model])
 
     if args.SESSION_ID:
         cmd.extend(["--resume", args.SESSION_ID])

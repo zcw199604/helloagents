@@ -33,7 +33,7 @@ options:
                         Return all messages (e.g. reasoning, tool calls, etc.) from the claude session. Set to `False` by default, only the
                         agent's final reply message is returned.
   --image IMAGE         Compatibility option with codex bridge. Currently ignored in claude bridge.
-  --model MODEL         The model to use for the claude session. This parameter is strictly prohibited unless explicitly specified by the user.
+  --model MODEL         Explicit model override. Defaults to `sonnet`; if prompt clearly requests opus, auto-switches to `opus`.
   --yolo                Run every command without approvals or sandboxing. Use with caution.
   --profile PROFILE     Compatibility option with codex bridge. Currently ignored in claude bridge.
 ```

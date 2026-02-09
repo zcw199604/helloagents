@@ -48,7 +48,7 @@ python scripts/gemini_bridge.py --cd "/project" --SESSION_ID "uuid-from-response
 | `--sandbox` | No | Run in sandbox mode (default: off) |
 | `--SESSION_ID` | No | Resume a previous session |
 | `--return-all-messages` | No | Include full reasoning trace in output |
-| `--model` | No | Specify model (use only when explicitly requested) |
+| `--model` | No | Explicit model override (default `flash`; clear opus request in prompt auto-switches to `opus`) |
 
 ### Output Format
 
