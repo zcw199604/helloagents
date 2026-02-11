@@ -12,21 +12,8 @@ import threading
 import time
 import shutil
 import argparse
-import re
 from pathlib import Path
 from typing import Generator, List, Optional
-
-
-DEFAULT_GEMINI_MODEL = "flash"
-OPUS_MODEL = "opus"
-
-OPUS_REQUEST_PATTERNS = (
-    r"(?:^|\s)--model\s+opus(?:\s|$)",
-    r"(?:^|\s)model\s*[:=]\s*opus(?:\s|$)",
-    r"(?:use|using|switch\s+to|set\s+(?:the\s+)?model\s+to)\s+opus(?:\s+model)?",
-    r"(?:使用|用|改用|切换到|设为|设置为|指定为)\s*opus(?:模型)?",
-    r"\bgemini\s+opus\b",
-)
 
 
 def _get_windows_npm_paths() -> List[Path]:
@@ -201,24 +188,6 @@ def configure_windows_stdio() -> None:
                 pass
 
 
-def _prompt_explicitly_requests_opus(prompt: str) -> bool:
-    """Detect whether prompt text explicitly asks to use opus model."""
-    prompt_text = prompt.lower()
-    if re.search(r"\bopus\b", prompt_text) is None:
-        return False
-    return any(re.search(pattern, prompt_text) for pattern in OPUS_REQUEST_PATTERNS)
-
-
-def _resolve_model(explicit_model: str, prompt: str) -> str:
-    """Resolve model priority: explicit --model > explicit opus request > default."""
-    model = explicit_model.strip()
-    if model:
-        return model
-    if _prompt_explicitly_requests_opus(prompt):
-        return OPUS_MODEL
-    return DEFAULT_GEMINI_MODEL
-
-
 def main():
     configure_windows_stdio()
     parser = argparse.ArgumentParser(description="Gemini Bridge")
@@ -227,7 +196,7 @@ def main():
     parser.add_argument("--sandbox", action="store_true", default=False, help="Run in sandbox mode. Defaults to `False`.")
     parser.add_argument("--SESSION_ID", default="", help="Resume the specified session of the gemini. Defaults to empty string, start a new session.")
     parser.add_argument("--return-all-messages", action="store_true", help="Return all messages (e.g. reasoning, tool calls, etc.) from the gemini session. Set to `False` by default, only the agent's final reply message is returned.")
-    parser.add_argument("--model", default="", help="Explicit model override. Defaults to `flash`; if prompt clearly requests opus, auto-switches to `opus`.")
+    parser.add_argument("--model", default="", help="Optional model passthrough to Gemini CLI. No automatic model switching is applied.")
 
     args = parser.parse_args()
 
@@ -240,10 +209,7 @@ def main():
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return
 
-    raw_prompt = args.PROMPT
-    selected_model = _resolve_model(args.model, raw_prompt)
-
-    PROMPT = raw_prompt
+    PROMPT = args.PROMPT
     if os.name == "nt":
         PROMPT = windows_escape(PROMPT)
 
@@ -252,7 +218,8 @@ def main():
     if args.sandbox:
         cmd.extend(["--sandbox"])
 
-    cmd.extend(["--model", selected_model])
+    if args.model.strip():
+        cmd.extend(["--model", args.model.strip()])
 
     if args.SESSION_ID:
         cmd.extend(["--resume", args.SESSION_ID])
