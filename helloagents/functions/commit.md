@@ -63,8 +63,18 @@
 提交信息生成:
   来源: 基于 git diff 实际代码变更
   过滤: 排除 README*.md、LICENSE*、CHANGELOG*、.gitignore 等
-  无参数: 分析 diff → 识别 type/scope → summary 描述"改了什么"
+  无参数: 分析 diff → 识别 type/scope → 生成中文 summary 和中文 body
   有参数: 使用用户 message，语义分析确定 type
+    - 如已包含 type 前缀，直接使用不重复添加
+    - 如输入包含 emoji 前缀，默认移除 emoji
+    - summary 非中文时先转换为中文再使用
+    - body 根据变更内容补充（可选，中文）
+
+  语言规则（~commit 特化）:
+    - 生成的 summary/body 默认使用中文
+    - type/scope 保持 Conventional Commits 规范标识（可保留英文 token）
+    - 默认不添加 emoji 前缀
+    - 本命令最终写入 git commit 的信息为中文单语块（不生成双语分隔块）
 
 输出: 确认（提交确认）
 ⛔ END_TURN
@@ -143,7 +153,7 @@ L2 会话摘要: 提交完成后写入 [→ services/memory.md L2 写入触发�
 ### 提交信息格式（Conventional Commits）
 
 ```
-<emoji> <type>[(scope)]: <summary>
+<type>[(scope)]: <summary>
 
 [body]
 
@@ -152,20 +162,20 @@ L2 会话摘要: 提交完成后写入 [→ services/memory.md L2 写入触发�
 
 ### 类型映射表
 
-| emoji | type | 说明 |
-|-------|------|------|
-| 🎉 | init | 项目初始化 |
-| ✨ | feat | 新功能 |
-| 🐞 | fix | 错误修复 |
-| 📃 | docs | 文档变更 |
-| 🌈 | style | 代码格式化 |
-| 🦄 | refactor | 代码重构 |
-| 🎈 | perf | 性能优化 |
-| 🧪 | test | 测试相关 |
-| 🔧 | build | 构建系统 |
-| 🐎 | ci | CI 配置 |
-| 🐳 | chore | 辅助工具 |
-| ↩ | revert | 撤销提交 |
+| type | 说明 |
+|------|------|
+| init | 项目初始化 |
+| feat | 新功能 |
+| fix | 错误修复 |
+| docs | 文档变更 |
+| style | 代码格式化 |
+| refactor | 代码重构 |
+| perf | 性能优化 |
+| test | 测试相关 |
+| build | 构建系统 |
+| ci | CI 配置 |
+| chore | 辅助工具 |
+| revert | 撤销提交 |
 
 ### 格式规则
 
@@ -175,11 +185,23 @@ body: 说明变更动机（可选），每行≤72字符
 footer: 关联 issue 或 BREAKING CHANGE（可选）
 ```
 
-### 双语模式
+### 提交语言规则（~commit 特化）
 
 ```yaml
-BILINGUAL_COMMIT=0: 仅使用 OUTPUT_LANGUAGE
-BILINGUAL_COMMIT=1: 本地语言块在上，英文块在下，用 --- 分隔，两块均为完整格式且精确互译
+核心原则:
+  - ~commit 生成的提交信息使用中文
+  - 采用 type/scope 等规范标识
+  - 默认不使用 emoji 前缀
+  - 禁止输出双语分隔块（---）作为最终 git commit 内容
+
+与 BILINGUAL_COMMIT 的关系:
+  - 本命令优先级更高，覆盖 BILINGUAL_COMMIT 的双语生成行为
+  - 若用户明确要求英文提交信息，进入"提交确认"场景二次确认后再执行
+
+示例:
+  feat(auth): 增加用户登录功能
+
+  - 支持 JWT 鉴权并补充登录态校验
 ```
 
 ### 特殊场景处理
