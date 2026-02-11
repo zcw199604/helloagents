@@ -86,7 +86,7 @@
 ### 步骤5: ~exec 后置一致性复核（多模型）
 
 ```yaml
-触发入口: functions/exec.md 步骤4 中用户选择"需要验证"
+触发入口: functions/exec.md 步骤4 中用户选择"多模型协作审查" / "仅 Claude 审查" / "仅 Gemini 审查"
 
 执行规则:
   - 读取并执行 rules/multi_model.md
@@ -95,10 +95,14 @@
     - CURRENT_PACKAGE/tasks.md
     - 本次代码改动文件
 
+审查模式（由 exec 入口传入）:
+  - multi_model: 默认组合 claude + gemini，结论冲突追加 codex 仲裁
+  - claude_only: 仅使用 claude 执行复核
+  - gemini_only: 仅使用 gemini 执行复核
+
 模型选择策略:
-  - 用户已指定模型/组合: 按用户指定执行
-  - 用户未指定: 使用默认组合 claude + gemini
-  - 结论冲突: 追加 codex 仲裁
+  - 若存在显式审查模式入参: 严格按入参执行
+  - 若无入参: 使用默认组合 claude + gemini，冲突追加 codex 仲裁
 
 输出要求:
   - 一致项 / 不一致项
@@ -145,14 +149,18 @@
 内容要素:
   - 询问目标: 是否调用其它模型验证"方案包修改 ↔ 代码实现"一致性
   - 验证范围: proposal.md + tasks.md + 本次代码改动文件
-  - 工具选择说明:
-    - 用户已指定工具时优先使用用户指定
-    - 未指定时使用默认组合（claude + gemini，冲突追加 codex）
+  - 审查模式说明:
+    - 多模型协作审查（claude + gemini，冲突追加 codex）
+    - 仅 Claude 审查
+    - 仅 Gemini 审查
 
 选项:
-  需要验证（推荐）:
-    - 如用户已指定工具: 直接按指定工具执行
-    - 如用户未指定工具: 按默认组合执行
+  多模型协作审查（推荐）:
+    - 执行: 审查模式=multi_model
+  仅 Claude 审查:
+    - 执行: 审查模式=claude_only
+  仅 Gemini 审查:
+    - 执行: 审查模式=gemini_only
   跳过验证:
     - 标注为用户主动跳过并继续流程
   取消:

@@ -83,9 +83,21 @@
   - 不因风险等级、是否已有审查结论而跳过本次询问
 
 用户选择:
-  需要验证（推荐）:
+  多模型协作审查（推荐）:
     - 复核范围: CURRENT_PACKAGE/proposal.md + CURRENT_PACKAGE/tasks.md + 本次代码改动文件
-    - 执行: 调用 functions/review.md 的"~exec 后置一致性复核（多模型）"流程
+    - 执行: 调用 functions/review.md 的"~exec 后置一致性复核（多模型）"流程（审查模式=multi_model）
+    - 输出: 一致项/不一致项、风险分级（P0/P1/P2）、修复建议
+    - 若复核执行失败: 记录"部分协作失败"并继续步骤5
+
+  仅 Claude 审查:
+    - 复核范围: CURRENT_PACKAGE/proposal.md + CURRENT_PACKAGE/tasks.md + 本次代码改动文件
+    - 执行: 调用 functions/review.md 的"~exec 后置一致性复核（多模型）"流程（审查模式=claude_only）
+    - 输出: 一致项/不一致项、风险分级（P0/P1/P2）、修复建议
+    - 若复核执行失败: 记录"部分协作失败"并继续步骤5
+
+  仅 Gemini 审查:
+    - 复核范围: CURRENT_PACKAGE/proposal.md + CURRENT_PACKAGE/tasks.md + 本次代码改动文件
+    - 执行: 调用 functions/review.md 的"~exec 后置一致性复核（多模型）"流程（审查模式=gemini_only）
     - 输出: 一致项/不一致项、风险分级（P0/P1/P2）、修复建议
     - 若复核执行失败: 记录"部分协作失败"并继续步骤5
 
@@ -97,7 +109,7 @@
     - 按 G7 状态重置协议执行，流程终止
 
 模型选择策略:
-  - 按 functions/review.md 的一致性复核规则执行
+  - 按 functions/review.md 的一致性复核规则执行（由用户在本步骤明确选择模式）
 ```
 
 ### 步骤5: 后续操作
