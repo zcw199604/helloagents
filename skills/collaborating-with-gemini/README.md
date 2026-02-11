@@ -22,13 +22,46 @@ This Skill enables Claude to delegate coding tasks to Gemini CLI, combining the 
 
 ## Usage
 
+> For long prompts on Windows PowerShell, prefer variable passing instead of inline long quoted strings.
+
 ### Basic
+
+**PowerShell (recommended for long prompts):**
+
+```powershell
+$prompt = @'
+Analyze the authentication flow
+'@
+
+python scripts/gemini_bridge.py --cd "C:/path/to/project" --PROMPT $prompt
+```
+
+**Bash / short prompt:**
 
 ```bash
 python scripts/gemini_bridge.py --cd "/path/to/project" --PROMPT "Analyze the authentication flow"
 ```
 
 ### Multi-turn Session
+
+**PowerShell (recommended for long prompts):**
+
+```powershell
+# Start a session
+$prompt1 = @'
+Review login.py for security issues
+'@
+python scripts/gemini_bridge.py --cd "C:/project" --PROMPT $prompt1
+# Response includes SESSION_ID
+
+# Continue the session
+$prompt2 = @'
+Suggest fixes for the issues found
+'@
+python scripts/gemini_bridge.py --cd "C:/project" --SESSION_ID "uuid-from-response" --PROMPT $prompt2
+```
+
+**Bash / short prompt:**
 
 ```bash
 # Start a session

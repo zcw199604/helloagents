@@ -5,6 +5,18 @@ description: Delegates coding tasks to Gemini CLI for prototyping, debugging, an
 
 ## Quick Start
 
+**PowerShell (recommended for long prompts):**
+
+```powershell
+$prompt = @'
+Your task
+'@
+
+python scripts/gemini_bridge.py --cd "C:/path/to/project" --PROMPT $prompt
+```
+
+**Bash / short prompt:**
+
 ```bash
 python scripts/gemini_bridge.py --cd "/path/to/project" --PROMPT "Your task"
 ```
@@ -34,6 +46,20 @@ options:
 ## Multi-turn Sessions
 
 **Always capture `SESSION_ID`** from the first response for follow-up:
+
+```powershell
+# Initial task
+$prompt1 = @'
+Analyze auth in login.py
+'@
+python scripts/gemini_bridge.py --cd "C:/project" --PROMPT $prompt1
+
+# Continue with SESSION_ID
+$prompt2 = @'
+Write unit tests for that
+'@
+python scripts/gemini_bridge.py --cd "C:/project" --SESSION_ID "uuid-from-response" --PROMPT $prompt2
+```
 
 ```bash
 # Initial task
