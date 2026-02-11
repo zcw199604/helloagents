@@ -136,8 +136,12 @@ def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[st
             if process.poll() is not None and not thread.is_alive():
                 break
 
-    process.wait()
-    thread.join()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+    thread.join(timeout=5)
 
     while not output_queue.empty():
         try:
