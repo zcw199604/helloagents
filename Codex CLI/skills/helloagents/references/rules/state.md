@@ -146,7 +146,7 @@
 
 ```yaml
 场景: 需求评估阶段的复杂度判定确认
-前提: WORKFLOW_MODE = AUTO_FULL 或 AUTO_PLAN（~auto/~plan命令触发）
+前提: WORKFLOW_MODE = AUTO_FULL（~auto命令触发）
 触发: 用户在确认选项中选择"交互执行"
 ```
 
@@ -170,7 +170,11 @@
 用户选择"交互执行":
   动作: 设置 WORKFLOW_MODE = INTERACTIVE
   后续: 切换为交互模式，每阶段输出结果并等待确认
-  注意: 此选项仅在 AUTO_FULL/AUTO_PLAN 模式下可用
+  注意: 此选项仅在 AUTO_FULL 模式下可用
+
+AUTO_PLAN 语义约束:
+  - ~plan 不提供"交互执行"切换
+  - 保持 WORKFLOW_MODE = AUTO_PLAN，确保流程止于方案设计并创建方案包
 
 用户选择"确认开始"（仅INTERACTIVE模式）:
   动作: 保持 WORKFLOW_MODE = INTERACTIVE
@@ -182,7 +186,7 @@
 ```yaml
 切换点: 仅在需求评估阶段的复杂度判定确认时
 不可逆性: 一旦切换为INTERACTIVE，当前流程内不会自动切回AUTO模式
-手动切换: 用户可通过取消后重新发起~auto/~plan命令来恢复自动模式
+手动切换: 用户可通过取消后重新发起~auto命令来恢复自动模式
 ```
 </mode_switch>
 

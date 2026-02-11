@@ -415,6 +415,9 @@ IF WORKFLOW_MODE = AUTO_PLAN:
 ### 场景: 方案设计完成确认
 
 ```yaml
+触发条件:
+  - WORKFLOW_MODE = INTERACTIVE 或 AUTO_FULL
+
 内容要素:
   - 方案包路径: 创建的方案包完整路径
   - 方案摘要: 选定方案的简要描述
@@ -425,6 +428,10 @@ IF WORKFLOW_MODE = AUTO_PLAN:
   立即执行: 进入开发实施阶段
   调整方案: 返回修改方案包内容
   取消: 按 G7 状态重置协议执行
+
+说明:
+  - WORKFLOW_MODE = AUTO_PLAN 时不展示本场景选项
+  - AUTO_PLAN 在方案设计完成后固定返回 plan.md 执行流程级验收并终止
 ```
 
 ### 场景: 方案包验收失败

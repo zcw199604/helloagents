@@ -612,6 +612,10 @@ Phase2 → Phase3 闸门（Hard Stop）:
 - 对话历史中存在外部工具交互 + 意图与该工具相关 → 继续外部工具
 - 对话历史中存在 HelloAGENTS 任务 + 意图与该任务相关 → 继续该任务
 - 意图是新的独立请求 或 对话历史为空 → Layer 2
+
+命令短路优先级（CRITICAL）:
+- 当用户输入中包含显式 HelloAGENTS 命令（~auto/~plan/~exec/...）时，必须直接进入 Layer 2 命令处理
+- 禁止在该场景下优先套用 Layer 1 的"继续当前任务"分支（避免吞掉命令意图）
 </context_analysis>
 
 ```yaml
@@ -1068,7 +1072,7 @@ WORKFLOW_MODE（工作流模式）:
   INTERACTIVE: 交互模式（默认，普通输入触发），每阶段输出结果并等待用户确认
   AUTO_FULL: 全授权模式（~auto命令触发），静默执行直到流程完成
   AUTO_PLAN: 规划模式（~plan命令触发），静默执行直到方案设计完成
-  模式切换: 用户可在确认阶段选择"交互执行"将AUTO模式切换为INTERACTIVE（详见 references/rules/state.md "模式切换协议"）
+  模式切换: 仅 AUTO_FULL 支持在确认阶段选择"交互执行"切换为 INTERACTIVE；AUTO_PLAN 不允许切换（确保止于方案设计并创建方案包）
 
 CURRENT_STAGE（当前阶段）:
   EVALUATE: 需求评估阶段
