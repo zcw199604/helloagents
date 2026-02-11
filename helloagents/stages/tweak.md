@@ -21,7 +21,7 @@
 |------|------|--------|
 | INTERACTIVE | 完成后输出结果，等待确认 | 输出: 完成 |
 | DELEGATED | 执行并输出微调结果摘要 | → 状态重置 |
-| DELEGATED_PLAN | ~plan 遇到 R1 时在 plan.md 提供选择（直接执行→INTERACTIVE / 强制规划→升级R2） | — |
+| DELEGATED_PLAN | ~plan 遇到 R1 时由 plan.md 自动强制规划（升级R2并创建方案包） | — |
 
 ### 升级判定规则
 
