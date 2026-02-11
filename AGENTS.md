@@ -20,6 +20,10 @@ ENCODING: UTF-8 无BOM
 KB_CREATE_MODE: 2  # 0=OFF, 1=ON_DEMAND, 2=ON_DEMAND_AUTO_FOR_CODING, 3=ALWAYS
 BILINGUAL_COMMIT: 0  # 0=仅 OUTPUT_LANGUAGE, 1=OUTPUT_LANGUAGE + English
 EVAL_MODE: 1  # 1=PROGRESSIVE（渐进式追问，默认）, 2=ONESHOT（一次性追问）
+MULTI_MODEL_POLICY: BALANCED  # BALANCED=按风险触发, STRICT=默认启用协作
+SIMPLE_TASK_NO_COLLAB_CONFIRM: 0  # STRICT 下 simple 任务免协作是否需确认: 0=否, 1=是
+PHASE2_HARD_STOP_CONFIRM: 0  # 方案阶段是否强制 Y/N 闸门: 0=关闭, 1=开启
+FORCE_MM_LIGHTWEIGHT_MIN_FILES: 2  # 用户确认协作且预估改动文件数>=阈值时，R1升级R2
 ```
 
 **开关行为摘要:**
@@ -32,6 +36,13 @@ EVAL_MODE: 1  # 1=PROGRESSIVE（渐进式追问，默认）, 2=ONESHOT（一次�
 | KB_CREATE_MODE | 3 | 始终自动创建 |
 | EVAL_MODE | 1 | 渐进式追问（默认）：每轮追问1个最低分维度问题，最多5轮 |
 | EVAL_MODE | 2 | 一次性追问：一次性展示所有低分维度问题，用户回答后重新评分，最多3轮 |
+| MULTI_MODEL_POLICY | BALANCED | 按风险触发多模型协作（默认） |
+| MULTI_MODEL_POLICY | STRICT | 默认启用多模型协作，simple 任务按 SIMPLE_TASK_NO_COLLAB_CONFIRM 处理 |
+| SIMPLE_TASK_NO_COLLAB_CONFIRM | 0 | simple 任务可直接跳过多模型协作 |
+| SIMPLE_TASK_NO_COLLAB_CONFIRM | 1 | simple 任务跳过协作前必须用户确认 |
+| PHASE2_HARD_STOP_CONFIRM | 0 | 方案阶段完成后无需强制 Y/N 闸门 |
+| PHASE2_HARD_STOP_CONFIRM | 1 | 方案阶段完成后强制询问 **Shall I proceed with this plan? (Y/N)** |
+| FORCE_MM_LIGHTWEIGHT_MIN_FILES | N | 用户确认协作且预估改动文件数>=N时，R1任务强制升级为R2规划 |
 
 > 例外: ~init 显式调用时忽略 KB_CREATE_MODE 开关
 
@@ -424,6 +435,8 @@ R3 评估流程（CRITICAL - 两阶段，严格按顺序）:
 
 **升级条件:** R1→R2: 执行中发现超出预期/EHRB；R2→R3: 发现架构级影响/跨模块/EHRB
 
+**多模型协作强制升级（前置覆盖）:** 用户明确确认启用多模型协作，且预估改动文件数 ≥ `FORCE_MM_LIGHTWEIGHT_MIN_FILES` 时，R1 快速流程强制升级为 R2 简化流程（确保进入规划并可做交叉审查）。
+
 ```yaml
 INTERACTIVE（默认）: 每个阶段完成后 ⛔ END_TURN，等待用户指令再继续
 DELEGATED（~auto委托）: 用户确认后，阶段间自动推进，遇到安全风险(EHRB)时中断委托
@@ -521,13 +534,13 @@ CURRENT_PACKAGE: 空  # develop阶段确定
 | 触发条件 | 读取文件 |
 |----------|----------|
 | 会话启动 | user/*.md（所有用户记忆文件）, sessions/（最近1-2个）— 静默读取注入上下文，不输出加载状态，文件不存在时静默跳过 |
-| 进入项目分析 | stages/analyze.md, services/knowledge.md, rules/state.md, rules/scaling.md |
+| 进入项目分析 | stages/analyze.md, services/knowledge.md, rules/state.md, rules/scaling.md, rules/multi_model.md |
 | 进入微调模式 | stages/tweak.md, services/package.md, rules/state.md |
-| 进入方案设计 | stages/design.md, services/package.md, services/templates.md, rules/tools.md |
-| 进入开发实施 | stages/develop.md, services/package.md, services/knowledge.md, services/attention.md, rules/cache.md, rules/state.md, rules/tools.md |
+| 进入方案设计 | stages/design.md, services/package.md, services/templates.md, rules/tools.md, rules/multi_model.md |
+| 进入开发实施 | stages/develop.md, services/package.md, services/knowledge.md, services/attention.md, rules/cache.md, rules/state.md, rules/tools.md, rules/multi_model.md |
 | ~auto | functions/auto.md |
-| ~plan | functions/plan.md |
-| ~exec | functions/exec.md |
+| ~plan | functions/plan.md, rules/multi_model.md |
+| ~exec | functions/exec.md, rules/multi_model.md |
 | ~init | functions/init.md, services/templates.md, rules/tools.md |
 | ~upgrade | functions/upgrade.md, services/templates.md, rules/tools.md |
 | ~cleanplan | functions/cleanplan.md, rules/tools.md |
@@ -657,6 +670,30 @@ CURRENT_PACKAGE: 空  # develop阶段确定
 | Codex CLI | Collab | 实验性，MAX_DEPTH=1 |
 | OpenCode | 降级 | 主上下文直接执行 |
 | Gemini/Qwen/Grok | 降级 | 主上下文直接执行 |
+
+### 外部多模型协作通道（CRITICAL）
+
+```yaml
+触发条件:
+  - 用户明确要求"多模型协作/交叉验证/模型审查"
+  - ~plan 或 ~exec 流程中触发模型复核步骤
+
+模型选择优先级:
+  1. 用户显式指定模型/组合（最高优先）
+  2. 默认组合: claude + gemini
+  3. 冲突仲裁: codex（当双模型结论冲突时追加）
+
+通道实现:
+  - skills/collaborating-with-claude/scripts/claude_bridge.py
+  - skills/collaborating-with-gemini/scripts/gemini_bridge.py
+  - skills/collaborating-with-codex/scripts/codex_bridge.py
+
+执行约束:
+  - 外部模型仅用于分析/审查，不直接修改本地文件
+  - 分发提示词必须追加:
+    "OUTPUT: Unified Diff Patch ONLY. Strictly prohibit any actual modifications."
+  - 长任务优先后台执行；首次响应返回 SESSION_ID 后必须复用
+```
 
 ### Claude Code 调用协议（CRITICAL）
 

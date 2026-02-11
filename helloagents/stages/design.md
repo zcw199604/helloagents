@@ -98,6 +98,26 @@ R3 标准: 生成2-3个方案 → [RLM:analyzer] 详细评估（强制）[→ G1
 R2 适度: 直接确定唯一方案 → 步骤5
 ```
 
+### 步骤4.5: 多模型协作审查（按需）
+
+```yaml
+触发条件:
+  - MULTI_MODEL_POLICY = STRICT
+  - 或 TASK_COMPLEXITY = complex
+  - 或用户明确要求多模型审查
+
+执行规则:
+  - 读取 rules/multi_model.md
+  - 并行发起 claude + gemini 协作审查
+  - 结果冲突时追加 codex 仲裁
+  - 将共识项与冲突处理结论写入 proposal.md
+
+Phase2 闸门（可选）:
+  - PHASE2_HARD_STOP_CONFIRM = 1 时，输出最终实施计划后必须询问:
+    "Shall I proceed with this plan? (Y/N)"
+  - 未获 Y 前不进入 DEVELOP
+```
+
 **DO:** 所有方案详情完整输出后才提供选择
 
 **DO NOT:** 在方案详情输出前提供选项
