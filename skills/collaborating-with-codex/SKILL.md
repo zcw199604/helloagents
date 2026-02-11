@@ -45,9 +45,9 @@ options:
                         Return all messages (e.g. reasoning, tool calls, etc.) from the codex session. Set to `False` by default, only the agent's final reply message is
                         returned.
   --image IMAGE         Attach one or more image files to the initial prompt. Separate multiple paths with commas or repeat the flag.
-  --model MODEL         The model to use for the codex session. This parameter is strictly prohibited unless explicitly specified by the user.
+  --model MODEL         Optional model passthrough to Codex CLI. No additional model restriction is applied by the bridge.
   --yolo                Run every command without approvals or sandboxing. Only use when `sandbox` couldn't be applied.
-  --profile PROFILE     Configuration profile name to load from `~/.codex/config.toml`. This parameter is strictly prohibited unless explicitly specified by the user.
+  --profile PROFILE     Optional profile passthrough to Codex CLI.
 ```
 
 ## Multi-turn Sessions

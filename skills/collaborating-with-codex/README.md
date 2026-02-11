@@ -83,7 +83,7 @@ python scripts/codex_bridge.py --cd "/project" --SESSION_ID "uuid-from-response"
 | `--SESSION_ID` | No | Resume a previous session |
 | `--return-all-messages` | No | Include full reasoning trace in output |
 | `--image` | No | Attach image files (comma-separated or repeated) |
-| `--model` | No | Specify model (use only when explicitly requested) |
+| `--model` | No | Optional model passthrough to Codex CLI. No additional model restriction is applied by the bridge. |
 | `--yolo` | No | Bypass all approvals (use with caution) |
 
 ### Output Format

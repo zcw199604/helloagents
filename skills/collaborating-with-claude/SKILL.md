@@ -45,7 +45,7 @@ options:
                         Return all messages (e.g. reasoning, tool calls, etc.) from the claude session. Set to `False` by default, only the
                         agent's final reply message is returned.
   --image IMAGE         Compatibility option with codex bridge. Currently ignored in claude bridge.
-  --model MODEL         Explicit model override. Defaults to `sonnet`; if prompt clearly requests opus, auto-switches to `opus`.
+  --model MODEL         Optional model passthrough to Claude CLI. No automatic model switching is applied.
   --yolo                Run every command without approvals or sandboxing. Use with caution.
   --profile PROFILE     Compatibility option with codex bridge. Currently ignored in claude bridge.
 ```

@@ -10,7 +10,7 @@ This Skill enables an orchestrating agent to delegate coding tasks to Claude CLI
 
 - **Multi-turn sessions**: Maintain conversation context across multiple interactions via `SESSION_ID`
 - **Sandbox compatibility**: Supports `read-only`, `workspace-write`, and `danger-full-access` modes
-- **Model defaults**: Uses `sonnet` by default; auto-switches to `opus` when prompt explicitly requests opus
+- **Model passthrough**: `--model` is optional passthrough to Claude CLI with no automatic model switching
 - **JSON output**: Structured responses for easy parsing and integration
 - **Cross-platform**: Windows path escaping handled automatically
 
