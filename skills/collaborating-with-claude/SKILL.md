@@ -23,6 +23,13 @@ python scripts/claude_bridge.py --cd "/path/to/project" --PROMPT "Your task"
 
 **Output:** JSON with `success`, `SESSION_ID`, `agent_messages`, and optional `error`.
 
+## Model And Timeout Policy
+
+- Model requirement: pass `--model` when the task requires a specific Claude model for reproducibility or policy compliance.
+- Default model behavior: if `--model` is omitted, the bridge keeps Claude CLI default model selection.
+- Timeout policy: by default, do not set any timeout value in skill calls.
+- Timeout escalation: only set timeout at the external orchestrator layer when explicitly required by caller or runtime constraints.
+
 ## Parameters
 
 ```
