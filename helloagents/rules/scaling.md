@@ -1,16 +1,16 @@
 # 大型项目扩展规则
 
-本模块定义大型项目的判定标准和文档分片策略。适用于项目分析阶段。
+本模块定义大型项目的判定标准和文档分片策略。适用于 DESIGN Phase1（上下文收集）。
 
 ---
 
 ## 大型项目规模判定
 
 ```yaml
-触发时机: 项目分析阶段
+触发时机: DESIGN Phase1（上下文收集）
 用途: 判断是否需要启用文档分片策略
 判定条件: 按 G9 复杂度判定标准（TASK_COMPLEXITY=complex 时触发）
-判定方式: 项目分析阶段扫描评估 | project_stats.py [--path <路径>]
+判定方式: DESIGN Phase1 扫描评估 | project_stats.py [--path <路径>]
 注意: 此判定与 ROUTING_LEVEL（R0/R1/R2/R3）无关
 ```
 
@@ -22,8 +22,8 @@
 
 | 对象 | 触发条件 | 分片策略 | 触发场景 |
 |------|----------|----------|----------|
-| CHANGELOG | 条目>200 | 按年份分片到 CHANGELOG_{YYYY}.md，主文件保留当前年份 | ~init/~upgrade/开发实施 |
-| modules/ | 模块>30 | 按类型分类: core/, feature/, shared/，各下独立 _index.md | ~init/~upgrade |
+| CHANGELOG | 条目>200 | 按年份分片到 CHANGELOG_{YYYY}.md，主文件保留当前年份 | ~init/~upgradekb/开发实施 |
+| modules/ | 模块>30 | 按类型分类: core/, feature/, shared/，各下独立 _index.md | ~init/~upgradekb |
 | archive/_index | 归档>200或跨年 | 按年份分片: _index-{YYYY}.md | 方案包迁移时 |
 
 ---

@@ -8,10 +8,11 @@
 
 **A multi-CLI workflow system that keeps going until tasks are implemented and verified.**
 
-[![Version](https://img.shields.io/badge/version-2.2.1-orange.svg)](./pyproject.toml)
+[![Version](https://img.shields.io/badge/version-2.2.12-orange.svg)](./pyproject.toml)
+[![npm](https://img.shields.io/npm/v/helloagents.svg)](https://www.npmjs.com/package/helloagents)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-3776AB.svg)](./pyproject.toml)
 [![Commands](https://img.shields.io/badge/workflow_commands-15-6366f1.svg)](./helloagents/functions)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 </div>
@@ -62,13 +63,14 @@ Compared with legacy multi-bundle releases, the v2.x line is now package-first w
 | Area | Legacy repo | Current repo |
 |---|---|---|
 | Distribution | Multiple bundle folders per CLI | One Python package + installer CLI |
-| Installation | Manual copy of config and skill folders | pip/uv install + `helloagents install <target>` |
+| Installation | Manual copy of config and skill folders | pip/uv install + `helloagents` interactive menu |
 | Routing | Three-layer (Context → Tools → Intent) | Five-dimension scoring (R0–R3) |
-| Workflow stages | 4 stages (Evaluate, Analyze, Design, Develop) | 5 stages (+Tweak) with sub-agent dispatch |
-| Agent system | None | RLM with 12 specialized roles and session isolation |
+| Workflow stages | 4 stages (Evaluate, Analyze, Design, Develop) | 3 stages (Evaluate, Design, Develop) + R1 fast flow, with sub-agent dispatch |
+| Agent system | None | RLM with 5 specialized roles + native sub-agents and session isolation |
 | Memory | No persistence | Three-layer: L0 user, L1 project KB, L2 session |
 | Safety | Basic EHRB | Three-layer EHRB (keyword + semantic + tool output) |
-| CLI targets | 5 visible bundle targets | 6 targets: claude, codex, opencode, gemini, qwen, grok |
+| Hooks | None | Auto-deploy lifecycle hooks (Claude Code 9 events + Codex CLI notify) |
+| CLI targets | 5 visible bundle targets | 6 targets: codex, claude, gemini, qwen, grok, opencode |
 | Commands | 12 | 15 workflow commands |
 
 > ⚠️ **Migration notice:** Because repository structure and installation workflow changed in v2.x, legacy versions were moved to **helloagents-archive**: https://github.com/hellowind777/helloagents-archive
@@ -82,16 +84,16 @@ Compared with legacy multi-bundle releases, the v2.x line is now package-first w
 
 **RLM sub-agent orchestration**
 
-12 specialized roles (explorer, analyzer, designer, implementer, reviewer, tester, etc.) are dispatched automatically based on task complexity, with session isolation per CLI instance.
+5 specialized roles (reviewer, synthesizer, kb_keeper, pkg_keeper, writer) plus host CLI native sub-agents (explore/implement/test/design) are dispatched automatically based on task complexity, with session isolation per CLI instance. Supports cross-CLI parallel scheduling and Agent Teams collaboration.
 
-**Your gain:** complex tasks are broken down and handled by the right specialist.
+**Your gain:** complex tasks are broken down and handled by the right specialist, with parallel execution when possible.
 </td>
 <td width="50%" valign="top">
 <img src="./readme_images/03-feature-icon-workflow.svg" width="48" align="left">
 
 **Five-dimension routing (R0–R3)**
 
-Every input is scored on action need, target clarity, decision scope, impact range, and EHRB risk — then routed to R0 direct, R1 fast, R2 simplified, or R3 standard flow.
+Every input is scored on action need, target clarity, decision scope, impact range, and EHRB risk — then routed to R0 direct response, R1 fast flow, R2 simplified flow, or R3 standard flow.
 
 **Your gain:** proportional effort — simple queries stay fast, complex tasks get full process.
 </td>
@@ -122,16 +124,15 @@ L0 user memory (global preferences), L1 project knowledge base (structured docs 
 
 - 6 CLI targets from helloagents/cli.py
 - 15 workflow commands from helloagents/functions
-- 12 RLM roles from helloagents/rlm/roles
-- 4 stage definitions from helloagents/stages
+- 5 RLM roles from helloagents/rlm/roles
+- 2 stage definitions from helloagents/stages
 - 5 core services from helloagents/services
 - 4 rule modules from helloagents/rules
 - 9 helper scripts from helloagents/scripts
+- 2 hooks configs from helloagents/hooks
 - 10 KB/plan templates from helloagents/templates
 
 ## Before and After (Snake Demo)
-
-Per your request, the original snake images are preserved and other README visuals are regenerated.
 
 <table>
 <tr>
@@ -164,9 +165,23 @@ Per your request, the original snake images are preserved and other README visua
 
     irm https://raw.githubusercontent.com/hellowind777/helloagents/main/install.ps1 | iex
 
-> The script auto-detects `uv` or `pip` and installs the HelloAGENTS Python package. Re-running performs an update.
+> The script auto-detects `uv` or `pip`, installs the HelloAGENTS package, and launches an interactive menu for you to select target CLIs. Re-running performs an update.
 
-### Method B: UV (isolated environment)
+**Update:**
+
+    helloagents update
+
+### Method B: npx (Node.js >= 16)
+
+    npx helloagents
+
+> Installs the Python package and launches an interactive menu. You can also specify directly: `npx helloagents install codex` (or use `npx -y` to auto-download without prompting)
+
+> Requires Python >= 3.10. After first install, use the native `helloagents` command directly.
+
+> **Acknowledgment:** Thanks to @setsuna1106 for generously transferring the npm `helloagents` package ownership.
+
+### Method C: UV (isolated environment)
 
 **Step 0 — Install UV first (skip if already installed):**
 
@@ -178,31 +193,37 @@ Per your request, the original snake images are preserved and other README visua
 
 > After installing UV, restart your terminal to make the `uv` command available.
 
-**Install:**
+> ⚠️ Windows PowerShell 5.1 does not support `&&`. Please run commands separately, or upgrade to [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell-on-windows).
 
-    uv tool install --from git+https://github.com/hellowind777/helloagents helloagents
+**Install and select targets (one command):**
+
+    uv tool install --from git+https://github.com/hellowind777/helloagents helloagents && helloagents
+
+> Installs the package and launches an interactive menu for you to select target CLIs. You can also specify directly: `helloagents install codex`
 
 **Update:**
 
     helloagents update
 
-### Method C: pip (Python >= 3.10)
+### Method D: pip (Python >= 3.10)
 
-**Install:**
+**Install and select targets (one command):**
 
-    pip install git+https://github.com/hellowind777/helloagents.git
+    pip install git+https://github.com/hellowind777/helloagents.git && helloagents
+
+> Installs the package and launches an interactive menu for you to select target CLIs. You can also specify directly: `helloagents install codex`
 
 **Update:**
 
     pip install --upgrade git+https://github.com/hellowind777/helloagents.git
 
-### Sync rules to target CLI
+### Install HelloAgents for different CLI targets
 
-    helloagents install codex
+    helloagents                  # interactive menu
 
-    helloagents install claude
+    helloagents install codex    # specify target directly
 
-    helloagents install --all
+    helloagents install --all    # install to all detected CLIs
 
 ### Verify
 
@@ -224,37 +245,52 @@ Per your request, the original snake images are preserved and other README visua
 
 **First install:**
 
-    # One-line script (recommended)
+    # One-line script (recommended, auto-launches interactive menu after install)
+    # macOS / Linux
     curl -fsSL https://raw.githubusercontent.com/hellowind777/helloagents/main/install.sh | bash
-    helloagents install codex
 
-    # pip
-    pip install git+https://github.com/hellowind777/helloagents.git
-    helloagents install codex
+    # Windows PowerShell
+    irm https://raw.githubusercontent.com/hellowind777/helloagents/main/install.ps1 | iex
+
+    # npx (or use npx -y to auto-download without prompting)
+    npx helloagents install codex
 
     # UV
-    uv tool install --from git+https://github.com/hellowind777/helloagents helloagents
-    helloagents install codex
+    uv tool install --from git+https://github.com/hellowind777/helloagents helloagents && helloagents install codex
+
+    # pip
+    pip install git+https://github.com/hellowind777/helloagents.git && helloagents install codex
 
 **Update later (auto-syncs installed targets):**
 
     helloagents update
 
+> ⚠️ **Codex CLI config.toml compatibility notes:** The following settings may affect HelloAGENTS:
+> - `[features]` `steer = true` — changes input submission behavior, may interfere with workflow interaction
+> - `[features]` `child_agents_md = true` — experimental, injects extra instructions that may conflict with HelloAGENTS
+> - `project_doc_max_bytes` too low — default 32KB, AGENTS.md will be truncated (auto-set to 98304 during install)
+> - `agent_max_depth = 1` — limits sub-agent nesting depth, recommend keeping default or ≥2
+> - `agent_max_threads` too low — default 6, lower values limit parallel sub-agent scheduling
+
 ### Claude Code example
 
 **First install:**
 
-    # One-line script (recommended)
+    # One-line script (recommended, auto-launches interactive menu after install)
+    # macOS / Linux
     curl -fsSL https://raw.githubusercontent.com/hellowind777/helloagents/main/install.sh | bash
-    helloagents install claude
 
-    # pip
-    pip install git+https://github.com/hellowind777/helloagents.git
-    helloagents install claude
+    # Windows PowerShell
+    irm https://raw.githubusercontent.com/hellowind777/helloagents/main/install.ps1 | iex
+
+    # npx (or use npx -y to auto-download without prompting)
+    npx helloagents install claude
 
     # UV
-    uv tool install --from git+https://github.com/hellowind777/helloagents helloagents
-    helloagents install claude
+    uv tool install --from git+https://github.com/hellowind777/helloagents helloagents && helloagents install claude
+
+    # pip
+    pip install git+https://github.com/hellowind777/helloagents.git && helloagents install claude
 
 **Update later (auto-syncs installed targets):**
 
@@ -264,38 +300,44 @@ Per your request, the original snake images are preserved and other README visua
 
 To install from the `beta` branch, append `@beta` to the repository URL:
 
-    # One-line script
+    # One-line script (auto-launches interactive menu after install)
+    # macOS / Linux
     curl -fsSL https://raw.githubusercontent.com/hellowind777/helloagents/beta/install.sh | HELLOAGENTS_BRANCH=beta bash
 
     # Windows PowerShell
     $env:HELLOAGENTS_BRANCH="beta"; irm https://raw.githubusercontent.com/hellowind777/helloagents/beta/install.ps1 | iex
 
+    # npx (or use npx -y to auto-download without prompting)
+    npx helloagents@beta
+
     # UV
-    uv tool install --from git+https://github.com/hellowind777/helloagents@beta helloagents
+    uv tool install --from git+https://github.com/hellowind777/helloagents@beta helloagents && helloagents
 
     # pip
-    pip install git+https://github.com/hellowind777/helloagents.git@beta
+    pip install git+https://github.com/hellowind777/helloagents.git@beta && helloagents
 
 ## How It Works
 
-1. Install the package (script/pip/uv) and run `helloagents install <target>` to deploy rules to your CLI.
+1. Install the package (script/pip/uv) and run `helloagents` to launch an interactive menu for selecting target CLIs (or specify directly with `helloagents install <target>`). Hooks and SKILL.md are auto-deployed during installation.
 2. In AI chat, every input is scored on five dimensions and routed to R0–R3.
-3. R2/R3 tasks enter the stage chain: EVALUATE → ANALYZE → DESIGN → DEVELOP → TWEAK.
-4. RLM dispatches specialized sub-agents (e.g. explorer, designer, implementer) based on task complexity.
-5. EHRB scans each step for destructive operations; risky actions require explicit user confirmation.
+3. R2/R3 tasks enter the stage chain: EVALUATE → DESIGN → DEVELOP. R1 fast flow handles single-point operations directly.
+4. RLM dispatches native sub-agents and specialized roles based on task complexity. Supports parallel scheduling and Agent Teams for complex tasks.
+5. EHRB scans each step for destructive operations; risky actions require explicit user confirmation. Hooks provide additional pre-tool safety checks when available.
 6. Three-layer memory (user / project KB / session) preserves context across sessions.
 7. Stage chain completes with verified output and optional knowledge base sync.
 
 ## Repository Guide
 
 - AGENTS.md: router and workflow protocol
-- pyproject.toml: package metadata (v2.2.1)
+- SKILL.md: skill discovery metadata for CLI targets
+- pyproject.toml: package metadata (v2.2.12)
 - helloagents/cli.py: installer entry
 - helloagents/functions: workflow commands
-- helloagents/stages: analyze, design, develop, tweak
+- helloagents/stages: design, develop
 - helloagents/services: knowledge, package, memory and support services
 - helloagents/rules: state, cache, tools, scaling
 - helloagents/rlm: role library and orchestration helpers
+- helloagents/hooks: Claude Code and Codex CLI hooks configs
 - helloagents/scripts: automation scripts
 - helloagents/templates: KB and plan templates
 
@@ -309,12 +351,12 @@ These commands run inside AI chat, not your system shell.
 | ~plan | planning and package generation |
 | ~exec | execute existing package |
 | ~init | initialize knowledge base |
-| ~upgrade | upgrade knowledge structure |
+| ~upgradekb | upgrade knowledge structure |
 | ~clean / ~cleanplan | cleanup workflow artifacts |
-| ~test / ~review / ~validate | quality checks |
+| ~test / ~review / ~validatekb | quality checks |
 | ~commit | generate commit message from context |
 | ~rollback | rollback workflow state |
-| ~rlm | role orchestration commands |
+| ~rlm | role orchestration (spawn / agents / resume / team) |
 | ~status / ~help | status and help |
 
 ## FAQ
@@ -323,19 +365,25 @@ These commands run inside AI chat, not your system shell.
   A: Both. CLI manages installation; workflow behavior comes from AGENTS.md and helloagents docs.
 
 - Q: Which target should I install?
-  A: Use the CLI you run: codex, claude, opencode, gemini, qwen, or grok.
+  A: Use the CLI you run: codex, claude, gemini, qwen, grok, or opencode.
 
 - Q: What if a rules file already exists?
   A: Non-HelloAGENTS files are backed up before replacement.
 
 - Q: What is RLM?
-  A: Role Language Model — a sub-agent orchestration system with 12 specialized roles dispatched based on task complexity.
+  A: Role Language Model — a sub-agent orchestration system with 5 specialized roles + native CLI sub-agents dispatched based on task complexity.
 
 - Q: Where does project knowledge go?
   A: In the project-local `.helloagents/` directory, auto-synced when code changes.
 
 - Q: Does memory persist across sessions?
   A: Yes. L0 user memory is global, L1 project KB is per-project, L2 session summaries are auto-saved at stage transitions.
+
+- Q: What are Hooks?
+  A: Lifecycle hooks auto-deployed during installation. Claude Code gets 9 event hooks (safety checks, progress snapshots, KB sync, etc.); Codex CLI gets a notify hook for update checks. All optional — features degrade gracefully without hooks.
+
+- Q: What is Agent Teams?
+  A: An experimental Claude Code multi-agent collaboration mode. Multiple Claude Code instances work as teammates with shared task lists and mailbox communication, mapped to RLM roles. Falls back to standard Task sub-agents when unavailable.
 
 ## Troubleshooting
 
@@ -347,16 +395,51 @@ These commands run inside AI chat, not your system shell.
 
 ## Version History
 
-### v2.2.1 (current)
+### v2.2.12 (current)
 
-- **RLM sub-agent system:** 12 specialized roles with automatic dispatch and session isolation
+- Comprehensive parallel sub-agent orchestration across all flows and commands, extend G10 coverage, eliminate hardcoded agent counts, add universal parallel information gathering principle
+
+### v2.2.11
+
+- Three-stage gate model: merge analysis into design stage (EVALUATE → DESIGN → DEVELOP), optimize stop points and fix sub-agent orchestration consistency
+
+### v2.2.10
+
+- Streamline sub-agent roles and integrate native multi-agent orchestration for all supported CLIs
+
+### v2.2.9
+
+- Comprehensive Windows file-locking fix: preemptive unlock and rename-aside fallback for install/update/uninstall/clean
+
+### v2.2.8
+
+- Codex CLI attention optimization for more stable HelloAGENTS execution
+
+### v2.2.7
+
+- **G12 Hooks integration spec:** 9 Claude Code lifecycle hooks + Codex CLI notify hook
+- **Auto-deploy Hooks:** auto-deploy and clean up Hooks config during install/uninstall
+- **Codex CLI native sub-agent:** G10 adds spawn_agent protocol with cross-CLI parallel scheduling
+- **Agent Teams protocol:** G10 adds Claude Code multi-role collaboration protocol
+- **SKILL integration:** auto-deploy SKILL.md to skills discovery directory for all CLI targets
+- **RLM command expansion:** add ~rlm agents/resume/team subcommands with parallel multi-role dispatch
+- **Stage parallel optimization:** parallel rules for develop stage, serial annotation for design
+- **Memory v2 bridge:** add Codex Memory v2 bridge protocol
+- **Script modularization:** extract config_helpers.py module
+
+### v2.2.5
+
+- **RLM sub-agent system:** 5 specialized roles + native sub-agents with automatic dispatch and session isolation
 - **Five-dimension routing (R0–R3):** replaces legacy three-layer routing
-- **Five-stage workflow:** added TWEAK stage for iterative refinement
+- **Four-stage workflow + R1 fast flow:** stage chain (Evaluate → Analyze → Design → Develop) with R1 fast flow for single-point operations
 - **Three-layer memory:** L0 user preferences, L1 project knowledge base, L2 session summaries
 - **Three-layer EHRB:** keyword + semantic + tool-output safety detection
-- **Package-first installer:** pip/uv install with `helloagents install <target>`
-- **15 workflow commands:** added ~rlm, ~validate, ~status
+- **Package-first installer:** pip/uv install with `helloagents` interactive menu
+- **15 workflow commands:** added ~rlm, ~validatekb, ~status
 - **6 CLI targets:** added OpenCode support
+- **Interactive installation menu:** multi-select target CLIs with one command
+- **Auto locale detection:** CLI messages switch between Chinese and English based on system locale
+- **Windows encoding fix:** UTF-8 safe subprocess handling on all platforms
 - **Knowledge base service:** structured project docs auto-synced from code changes
 - **Attention service:** live status tracking and progress snapshots
 
@@ -373,7 +456,7 @@ See CONTRIBUTING.md for contribution rules and PR checklist.
 
 ## License
 
-This project is licensed under the MIT License. See LICENSE.
+This project is dual-licensed: Code under Apache-2.0, Documentation under CC BY 4.0. See [LICENSE.md](./LICENSE.md).
 
 ---
 
@@ -381,6 +464,6 @@ This project is licensed under the MIT License. See LICENSE.
 
 If this project helps your workflow, a star is always appreciated.
 
-<sub>Thanks to <a href="https://codexzh.com">codexzh.com</a> / <a href="https://ccodezh.com">ccodezh.com</a> for supporting this project</sub>
+Thanks to <a href="https://codexzh.com/?ref=EEABC8">codexzh.com</a> / <a href="https://ccodezh.com">ccodezh.com</a> for supporting this project
 
 </div>

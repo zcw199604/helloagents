@@ -26,6 +26,8 @@
 ### 步骤2: 解析参数与扫描
 
 ```yaml
+前置迁移: upgradewiki.py --migrate-root（静默执行，确保旧目录名已迁移后再扫描）
+
 参数解析:
   ~clean              → 列出所有可清理项，让用户选择
   ~clean sessions     → 清理会话摘要（L2），展示列表供选择
@@ -35,7 +37,7 @@
   ~clean memory all   → 清空全部用户记忆（需确认）
   ~clean all          → 清理全部 L0 + L2（需二次确认）
 
-扫描目录:
+扫描目录（3 个独立数据源，同一消息中发起多个并行工具调用）:
   会话摘要（L2）:
     项目级: {KB_ROOT}/sessions/*.md
     全局级: {HELLOAGENTS_ROOT}/user/sessions/*.md

@@ -47,6 +47,11 @@
   KB_CREATE_MODE=1/2/3: 直接继续
 
 知识库状态检测:
+  0. 旧目录名迁移检测:
+     脚本: upgradewiki.py --migrate-root
+     status=migrated → 提示已自动迁移 helloagents/ → .helloagents/，继续
+     status=conflict → 输出: 确认（新旧目录同时存在）→ 用户选择保留哪个 → ⛔ END_TURN
+     status=not_needed/not_found → 静默继续
   1. 检查 {KB_ROOT}/ 目录是否存在
   2. 检查核心文件完整性（INDEX.md, context.md, CHANGELOG.md, modules/_index.md）
   3. 对比当前结构与框架标准
@@ -56,7 +61,7 @@
 | 状态 | 处理 |
 |------|------|
 | 不存在 | 输出: 确认（项目信息+将创建知识库）→ 继续(→步骤3) / 取消(→状态重置) |
-| 存在但结构不匹配 | 输出: 确认 → 升级(→upgrade.md) / 重建(→步骤3) / 取消(→状态重置) |
+| 存在但结构不匹配 | 输出: 确认 → 升级(→upgradekb.md) / 重建(→步骤3) / 取消(→状态重置) |
 | 存在但不完整 | 输出: 确认（缺失文件列表）→ 补全 / 重建(→步骤3) / 取消(→状态重置) |
 | 存在且完整 | 输出: 确认（重建）→ 重建(删除后→步骤3) / 取消(→状态重置) |
 
@@ -66,6 +71,7 @@
 扫描代码库:
   优先: 根目录配置文件（package.json/pyproject.toml/Cargo.toml/pom.xml 等）
   按需: 配置文件信息不足时，再扫描目录结构和源代码文件
+  并行读取: 多个根目录配置文件同时读取（同一消息中发起多个并行工具调用）
 
 技术栈识别:
   1. 读取根目录包管理/构建配置文件（优先，通常足够确定技术栈）
@@ -77,7 +83,7 @@
 创建:
   目录结构: 按 G1 知识库完整结构创建（含 sessions/ 目录）
   模板: 读取 services/templates.md
-  大型项目: 按 G9 复杂度判定标准（TASK_COMPLEXITY=complex）分批处理
+  大型项目（TASK_COMPLEXITY=complex）: 调度原生子代理并行扫描不同模块目录 [→ G10 调用通道]，主代理汇总各子代理扫描结果后统一创建
   全局记忆: 检查 {HELLOAGENTS_ROOT}/user/ 目录，不存在时自动创建
 ```
 
@@ -86,7 +92,7 @@
 ```yaml
 Codex CLI 配置（自动检测，非 Codex 环境跳过）:
   脚本: configure_codex.py
-  功能: 设置 project_doc_max_bytes = 98304（96 KiB），防止 AGENTS.md 被截断
+  功能: 设置 project_doc_max_bytes = 98304（96 KiB），防止规则文件被截断
   安全: 仅在参数未设置或低于目标值时写入，不修改已有配置
 ```
 

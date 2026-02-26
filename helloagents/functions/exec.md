@@ -40,6 +40,8 @@
 ### 步骤2: 扫描方案包
 
 ```yaml
+前置迁移: upgradewiki.py --migrate-root（静默执行，确保旧目录名已迁移后再扫描）
+
 脚本: list_packages.py
 
 结果处理:
@@ -116,7 +118,7 @@
 
 ```yaml
 验收: 按 G8 流程级验收规则执行
-遗留方案包扫描: 按 G6 执行
+遗留方案包扫描 [→ services/package.md scan()]
 输出: 完成（验收报告+变更摘要）
 → 状态重置
 ```

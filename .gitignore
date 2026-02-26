@@ -34,3 +34,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 COMMIT_MESSAGE.md
+.claude/settings.local.json
+%TEMP%updater_committed.py
+nul

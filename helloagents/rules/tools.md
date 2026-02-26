@@ -35,19 +35,19 @@ migrate_package.py:
   用法: python -X utf8 '{SCRIPTS_DIR}/migrate_package.py' <package-name> [--status <completed|skipped>] [--all] [--path <路径>]
 
 upgradewiki.py:
-  用法: python -X utf8 '{SCRIPTS_DIR}/upgradewiki.py' --scan|--init|--backup|--write <json-file> [--path <路径>]
+  用法: python -X utf8 '{SCRIPTS_DIR}/upgradewiki.py' --scan|--init|--backup|--write <json-file>|--migrate-root [--path <路径>]
 
 configure_codex.py:
-  用法: python -X utf8 '{SCRIPTS_DIR}/configure_codex.py' [--path <路径>]
+  用法: python -X utf8 '{SCRIPTS_DIR}/configure_codex.py'
   说明: Codex CLI 环境配置，非 Codex 环境跳过
 
 session.py:
-  用法: python -X utf8 '{SCRIPTS_DIR}/session.py' --info|--list|--cleanup [<hours>]
-  说明: RLM Session 管理
+  用法: python -X utf8 '{HELLOAGENTS_ROOT}/rlm/session.py' --info|--list|--cleanup [<hours>]
+  说明: RLM Session 管理（位于 rlm/ 目录，非 scripts/）
 
 shared_tasks.py:
-  用法: python -X utf8 '{SCRIPTS_DIR}/shared_tasks.py' --status|--list|--available|--claim <id> --owner <sid>|--complete <id>|--add '<subject>' [--blocked-by <ids>]
-  说明: 多终端协作任务管理，需 hellotasks 环境变量
+  用法: python -X utf8 '{HELLOAGENTS_ROOT}/rlm/shared_tasks.py' --status|--list|--available|--claim <id> --owner <sid>|--complete <id>|--add '<subject>' [--blocked-by <ids>]
+  说明: 多终端协作任务管理，需 hellotasks 环境变量（位于 rlm/ 目录，非 scripts/）
 ```
 
 ### 脚本存在性检查
@@ -130,6 +130,46 @@ shared_tasks.py:
 | 读取失败（必需文件） | 暂停流程，提示创建 |
 | 读取失败（可选文件） | 跳过并继续 |
 | 目录创建失败 | 检查父目录→检查权限→提示手动创建 |
+
+---
+
+## 并行工具执行规范
+
+```yaml
+并行工具执行:
+  适用范围: 主代理在同一消息中发起多个直接工具调用（不含子代理调度）
+  支持: Claude Code（多工具并行）、Codex CLI（并行 shell 工具执行）
+  规则:
+    - 多个无依赖的只读操作（文件读取/搜索/Glob）→ 可并行
+    - 包含写操作的直接工具调用 → 禁止并行（避免竞态）
+    - Codex CLI: shell 相关工具可并行执行，提升多命令吞吐量
+    - Shell 环境快照: Codex CLI 的 shell env snapshot 确保子代理继承主代理环境变量和 rc 配置
+  其他 CLI: 串行执行所有工具调用
+  与子代理并行的区分:
+    - 子代理调度（多个 Task/spawn_agent）→ 按 G10 并行调度规则执行，不受此处限制
+    - 子代理内部各自独立操作不同文件集，无竞态风险
+    - 此处规则仅约束主代理自身的直接工具调用
+```
+
+## Hooks 工具协调
+
+```yaml
+Hooks 工具协调:
+  - Claude Code Hooks 可在工具调用前后执行（详见 AGENTS.md G12）
+  - HelloAGENTS 提供预定义 Hook 配置，用户可选启用
+  - 子代理调用被用户自定义 Hook 阻断时:
+    记录阻断原因 → 降级为主代理执行 → 在 tasks.md 标记 [Hook阻断降级]
+  - 不主动注册修改用户已有的 Hook 配置
+```
+
+## Plan 工具协调
+
+```yaml
+Plan 工具协调:
+  - Codex CLI Plan 协作模式（CollaborationModes 特性，默认启用）与 HelloAGENTS ~plan 工作流命令协调
+  - DESIGN 阶段: Plan 模式输出可作为方案设计子代理的输入参考
+  - Plan 模式生成的计划不替代 HelloAGENTS 的 proposal.md/tasks.md 体系
+```
 
 ---
 

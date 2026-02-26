@@ -1,10 +1,10 @@
 [project]
 name = "helloagents"
-version = "2.2.1"
+version = "2.2.12"
 description = "HelloAGENTS - 自主的高级智能伙伴"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 authors = [{name = "HelloWind"}]
 keywords = ["ai", "agent", "claude", "codex", "cli", "opencode", "gemini", "qwen", "grok"]
 dependencies = []
@@ -21,11 +21,13 @@ packages = ["helloagents"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "AGENTS.md" = "AGENTS.md"
+"SKILL.md" = "SKILL.md"
 
 [tool.hatch.build.targets.sdist]
 include = [
     "helloagents/**",
     "AGENTS.md",
+    "SKILL.md",
     "README.md",
     "pyproject.toml",
 ]

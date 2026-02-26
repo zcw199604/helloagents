@@ -1,4 +1,4 @@
-# ~upgrade 命令 - 升级知识库
+# ~upgradekb 命令 - 升级知识库
 
 本模块定义 AI 驱动的知识库升级流程。
 
@@ -7,7 +7,7 @@
 ## 命令说明
 
 ```yaml
-命令: ~upgrade
+命令: ~upgradekb
 类型: 场景确认类
 功能: 升级知识库结构至最新框架标准
 特点: AI 分析内容语义，动态匹配模板，支持任意源格式
@@ -53,6 +53,11 @@
   - {TEMPLATES_DIR}/plan/proposal.md, plan/tasks.md
 
 扫描知识库:
+  旧目录名迁移检测:
+    脚本: upgradewiki.py --migrate-root
+    status=migrated → 提示已自动迁移 helloagents/ → .helloagents/，继续
+    status=conflict → 输出: 确认（新旧目录同时存在）→ 用户选择保留哪个 → ⛔ END_TURN
+    status=not_needed/not_found → 静默继续
   脚本: upgradewiki.py --scan
   获取: 目录结构和文件列表（JSON格式）
 ```
@@ -60,7 +65,7 @@
 ### AI 内容分析
 
 ```yaml
-1. 读取源文件内容（跳过非知识库文件）
+1. 并行读取所有源文件内容（多个独立文件同一消息中发起多个并行工具调用，跳过非知识库文件）
 
 2. 识别内容类型:
    项目概述类 | 需求类 | 方案类 | 技术设计类 | 变更记录类 | 模块文档类 | 方案包类
@@ -102,7 +107,7 @@ AI 生成目标内容: 读取源 → 按模板格式重组 → 填充占位符
 ```yaml
 Codex CLI 配置（自动检测，非 Codex 环境跳过）:
   脚本: configure_codex.py
-  功能: 设置 project_doc_max_bytes = 98304（96 KiB），防止 AGENTS.md 被截断
+  功能: 设置 project_doc_max_bytes = 98304（96 KiB），防止规则文件被截断
   安全: 仅在参数未设置或低于目标值时写入，不修改已有配置
 ```
 
@@ -113,7 +118,7 @@ Codex CLI 配置（自动检测，非 Codex 环境跳过）:
   ⛔ 阻断性: 知识库结构符合目标版本，核心文件完整（INDEX.md, context.md 存在且非空）
   ⚠️ 警告性: 内容无丢失（对比源/目标内容）
 
-验收方式: 调用 ~validate 仅知识库模式
+验收方式: 调用 ~validatekb 仅知识库模式
 
 验收失败:
   阻断性: 输出: 警告，建议从备份恢复
@@ -163,6 +168,12 @@ Codex CLI 配置（自动检测，非 Codex 环境跳过）:
 
 常见旧结构映射:
   wiki/ → modules/ | history/ → archive/ | project.md → context.md
+  v1.0/v1.x 特有: wiki/overview.md+arch.md → context.md, wiki/api.md+data.md → modules/
+  v2.0 → v2.2.3: 目录名 helloagents/ → .helloagents/，补建 sessions/
+
+升级后必须:
+  - 确保 INDEX.md 包含 kb_version 字段（设为当前框架版本）
+  - 确保 sessions/ 目录存在
 ```
 
 ---

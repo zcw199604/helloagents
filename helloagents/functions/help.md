@@ -17,12 +17,13 @@
 
 ## 输出模板
 
-```
-- HelloAGENTS 是结构化任务工作流系统，可按需求执行评估、分析、设计、开发与验证。
-- 可用命令: ~auto ~plan ~exec ~init ~upgrade ~clean ~cleanplan ~commit ~test ~review ~validate ~rollback ~rlm ~status ~help
-- 使用方式:
-    - ~命令 需求描述 (例: ~auto 修复登录超时并补测试)
-    - 或直接描述需求 (系统会自动判定 R0~R3 并执行)
-- 路由机制: 命令路径 (~xxx) / 外部工具路径 (Skill/MCP/插件) / 通用路径 (自动判级执行)
-- 子代理按 G9 复杂度判定强制/跳过调用 (explorer、analyzer、designer、implementer、reviewer、tester 等) [→ G9/G10]
+```yaml
+输出要素:
+  - 系统简介: 说明 HelloAGENTS 是结构化任务工作流系统，支持评估、设计、开发与验证
+  - 可用命令列表: 列出所有 ~ 命令
+  - 使用方式: ~命令+需求描述 或 直接描述需求（系统自动路由 R0~R3）
+  - 路由机制: 命令路径 / 外部工具路径 / 通用路径
+  - 子代理: 原生子代理 + helloagents 专有角色，含并行调度、Agent Teams、~rlm 子命令
+  - Hooks: 可选增强，支持安全预检/进度快照/质量门 [→ G12]
+  - 全局开关: G1 中的 KB_CREATE_MODE / EVAL_MODE / UPDATE_CHECK
 ```

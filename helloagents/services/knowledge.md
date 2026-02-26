@@ -20,8 +20,34 @@
   排除: {KB_ROOT}/plan/ 和 {KB_ROOT}/archive/（属于 PackageService）
 ```
 
-**执行时机:** 被引用时首先执行知识库开关前置检查
+**执行时机:** 被引用时首先执行前置检查（含知识库开关、目录迁移、版本检测）
 **显式调用例外:** ~init 由 functions/init.md 处理确认流程
+
+---
+
+## 前置检查（所有接口调用前自动执行）
+
+```yaml
+步骤1 - 知识库开关检查:
+  KB_CREATE_MODE=0 且无 {KB_ROOT}/: KB_SKIPPED=true，跳过后续检查
+
+步骤2 - 旧目录名迁移:
+  检测: 项目根目录是否存在 helloagents/（旧版目录名）
+  脚本: upgradewiki.py --migrate-root
+  status=migrated: 静默完成，输出: 提示（旧目录名已自动迁移至新目录名）
+  status=conflict: 新旧目录同时存在 → 输出: 确认（让用户选择保留哪个）→ ⛔ END_TURN
+  status=not_needed/not_found: 静默继续
+
+步骤3 - 知识库版本检测:
+  条件: {KB_ROOT}/ 存在
+  检测: 读取 {KB_ROOT}/INDEX.md 中的 kb_version 字段
+  处理:
+    kb_version 缺失或低于当前框架版本:
+      补全缺失的目录和文件（对比 G1 知识库目录结构，缺什么补什么）
+      更新 INDEX.md 中的 kb_version 为当前版本
+      输出: 提示（知识库结构已自动升级至当前版本）
+    kb_version 与当前版本一致: 静默继续
+```
 
 ---
 
@@ -70,7 +96,7 @@
 ### validate()
 
 ```yaml
-触发: ~validate 命令、流程验收
+触发: ~validatekb 命令、流程验收
 流程: kb_keeper 检查结构 → 对比本次变更涉及的代码与文档 → 识别不一致项
 返回: valid, issues[{type(structure|content|outdated), file, message}]
 ```
@@ -145,9 +171,9 @@
 - **[{模块名}]**: {修复描述}
   - 方案: [{YYYYMMDDHHMM}_{fix}](archive/{YYYY-MM}/{YYYYMMDDHHMM}_{fix}/)
 
-### 微调
-- **[{模块名}]**: {微调描述}
-  - 类型: 微调（无方案包）
+### 快速修改
+- **[{模块名}]**: {修改描述}
+  - 类型: 快速修改（无方案包）
   - 文件: {文件路径}:{行号范围}
 
 ### 回滚
@@ -163,11 +189,11 @@
 
 | 模式 | 触发 | 记录位置 | 特殊规则 |
 |------|------|----------|----------|
-| R2 适度/R3 标准 | 开发实施完成后 | CHANGELOG.md | 必填：版本号+日期+分类+模块+描述+方案链接 |
-| R1 微调 | ROUTING_LEVEL = R1 | CHANGELOG.md 微调分类 | KB_SKIPPED=true，不触发完整知识库创建 |
+| R2 简化流程/R3 标准流程 | 开发实施完成后 | CHANGELOG.md | 必填：版本号+日期+分类+模块+描述+方案链接 |
+| R1 快速流程 | ROUTING_LEVEL = R1 | CHANGELOG.md 快速修改分类 | KB_SKIPPED=true，不触发完整知识库创建 |
 | Overview 归档 | overview 方案包归档时 | CHANGELOG.md 文档分类 | Patch 版本递增 |
 
-**R1 微调 KB 行为:**
+**R1 快速流程 KB 行为:**
 ```yaml
 KB_CREATE_MODE=0 且无 {KB_ROOT}/: 跳过 CHANGELOG
 KB_CREATE_MODE=1/2/3 且无 {KB_ROOT}/: 仅创建 {KB_ROOT}/ 和 CHANGELOG.md
@@ -182,7 +208,7 @@ KB_CREATE_MODE=1/2/3 且有 {KB_ROOT}/: 更新 CHANGELOG.md
 
 获取优先级: 用户指定 → 主模块解析（已知项目类型时直接读取对应来源）→ Git标签 → CHANGELOG最新递增 → 0.1.0
 
-自动递增: 破坏性→Major+1 | 新功能→Minor+1 | 修复/优化/微调→Patch+1
+自动递增: 破坏性→Major+1 | 新功能→Minor+1 | 修复/优化/快速修改→Patch+1
 ```
 
 ### 多语言版本号来源
@@ -207,7 +233,7 @@ KB_CREATE_MODE=1/2/3 且有 {KB_ROOT}/: 更新 CHANGELOG.md
 > 详细规则见 {HELLOAGENTS_ROOT}/rules/scaling.md
 
 ```yaml
-核心: 判定条件按 G9 复杂度判定标准（TASK_COMPLEXITY=complex），项目分析阶段评估
+核心: 判定条件按 G9 复杂度判定标准（TASK_COMPLEXITY=complex），DESIGN Phase1 评估
 策略: CHANGELOG按年份分片、modules按类型分类、archive按年份索引
 ```
 
