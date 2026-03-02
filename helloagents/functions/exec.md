@@ -40,7 +40,7 @@
 ### 步骤2: 扫描方案包
 
 ```yaml
-前置迁移: upgradewiki.py --migrate-root（静默执行，确保旧目录名已迁移后再扫描）
+前置迁移: [→ services/knowledge.md 前置检查 步骤2]
 
 脚本: list_packages.py
 
@@ -71,7 +71,7 @@
 ### 步骤3: 开发实施
 
 ```yaml
-加载: stages/develop.md [阻塞式]
+按 G7 按需读取表"R2/R3 进入开发实施（入口）"加载
 ```
 
 ### 步骤4: 完成后一致性验证确认（固定询问）
