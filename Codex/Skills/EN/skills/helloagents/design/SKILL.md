@@ -207,6 +207,17 @@ Set: CREATED_PACKAGE = Solution package path created in step 1
 Purpose: Pass to development implementation in full authorization command to ensure executing correct solution package
 ```
 
+**6. Multi-Model Review Prompt (Optional)**
+
+```yaml
+Trigger timing: After solution package files are created, before outputting phase summary
+Applicable modes: Interactive confirmation mode / Planning command
+
+Full authorization command handling:
+  - Skip prompt, proceed directly to development implementation
+  - Append to end of final summary: "💡 Multi-model review: To review the solution package, trigger separately after planning command completes"
+```
+
 ---
 
 ## Solution Design Output Format
@@ -230,32 +241,55 @@ Strictly call G6.1 unified output format, fill following data:
    - `helloagents/plan/YYYYMMDDHHMM_<feature>/how.md`
    - `helloagents/plan/YYYYMMDDHHMM_<feature>/task.md`
 4. **Next Step Suggestions:**
-   - Interactive confirmation mode: Enter development implementation? (Yes/No)
-   - Planning command: Solution package generated, enter `~exec` to execute if needed
+   - Interactive confirmation mode / Planning command: Output multi-model review prompt (see "Multi-Model Review Prompt Format")
+   - Full authorization command: Proceed directly to development implementation, append multi-model review hint to summary
 5. **Legacy Solution Reminder:**
    - Scan plan/ directory per G11
    - If legacy solution packages detected (exclude solution package created this time), display per G11 rules
+
+### Multi-Model Review Prompt Format
+
+```
+❓【HelloAGENTS】- Multi-Model Review
+
+Solution package generated: `[solution package path]`
+You may invoke claude + gemini to cross-review the proposal, checking the technical solution's soundness and potential risks.
+
+[1] Start Multi-Model Review - Read `multi_model` Skill, execute per DESIGN phase rules
+[2] Skip - Proceed to next step
+
+────
+🔄 Next Steps: Enter option number to select
+```
 
 ---
 
 ## Phase Transition Rules
 
 ```yaml
-Interactive confirmation mode:
-  - Output summary (contains "🔄 Next Steps: Enter development implementation? (Yes/No)")
-  - Stop and wait for user explicit confirmation
-  - User response handling:
-    - Explicit confirmation ("yes"/"continue"/"confirm", etc.) → Enter development implementation
-    - Explicit refusal ("no"/"cancel", etc.) → Flow terminates
-    - Feedback-Delta (provide modification feedback) → Handle per Feedback-Delta rules
-    - Other input → Treat as new user requirement, re-determine per routing mechanism
+Interactive confirmation mode / Planning command:
+  - Output phase summary
+  - Output "Multi-Model Review Prompt Format", wait for user selection
+  - User selects [1] Start multi-model review:
+      - Read `multi_model` Skill, execute per DESIGN phase collaboration rules
+      - Output review conclusions (consensus items, divergence items, final recommendations)
+      - After review completes, proceed to subsequent phase transition logic
+  - User selects [2] Skip:
+      - Proceed to subsequent phase transition logic
+  - Subsequent phase transition logic:
+      - Interactive confirmation mode: Ask "Enter development implementation? (Yes/No)", wait for confirmation
+        - Explicit confirmation → Enter development implementation
+        - Explicit refusal → Flow terminates
+        - Feedback-Delta → Handle per Feedback-Delta rules
+        - Other input → Treat as new user requirement, re-determine per routing mechanism
+      - Planning command: Output overall summary → Stop → Clear MODE_PLANNING
 
 Push mode:
-  - Full authorization command: Complete solution design → Immediately silently enter development implementation
-  - Planning command: Output overall summary → Stop → Clear MODE_PLANNING
+  - Full authorization command: Complete solution design → Skip multi-model review prompt → Immediately silently enter development implementation
+                                Append to summary: "💡 Multi-model review: To review the solution package, trigger separately after planning command completes"
 
 Critical constraint (only following 3 situations can enter development implementation):
-  1. User explicitly confirms after solution design complete
+  1. User explicitly confirms after solution design complete (including confirmation after multi-model review)
   2. Full authorization command (~auto, etc.) triggered and solution design completed
   3. Execution command (~exec, etc.) triggered and solution package exists in plan/
 ```

@@ -274,6 +274,38 @@ Found following optimizable items:
 **Cannot skip:** This step is atomic operation at end of this phase
 </plan_migration>
 
+### Step 13: Multi-Model Acceptance Prompt (Optional)
+
+```yaml
+Trigger timing: After solution package migration completes, before outputting final summary
+Applicable modes: Interactive confirmation mode / Execution command
+
+Full authorization command handling:
+  - Skip prompt, output completion summary directly
+  - Append to end of final summary: "💡 Multi-model acceptance: To verify consistency between code implementation and solution package, trigger separately after completion"
+
+Prompt format:
+  ❓【HelloAGENTS】- Multi-Model Acceptance
+
+  Development implementation complete. You may perform multi-model acceptance testing to verify
+  whether actual code implementation matches the solution package.
+
+  [1] Start Multi-Model Acceptance - Read `multi_model` Skill, execute consistency review and risk classification per DEVELOP phase rules
+  [2] Skip - Output completion summary directly
+
+  ────
+  🔄 Next Steps: Enter option number to select
+
+User selection handling:
+  [1] Start multi-model acceptance:
+    - Read `multi_model` Skill, execute per DEVELOP phase collaboration rules:
+      - External model reviews actual code changes against migrated task.md in history/
+      - No-write principle: Append to prompt "OUTPUT: Unified Diff Patch ONLY."
+      - Output risk classification report (P0 Must Fix / P1 Should Fix / P2 Note)
+    - Output phase completion summary after acceptance completes
+  [2] Output phase completion summary directly
+```
+
 ---
 
 ## Code Specification Requirements
@@ -331,7 +363,9 @@ Strictly call G6.1 unified output format, fill following data:
      - helloagents/history/index.md
      ...
    ```
-4. **Next Step Suggestions:** "Please confirm if implementation results meet expectations?"
+4. **Next Step Suggestions:**
+   - Interactive confirmation mode / Execution command: Output multi-model acceptance prompt (see step 13 "Prompt format")
+   - Full authorization command: Append multi-model acceptance hint to summary
 5. **Legacy Solution Reminder:** Scan plan/ directory per G11, display if legacy solution packages exist
 
 ---
@@ -339,10 +373,13 @@ Strictly call G6.1 unified output format, fill following data:
 ## Phase Transition Rules
 
 ```yaml
-After completing all actions:
-  Interactive confirmation mode: Output summary → Development implementation ends
-  Full authorization command: Output overall summary → Flow ends
-  Execution command: Output overall summary → Flow ends
+After completing all actions (step 12 migration complete):
+  Interactive confirmation mode / Execution command:
+    - Execute step 13 multi-model acceptance prompt
+    - User selects [1] → Read multi_model Skill, execute acceptance → Output acceptance report → Output completion summary
+    - User selects [2] → Output completion summary directly → Development implementation ends
+  Full authorization command:
+    - Skip step 13 prompt → Output overall summary (with multi-model acceptance hint at end) → Flow ends
   Variable cleanup: CURRENT_PACKAGE will automatically clean during legacy solution scan (per G11 rules)
 
 Exceptional situations (test failures/user raises issues):

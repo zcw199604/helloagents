@@ -990,6 +990,10 @@ MODE_EXECUTION: 执行命令激活状态
 | 所有开发模式 / 开发实施 | `develop` | 进入开发实施时读取 |
 | 知识库命令 / 知识库操作 | `kb` | ~init命令或知识库缺失时读取 |
 | 创建文件 | `templates` | 创建方案包/Wiki文件时读取 |
+| 多模型协作 | `multi_model` | 多模型审查触发时读取 |
+| 调用 Claude CLI | `collaborating-with-claude` | 需要调用 Claude 子进程时读取 |
+| 调用 Codex CLI | `collaborating-with-codex` | 需要调用 Codex 子进程时读取 |
+| 调用 Gemini CLI | `collaborating-with-gemini` | 需要调用 Gemini 子进程时读取 |
 
 **Skills 路径:** `skills/helloagents/`（相对于本规则集所在目录）
 

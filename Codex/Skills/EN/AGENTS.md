@@ -990,6 +990,10 @@ Exceptional situations: Mark in output, wait for user decision
 | All Development Modes / Development Implementation | `develop` | Read when entering development implementation |
 | Knowledge Base Command / Knowledge Base Operations | `kb` | Read when ~init command or knowledge base missing |
 | Create Files | `templates` | Read when creating solution packages/Wiki files |
+| Multi-Model Collaboration | `multi_model` | Read when multi-model review is triggered |
+| Invoke Claude CLI | `collaborating-with-claude` | Read when Claude subprocess call is needed |
+| Invoke Codex CLI | `collaborating-with-codex` | Read when Codex subprocess call is needed |
+| Invoke Gemini CLI | `collaborating-with-gemini` | Read when Gemini subprocess call is needed |
 
 **Skills Path:** `skills/helloagents/` (relative to this ruleset's directory)
 
