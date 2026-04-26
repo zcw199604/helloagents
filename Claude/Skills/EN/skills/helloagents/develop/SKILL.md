@@ -1,4 +1,4 @@
----
+﻿---
 name: develop
 description: Development implementation phase detailed rules; read when entering development implementation; includes execution flow, code specifications, consistency audit, solution package migration
 ---
@@ -112,6 +112,9 @@ Read `plan/YYYYMMDDHHMM_<feature>/task.md` and `why.md`
 ```yaml
 Execution rules:
   - Strictly execute item by item per task.md
+  - If a task matches TDD applicability (new feature, bug fix, behavior change, core logic change, or test strategy design), read the `tdd` Skill first
+  - Complete the matching RED task by default before changing production code
+  - When constrained by legacy code, missing test frameworks, unstable reproduction environments, or user constraints, record the constraint, alternative verification method, and TDD-EXEMPT reason before continuing with the existing verification strategy
 
 Task success handling:
   - After each task executes successfully, immediately update status from [ ] to [√]
@@ -146,6 +149,12 @@ Check content:
 
 ```yaml
 Test execution: Run test tasks defined in task.md, or project's existing test suite
+
+TDD gate (strictly enforce when applicable):
+  - RED: The test must fail first, and the failure reason must match the target behavior
+  - GREEN: Write only the minimum implementation needed for related tests to pass
+  - REFACTOR: Refactor only after tests pass, then rerun related tests
+  - Anti-pattern check: Do not test mock behavior, do not add test-only production interfaces, and prefer fakes/real components/integration tests when mocks become complex
 
 Test failure handling rules (strictly enforce):
   ⛔ Blocking tests (core functionality):
@@ -387,3 +396,4 @@ Exceptional situations (test failures/user raises issues):
   Full authorization command/Execution command: Mark test failure in summary, flow ends normally
   Subsequent user messages handled per routing priority
 ```
+

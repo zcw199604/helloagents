@@ -193,6 +193,8 @@ Single task code change amount control:
   - Large project: ≤2 files/task
 Verification tasks: Insert periodically
 Security check: MUST include security check task
+TDD tasks: For testable behaviors where TDD is Required/Recommended, read the `tdd` Skill and split tasks into RED → GREEN → REFACTOR → VERIFY
+TDD exemptions: Exempt tasks must include TDD-EXEMPT and a reason
 ```
 
 **4. Risk Avoidance Measure Formulation**

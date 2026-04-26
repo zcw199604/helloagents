@@ -620,6 +620,7 @@ Primary dimensions:
 
 Secondary dimensions:
   EHRB risk signal: Yes | No
+  TDD applicability: Required | Recommended | Exempt | Uncertain
   Keywords: prod|production|live|DROP|TRUNCATE|rm -rf|keys|payment
 ```
 
@@ -964,7 +965,7 @@ Push mode (planning command): Output summary → Flow ends
 3. Read solution package
 4. Execute code changes per task list
 5. Code security check
-6. Quality check and testing
+6. TDD gate and quality testing (read `tdd` Skill when applicable)
 7. Synchronize update knowledge base
 8. Update CHANGELOG.md
 9. Consistency audit
@@ -988,6 +989,7 @@ Exceptional situations: Mark in output, wait for user decision
 | Complete R&D / Requirements Analysis | `analyze` | Read when entering requirements analysis |
 | Standard Development/Complete R&D / Solution Design | `design` | Read when entering solution design |
 | All Development Modes / Development Implementation | `develop` | Read when entering development implementation |
+| Test-driven development | `tdd` | Read for new features, bug fixes, behavior changes, core logic changes, or test strategy design |
 | Knowledge Base Command / Knowledge Base Operations | `kb` | Read when ~init command or knowledge base missing |
 | Create Files | `templates` | Read when creating solution packages/Wiki files |
 | Multi-Model Collaboration | `multi_model` | Read when multi-model review is triggered |

@@ -1,4 +1,4 @@
----
+﻿---
 name: templates
 description: Documentation template collection; read when creating Wiki or solution package files; includes all knowledge base templates and solution file templates
 ---
@@ -426,7 +426,12 @@ Directory: `helloagents/plan/YYYYMMDDHHMM_<feature>/`
 - [ ] 4.1 Update <knowledge base file>
 
 ## 5. Testing
-- [ ] 5.1 Implement scenario test in `tests/integration/xxx.test.ts`: [Scenario 1 name], verification points: [key verification point list]
+- Keep either the RED/GREEN/REFACTOR/VERIFY sequence or a TDD-EXEMPT item according to TDD applicability; do not keep both for the same behavior.
+- [ ] 5.1 RED: Choose the smallest appropriate layer from the project's existing test structure and add a failing test for [observable behavior], confirming the failure reason is [expected reason]
+- [ ] 5.2 GREEN: Use the minimum production implementation to pass the RED test, depends on task 5.1
+- [ ] 5.3 REFACTOR: Clean up implementation while tests remain passing, depends on task 5.2
+- [ ] 5.4 VERIFY: Run [test command] and record related test results
+- [ ] 5.5 TDD-EXEMPT: [exempt task], reason: [documentation only/no behavior change/no test framework/user constraint/other]
 ```
 
 **Task Status Symbols:** Follow G11 definition
@@ -449,3 +454,4 @@ Directory: `helloagents/plan/YYYYMMDDHHMM_<feature>/`
 | C/C++ | CMakeLists.txt → project(...VERSION) | Header file → #define PROJECT_VERSION |
 
 **Purpose:** Referenced by G7 version management rules to determine version number file locations for projects in each language.
+

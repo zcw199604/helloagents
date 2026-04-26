@@ -1,4 +1,4 @@
----
+﻿---
 name: analyze
 description: Requirements analysis phase detailed rules; read when entering requirements analysis; includes requirement scoring, follow-up logic, code analysis steps
 ---
@@ -132,10 +132,14 @@ Score <7 points: Stop immediately, output follow-up, wait for response, don't ex
 
 ## Phase B: Code Analysis (only execute after score ≥7 points)
 
-### Step 5: Extract Key Objectives and Success Criteria
+### Step 5: Extract Key Objectives, Success Criteria, and TDD Applicability
 
 - Extract key objectives: Refine core objectives from complete requirements
 - Define success criteria: Clarify verifiable success criteria
+- Determine TDD applicability: Required | Recommended | Exempt | Uncertain
+- Read the `tdd` Skill when the task involves new features, bug fixes, behavior changes, core logic changes, or test strategy design
+- Treat missing testable success criteria as a scoring deduction or clarification point
+- For legacy code, missing test frameworks, or unstable reproduction environments, determine the verification strategy early: automated test | manual verification | TDD-EXEMPT
 
 ### Step 6: Code Analysis and Technical Preparation
 
@@ -185,3 +189,4 @@ Score < 7 points: Loop follow-up until score ≥7 points or user cancels
 Score ≥7 points AND Interactive confirmation mode: Output summary → Stop → Wait for confirmation
 Score ≥7 points AND (MODE_FULL_AUTH=true OR MODE_PLANNING=true): Complete requirements analysis → Immediately silently enter solution design
 ```
+
