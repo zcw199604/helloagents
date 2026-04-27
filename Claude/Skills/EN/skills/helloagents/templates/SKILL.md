@@ -412,6 +412,16 @@ Directory: `helloagents/plan/YYYYMMDDHHMM_<feature>/`
 
 ---
 
+## Parallel Subagent Annotation (Optional)
+
+Enable this section only when task groups are independent, have no ordering dependency, have non-overlapping write scopes, and have clear verification methods.
+
+- Parallel Group A: tasks [1.1, 4.1]; allowed writes: `path/to/a.ts`, `wiki/modules/a.md`; conflict domain: none; verification: `[verification command]`
+- Parallel Group B: tasks [2.1]; allowed writes: `path/to/b.ts`; conflict domain: none; verification: `[verification command]`
+- Non-parallel tasks: [3.1, 5.4]; reason: security check/final verification must run after integration
+
+---
+
 ## 1. [Core Feature Module Name]
 - [ ] 1.1 Implement [specific functionality] in `path/to/file.ts`, verify why.md#[requirement-title-anchor]-[scenario-title-anchor]
 - [ ] 1.2 Implement [specific functionality] in `path/to/file.ts`, verify why.md#[requirement-title-anchor]-[scenario-title-anchor], depends on task 1.1

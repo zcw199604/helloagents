@@ -56,6 +56,27 @@ PHASE2_HARD_STOP_CONFIRM = 1:
 
 ---
 
+## 与 hello-subagent 的边界
+
+```yaml
+关系定位:
+  - multi_model 负责多模型分析/审查/验收
+  - hello-subagent 负责并行子任务编排、上下文裁剪、文件边界和返回契约
+
+触发联动:
+  - 当多模型审查可拆分为多个独立风险域时:
+    - 读取 `hello-subagent` Skill
+    - 按其规则生成审查型子任务包
+    - 审查型子代理保持只读，不直接修改本地文件
+
+边界约束:
+  - multi_model 的无写入原则优先于 hello-subagent 的执行型子代理规则
+  - 多模型输出只能作为建议、风险报告或 unified diff
+  - 最终采纳、代码修改、知识库同步仍由主代理执行
+```
+
+---
+
 ## 分阶段协作规则
 
 ### ANALYZE 阶段

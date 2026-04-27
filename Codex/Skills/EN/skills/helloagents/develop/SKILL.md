@@ -107,11 +107,19 @@ Execution method:
 
 Read `plan/YYYYMMDDHHMM_<feature>/task.md` and `why.md`
 
+### Step 4.5: Parallel Subagent Applicability Check (Optional)
+
+When `task.md` contains multiple independent, clearly bounded, verifiable task groups with no overlapping file writes, read the `hello-subagent` Skill and follow its rules for subtask dispatch, context trimming, conflict control, and result acceptance.
+
+If subagent trigger conditions are not met, the main agent executes tasks sequentially in the following steps.
+
 ### Step 5: Execute Code Changes Per Task List
 
 ```yaml
 Execution rules:
   - Strictly execute item by item per task.md
+  - If parallel subagents are enabled, the main agent must first complete pre-dispatch checks, file boundary declarations, and return-format constraints per the hello-subagent Skill
+  - Subagent results are only intermediate material; the main agent must review changed_files, verification results, and task.md status before entering later quality checks
   - If a task matches TDD applicability (new feature, bug fix, behavior change, core logic change, or test strategy design), read the `tdd` Skill first
   - Complete the matching RED task by default before changing production code
   - When constrained by legacy code, missing test frameworks, unstable reproduction environments, or user constraints, record the constraint, alternative verification method, and TDD-EXEMPT reason before continuing with the existing verification strategy

@@ -195,6 +195,10 @@ Verification tasks: Insert periodically
 Security check: MUST include security check task
 TDD tasks: For testable behaviors where TDD is Required/Recommended, read the `tdd` Skill and split tasks into RED → GREEN → REFACTOR → VERIFY
 TDD exemptions: Exempt tasks must include TDD-EXEMPT and a reason
+Parallel subagent annotation:
+  - When parallelizable task groups exist, read the `hello-subagent` Skill trigger conditions
+  - In task.md, annotate parallel groups, allowed write scope, conflict domains, and verification commands
+  - If file boundaries or dependencies are unclear, do not mark tasks as parallelizable
 ```
 
 **4. Risk Avoidance Measure Formulation**

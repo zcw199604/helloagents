@@ -963,14 +963,15 @@ Push mode (planning command): Output summary → Flow ends
 1. Determine solution package to execute
 2. Check knowledge base status
 3. Read solution package
-4. Execute code changes per task list
-5. Code security check
-6. TDD gate and quality testing (read `tdd` Skill when applicable)
-7. Synchronize update knowledge base
-8. Update CHANGELOG.md
-9. Consistency audit
-10. Code quality check (optional)
-11. **【Mandatory】Migrate solution package to history/**
+4. Parallel subagent applicability check (read `hello-subagent` Skill when applicable)
+5. Execute code changes per task list
+6. Code security check
+7. TDD gate and quality testing (read `tdd` Skill when applicable)
+8. Synchronize update knowledge base
+9. Update CHANGELOG.md
+10. Consistency audit
+11. Code quality check (optional)
+12. **【Mandatory】Migrate solution package to history/**
 
 **Detailed Rules:** → Read `develop` Skill when entering phase
 
@@ -990,6 +991,7 @@ Exceptional situations: Mark in output, wait for user decision
 | Standard Development/Complete R&D / Solution Design | `design` | Read when entering solution design |
 | All Development Modes / Development Implementation | `develop` | Read when entering development implementation |
 | Test-driven development | `tdd` | Read for new features, bug fixes, behavior changes, core logic changes, or test strategy design |
+| Parallel Subagent Orchestration | `hello-subagent` | Read when development implementation or multi-model collaboration has multiple independent, clearly bounded, verifiable subtasks |
 | Knowledge Base Command / Knowledge Base Operations | `kb` | Read when ~init command or knowledge base missing |
 | Create Files | `templates` | Read when creating solution packages/Wiki files |
 | Multi-Model Collaboration | `multi_model` | Read when multi-model review is triggered |

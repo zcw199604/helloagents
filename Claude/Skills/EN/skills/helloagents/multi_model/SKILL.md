@@ -56,6 +56,27 @@ PHASE2_HARD_STOP_CONFIRM = 1:
 
 ---
 
+## Boundary With hello-subagent
+
+```yaml
+Relationship:
+  - multi_model handles multi-model analysis/review/acceptance
+  - hello-subagent handles parallel subtask orchestration, context trimming, file boundaries, and return contracts
+
+Trigger Linkage:
+  - When multi-model review can be split into independent risk domains:
+    - Read the `hello-subagent` Skill
+    - Generate review-type subtask packets per its rules
+    - Review subagents remain read-only and must not modify local files directly
+
+Boundary Constraints:
+  - multi_model no-write principle has priority over hello-subagent execution-subagent rules
+  - Multi-model outputs are only recommendations, risk reports, or unified diffs
+  - Final adoption, code modification, and knowledge-base synchronization remain main-agent responsibilities
+```
+
+---
+
 ## Phase-Specific Collaboration Rules
 
 ### ANALYZE Phase
