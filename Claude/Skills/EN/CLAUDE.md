@@ -143,7 +143,7 @@ Syntax Constraints:
 
 **Regular Project:** Does not meet above conditions
 
-**Purpose:** Affects task granularity, documentation creation strategy, batch processing size
+**Purpose:** Affects task granularity, documentation creation strategy, batch processing size, and large-project minimal-change strategy
 
 ### G5 | Write Authorization and Silent Execution
 
@@ -604,8 +604,9 @@ For each user message, execute the following steps:
 ```yaml
 1. Command Mode (~auto/~plan/~exec/~init)
 2. Context Response (follow-up/selection/confirmation/feedback)
-3. Development Mode (fine-tuning → lightweight iteration → standard development → complete R&D)
-4. Consultation Q&A (fallback)
+3. Systematic Debugging Mode (bug/test failure/build failure/runtime exception/performance regression/flaky)
+4. Development Mode (fine-tuning → lightweight iteration → standard development → complete R&D)
+5. Consultation Q&A (fallback)
 ```
 
 ### Evaluation Dimensions
@@ -619,9 +620,10 @@ Primary dimensions:
   Command modifier: None | ~auto | ~plan | ~init | ~exec
 
 Secondary dimensions:
+  Debugging signal: Bug | Test failure | Build failure | Runtime exception | Performance regression | flaky | None
   EHRB risk signal: Yes | No
   TDD applicability: Required | Recommended | Exempt | Uncertain
-  Keywords: prod|production|live|DROP|TRUNCATE|rm -rf|keys|payment
+  Keywords: prod|production|live|DROP|TRUNCATE|rm -rf|keys|payment|bug|error|exception|failure|regression|flaky|timeout|stack trace|pollution|polluter|passes alone|suite failure|boundary|chain
 ```
 
 ### Decision Principles
@@ -639,11 +641,13 @@ Secondary dimensions:
 **Pre-routing verification (complete in <thinking>):**
 1. **Intent type**: [Q&A type/Modification type/Command type] - Basis: [quote user's original words]
 2. **Modification scope**: [None/Micro/Small/Medium/Large/Uncertain] - Basis: [file count/line count estimate]
-3. **EHRB signal**: [Yes/No] - Basis: [keyword scan result]
-4. **Final routing**: [Consultation Q&A/Fine-tuning/Lightweight iteration/Standard development/Complete R&D]
+3. **Debugging signal**: [Bug/Test failure/Build failure/Runtime exception/Performance regression/flaky/None] - Basis: [error/log/keywords]
+4. **EHRB signal**: [Yes/No] - Basis: [keyword scan result]
+5. **Final routing**: [Consultation Q&A/Systematic Debugging/Fine-tuning/Lightweight iteration/Standard development/Complete R&D]
 
 **Post-routing restatement (in output):**
 - If routed to development mode (not consultation Q&A): "Determined as [mode name], reason: [1-2 sentence explanation]"
+- If routed to systematic debugging mode: "Determined as Systematic Debugging Mode, reason: detected [debugging signal], will reproduce and locate root cause before modifying"
 - If uncertain: "Requirement complexity uncertain, defaulting to complete R&D flow to ensure quality"
 
 **Uncertainty handling:**
@@ -661,6 +665,19 @@ Secondary dimensions:
 **Consultation Q&A**
 - Condition: Does not meet any above conditions (fallback)
 - Action: Answer directly per G6.3 format
+
+**Systematic Debugging Mode**
+- Condition (meets any): User reports a bug, test failure, build failure, runtime exception, performance regression, flaky/timeout behavior, error logs, stack trace, or regression issue
+- Action:
+  1. First enter the systematic debugging gate in development implementation (see `develop` Skill)
+  2. Before fixing, MUST complete: read full error, reproduce stably, inspect recent changes, locate failure layer, trace the source of bad data/bad state
+  3. Multi-component chains must collect boundary evidence; test pollution must locate the polluter; bad-data issues must add necessary defenses after root cause is confirmed
+  4. Verify only one hypothesis at a time; prohibit stacking unverified patches
+  5. After 3 consecutive failed fixes or inability to locate root cause → stop expanding changes, re-enter requirements analysis/solution design or request confirmation per G3
+  6. After root cause is clear, enter fine-tuning/lightweight iteration/standard development/complete R&D based on impact scope; if EHRB involved, use complete R&D
+- Output:
+  - When reproduction information is missing: use requirements analysis follow-up format
+  - When fix is complete: output using the final actual development mode (fine-tuning/lightweight iteration/development implementation/command complete)
 
 **Fine-tuning Mode**
 - Condition (all must meet): Intent=modification type, instruction clearly contains file path, files≤2, lines≤30, no architecture impact, command modifier=none, EHRB=no
@@ -921,8 +938,9 @@ Phase A (steps 1-4) → Critical checkpoint: Score ≥7 points?
 2. Acquire project context
 3. Requirement type determination
 4. Requirement completeness scoring【Critical checkpoint】
-5. Extract key objectives and success criteria
-6. Code analysis and technical preparation
+5. Large-scope requirement split gate (when applicable)
+6. Extract key objectives and success criteria
+7. Code analysis and technical preparation
 
 **Detailed Rules:** → Read `analyze` Skill when entering phase
 
@@ -943,8 +961,8 @@ Solution ideation → [User selection/Push mode auto] → Detailed planning
 ```
 
 **Key Steps:**
-- Solution ideation: Knowledge base check, project scale determination, task complexity determination, solution ideation
-- Detailed planning: Create solution package directory, generate why.md/how.md/task.md, risk avoidance
+- Solution ideation: Knowledge base check, project scale determination, task complexity determination, large-scope solution split, solution ideation
+- Detailed planning: Create solution package directory, generate why.md/how.md/task.md, design boundary check, risk avoidance, solution self-review gate
 
 **Detailed Rules:** → Read `design` Skill when entering phase
 
@@ -964,14 +982,16 @@ Push mode (planning command): Output summary → Flow ends
 2. Check knowledge base status
 3. Read solution package
 4. Parallel subagent applicability check (read `hello-subagent` Skill when applicable)
-5. Execute code changes per task list
-6. Code security check
-7. TDD gate and quality testing (read `tdd` Skill when applicable)
-8. Synchronize update knowledge base
-9. Update CHANGELOG.md
-10. Consistency audit
-11. Code quality check (optional)
-12. **【Mandatory】Migrate solution package to history/**
+5. Systematic debugging gate (for bugs/tests/build/runtime exceptions)
+6. Execute code changes per task list
+7. Large-project minimal-change execution constraint (when applicable)
+8. Code security check
+9. TDD gate and quality testing (read `tdd` Skill when applicable)
+10. Synchronize update knowledge base
+11. Update CHANGELOG.md
+12. Consistency audit
+13. Code quality check (optional)
+14. **【Mandatory】Migrate solution package to history/**
 
 **Detailed Rules:** → Read `develop` Skill when entering phase
 
@@ -990,6 +1010,7 @@ Exceptional situations: Mark in output, wait for user decision
 | Complete R&D / Requirements Analysis | `analyze` | Read when entering requirements analysis |
 | Standard Development/Complete R&D / Solution Design | `design` | Read when entering solution design |
 | All Development Modes / Development Implementation | `develop` | Read when entering development implementation |
+| Systematic Debugging | `develop` | Read when detecting bugs, test failures, build failures, runtime exceptions, performance regressions, or flaky behavior |
 | Test-driven development | `tdd` | Read for new features, bug fixes, behavior changes, core logic changes, or test strategy design |
 | Parallel Subagent Orchestration | `hello-subagent` | Read when development implementation or multi-model collaboration has multiple independent, clearly bounded, verifiable subtasks |
 | Knowledge Base Command / Knowledge Base Operations | `kb` | Read when ~init command or knowledge base missing |

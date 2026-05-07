@@ -1,4 +1,4 @@
-﻿---
+---
 name: develop
 description: Development implementation phase detailed rules; read when entering development implementation; includes execution flow, code specifications, consistency audit, solution package migration
 ---
@@ -113,11 +113,43 @@ When `task.md` contains multiple independent, clearly bounded, verifiable task g
 
 If subagent trigger conditions are not met, the main agent executes tasks sequentially in the following steps.
 
+### Step 4.6: Systematic Debugging Gate (when applicable)
+
+<systematic_debugging_gate>
+**Trigger conditions (any match):**
+```yaml
+- User reports a bug, test failure, build failure, runtime exception, performance regression, flaky/timeout behavior, or regression issue
+- task.md task type is defect fix, failed-test fix, build fix, or stability fix
+- A new blocking test failure or reproducible exception appears during development implementation
+```
+
+**Root-cause investigation requirements (must complete before fixing):**
+- Read the full error, logs, stack trace, failed test name, and triggering command; do not rely only on the final error line
+- Reproduce the problem stably; if it cannot be reproduced, record environment, steps, inputs, frequency, and ruled-out factors
+- Inspect recent changes, dependency/config/environment differences, and locate whether failure is caused by input, state, boundary condition, concurrent timing, integration contract, or environment
+- For multi-component chains (such as CI→build→signing, API→service→database, frontend→gateway→backend), record input, output, environment/config propagation, and responsible layer at each boundary before deciding where the failure originates
+- Trace bad data or bad state upward from the error site through the call chain/data flow; fix at the source first, and do not patch only the deep symptom site
+- When a test passes alone but fails in the suite, or dirty files, database records, cache, globals, time/random seed pollution appear, locate the polluter test; prefer bisection, minimum test combinations, or ordered reproduction, and do not only clean up in the failing test
+- Propose only one root-cause hypothesis per round and confirm or reject it with the smallest verification; if verification fails, return to investigation instead of stacking speculative patches
+- For async or flaky issues, prefer waiting for real conditions (state, event, DOM, port, file, queue empty, etc.); prohibit fixed sleep as timing guesswork. Fixed waits are allowed only when testing real timing semantics and the reason is recorded
+- Temporary diagnostic logs/assertions are allowed, but must be removed before final implementation or converted into project-approved observability code
+
+**Fix rules after root cause is confirmed:**
+- For bad-data/bad-state issues, fix the source first and add defense layers as needed: entry validation, business invariants, boundary compatibility, and diagnostic observability
+- Defense layers must cover only this root cause and bypass paths, still follow large-project minimal-change constraints, and must not expand into a broad refactor
+- Time pressure, authority pressure, and sunk cost after repeated failures cannot bypass root-cause investigation; if evidence is insufficient, pause and handle per G3
+
+**Stop-expansion rule:**
+- After 3 consecutive failed fix attempts, root cause remains unclear, or the fix needs to expand into architecture/public contracts, stop modifying code
+- Output uncertainty per G3 or split the issue back into solution design; do not continue blind refactoring
+</systematic_debugging_gate>
+
 ### Step 5: Execute Code Changes Per Task List
 
 ```yaml
 Execution rules:
   - Strictly execute item by item per task.md
+  - If the systematic debugging gate is triggered, complete root-cause investigation and single-hypothesis verification before modifying production code
   - If parallel subagents are enabled, the main agent must first complete pre-dispatch checks, file boundary declarations, and return-format constraints per the hello-subagent Skill
   - Subagent results are only intermediate material; the main agent must review changed_files, verification results, and task.md status before entering later quality checks
   - If a task matches TDD applicability (new feature, bug fix, behavior change, core logic change, or test strategy design), read the `tdd` Skill first
@@ -145,6 +177,20 @@ Code editing techniques:
   - Large file handling (≥2000 lines): Grep locate → Read(offset,limit) → Edit precise modification
   - Each Edit only modifies single function/class
 ```
+
+### Step 5.5: Large-Project Minimal Change Execution Constraint
+
+<large_project_minimal_change>
+**Trigger condition:** Project scale is determined as large, or task affects public modules/cross-module contracts
+
+**Execution constraints:**
+- Prefer the smallest code change that satisfies the current solution package success criteria, avoiding opportunistic refactors
+- By default, do not move directories, batch rename, change public API signatures, upgrade dependencies, or format entire files unless necessary
+- Prefer preserving existing architecture, naming, error handling, logging, testing style, and compatibility behavior
+- If broad refactoring becomes necessary to continue, stop expanding the change and record it as a separate follow-up solution or request confirmation per G3
+- For defect fixes, prioritize root-cause location and the smallest patch, avoiding whole rewrites that mask the issue
+- Verification scope must cover touched paths and affected contracts; do not skip tests/audit just because the change is small
+</large_project_minimal_change>
 
 ### Step 6: Code Security Check
 
