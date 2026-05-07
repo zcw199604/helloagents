@@ -55,6 +55,19 @@ Meets any condition is complex task:
 - User explicitly requests multiple solutions
 ```
 
+**6.5 Large-Scope Solution Split**
+
+```yaml
+Trigger condition: Requirements analysis marked a large-scope requirement, or solution ideation discovers it cannot complete within one verifiable delivery loop
+Split principles:
+  - Split by business capability, module boundary, risk level, or deliverable loop
+  - Each slice must be independently verifiable, independently rollbackable, and independently documentable in the knowledge base
+  - Current solution package covers only one slice; prohibit stuffing weakly related slices into one task list
+  - Unselected slices go into why.md "Out of scope" or "Follow-up plan", not current task.md
+Interactive confirmation mode: If current slice is unclear, output solution ideation selection and ask user which slice to execute first
+Push mode: Select the lowest-risk, smallest-change slice with a clear value loop, and record assumptions in the solution package
+```
+
 **7. Solution Ideation**
 
 <solution_design>
@@ -67,6 +80,7 @@ Meets any condition is complex task:
 - Risk assessment (includes EHRB)
 - Cost estimation
 - Whether follows best practices
+- Large-project minimal change: Prefer local fixes, compatibility adapters, and incremental evolution; complete refactors require explicit necessity and risk mitigation
 
 **Solution Ideation Reasoning Process (completed in <thinking> tags, not output to user):**
 
@@ -191,6 +205,13 @@ Read `templates` Skill to get templates, generate:
 Single task code change amount control:
   - Regular project: ≤3 files/task
   - Large project: ≤2 files/task
+Large-project minimal change:
+  - Tasks must stay limited to directly related modules and the smallest file set first
+  - Prohibit mixing style cleanup, directory moves, dependency upgrades, or public interface renames into feature implementation
+  - If refactoring is truly required, split it into an independent task and state necessity, rollback method, and verification command
+Design boundaries:
+  - In how.md, clarify in scope/out of scope, module responsibilities, interface contracts, data boundaries, and dependency boundaries
+  - In task.md, each code task must state target files, verification scenario, and dependencies
 Verification tasks: Insert periodically
 Security check: MUST include security check task
 TDD tasks: For testable behaviors where TDD is Required/Recommended, read the `tdd` Skill and split tasks into RED → GREEN → REFACTOR → VERIFY
@@ -206,6 +227,22 @@ Parallel subagent annotation:
 - Interactive confirmation mode: Ask user
 - MODE_FULL_AUTH=true OR MODE_PLANNING=true: Avoid risks
 - Write to Security and Performance section of `how.md`
+
+**4.5 Solution Self-Review Gate**
+
+<design_self_review_gate>
+**Execution timing:** After first drafts of `why.md`, `how.md`, and `task.md` are generated, before outputting phase summary
+
+**Self-review checklist (all must pass):**
+- Scope consistency: Requirements in `why.md`, technical solution in `how.md`, and task list in `task.md` cover the same requirement slice
+- Clear boundaries: In scope/out of scope, module responsibilities, interface contracts, data boundaries, and dependency boundaries are unambiguous
+- Minimal change: Large-project solution prefers local changes and has no unnecessary refactor, migration, dependency upgrade, or public API rename
+- Verifiable: Every core scenario has corresponding tasks and verification method; TDD applicability has been handled
+- Risk closure: EHRB, security, performance, rollback, and compatibility risks have mitigation measures
+- No unresolved placeholders: Do not leave unexplained TODO/TBD/pending/??? or contradictory descriptions
+
+**Failure handling:** Silently revise the solution package and rerun self-review; if key uncertainty cannot be removed, output uncertainty per G3 and wait for user choice
+</design_self_review_gate>
 
 **5. Set Solution Package Tracking Variable**
 ```yaml

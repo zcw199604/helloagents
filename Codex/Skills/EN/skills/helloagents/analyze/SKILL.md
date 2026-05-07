@@ -1,4 +1,4 @@
-﻿---
+---
 name: analyze
 description: Requirements analysis phase detailed rules; read when entering requirements analysis; includes requirement scoring, follow-up logic, code analysis steps
 ---
@@ -79,6 +79,25 @@ Purpose: Provide complete project context for scoring and follow-up, avoid low-l
 - Score ≥7 points → Continue executing Phase B
 - Score <7 points → Output follow-up format
 </requirement_scoring>
+
+### Step 4.5: Large-Scope Requirement Split Gate
+
+<large_scope_split_gate>
+**Trigger conditions (any match):**
+```yaml
+- Requirement covers multiple subsystems/business domains and cannot form one verifiable delivery loop
+- Estimated affected modules >3 or affected files >10
+- User uses broad wording such as "overall/all/entire site/complete refactor/comprehensive optimization"
+- Requirement mixes architecture, data, API, UI, and other change layers
+```
+
+**Handling rules:**
+- Split large-scope requirements into independent, verifiable, rollbackable requirement slices first
+- Each slice must have a clear goal, scope boundary, success criteria, and primary risks
+- If user has not specified priority or the current execution slice, downgrade Boundary Scope scoring and use follow-up flow to confirm which slice to do first
+- In push mode, continue only when user already provided clear priority; otherwise break silent flow via insufficient-score follow-up
+- When entering solution design, create the solution package only for the current slice; record other slices as out of scope/follow-up plan and do not mix them into current tasks
+</large_scope_split_gate>
 
 ### Follow-up Output Format (when score < 7 points)
 

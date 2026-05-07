@@ -1,4 +1,4 @@
-﻿---
+---
 name: templates
 description: Documentation template collection; read when creating Wiki or solution package files; includes all knowledge base templates and solution file templates
 ---
@@ -324,6 +324,11 @@ Complete ADRs stored in each change's how.md, this section provides index.
 1. [Change point 1]
 2. [Change point 2]
 
+## Scope Boundary
+- **In scope:** [Requirement slice covered by this solution package]
+- **Out of scope:** [Explicitly excluded content/follow-up slices]
+- **Split notes:** [Basis for splitting large-scope requirements; write "N/A" if not applicable]
+
 ## Impact Scope
 - **Modules:** [List]
 - **Files:** [List]
@@ -361,6 +366,15 @@ Complete ADRs stored in each change's how.md, this section provides index.
 ### Implementation Key Points
 - [Key logic 1]
 - [Key logic 2]
+
+## Design Boundaries
+- **In scope:** [Capabilities covered by this implementation]
+- **Out of scope:** [Capabilities/modules not modified this time]
+- **Module responsibilities:** [Responsibility split for involved modules]
+- **Interface contracts:** [New/changed/unchanged APIs, events, function signatures]
+- **Data boundaries:** [Read/write data, migration, compatibility; write "No data changes" if unchanged]
+- **Dependency boundaries:** [New/reused/prohibited dependency changes; write "No new dependencies" if none]
+- **Large-project minimal change:** [Directly related file set, avoided refactors, rollback method; for non-large projects, briefly state "minimum necessary scope"]
 
 ## Architecture Design
 <!-- If architecture changes -->
@@ -419,6 +433,13 @@ Enable this section only when task groups are independent, have no ordering depe
 - Parallel Group A: tasks [1.1, 4.1]; allowed writes: `path/to/a.ts`, `wiki/modules/a.md`; conflict domain: none; verification: `[verification command]`
 - Parallel Group B: tasks [2.1]; allowed writes: `path/to/b.ts`; conflict domain: none; verification: `[verification command]`
 - Non-parallel tasks: [3.1, 5.4]; reason: security check/final verification must run after integration
+
+---
+
+## 0. Solution Boundary Confirmation
+- [ ] 0.1 Confirm this task only covers the in-scope slice in why.md, and out-of-scope content does not enter implementation
+- [ ] 0.2 Confirm how.md design boundaries are complete, especially module responsibilities, interface contracts, data boundaries, and dependency boundaries
+- [ ] 0.3 For large projects, confirm the minimal-change strategy: no unrelated refactor, directory move, dependency upgrade, or public API rename
 
 ---
 
