@@ -94,8 +94,9 @@ Syntax Constraints:
 - **Solution Package**: Complete solution unit (`why.md` + `how.md` + `task.md`)
 
 **Path Conventions:**
-- In this ruleset, `plan/`, `wiki/`, `history/` all refer to complete paths under `helloagents/`
-- All knowledge base files MUST be created under the `helloagents/` directory
+- In this ruleset, `helloagents/<branch-name>/` denotes the local knowledge base root for the current branch; `<branch-name>` is the current git branch name or workspace alias
+- In this ruleset, `plan/`, `wiki/`, `history/` all refer to complete paths under `helloagents/<branch-name>/`
+- All knowledge base files MUST be created under the `helloagents/<branch-name>/` directory
 
 ### G3 | Uncertainty Handling Principles
 
@@ -167,7 +168,7 @@ Routing determination → Execute current phase (follow silent execution) → Ha
 - **Interactive Confirmation Mode** (default): Wait for user confirmation after each phase
 - **Push Mode**:
   - Full authorization command (`~auto`): Requirements Analysis → Solution Design → Development Implementation continuous execution
-  - Planning command (`~plan`): Requirements Analysis → Solution Design continuous execution
+  - Planning command (`~plan`): Defaults to automatic planning; can choose interactive planning at command confirmation (wait for solution selection during solution ideation)
 - **Single Phase Commands**:
   - Knowledge base command (`~init`): Knowledge base management operations
   - Execution command (`~exec`): Development implementation phase execution
@@ -177,7 +178,8 @@ Routing determination → Execute current phase (follow silent execution) → Ha
 Interactive Confirmation Mode: Output phase summary and wait for confirmation
 Push Mode:
   - Full authorization command: Requirements Analysis → Solution Design → Development Implementation fully silent, output overall summary after development implementation complete
-  - Planning command: Requirements Analysis → Solution Design fully silent, output overall summary after solution design complete
+  - Planning command (automatic planning): Requirements Analysis → Solution Design fully silent, output overall summary after solution design complete
+  - Planning command (interactive planning): Requirements Analysis silent, output solution comparison during solution ideation and wait for user selection, output overall summary after solution design complete
   - Scoring <7 points: Immediately output follow-up questions (break silence)
   - EHRB unavoidable: Output warning and pause
 ```
@@ -534,7 +536,7 @@ STEP 3: Knowledge base exists
 
 **Create New Solution Package (handle name conflicts):**
 ```yaml
-Path: plan/YYYYMMDDHHMM_<feature>/
+Path: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/
 Conflict handling:
   1. Check if directory exists
   2. Does not exist → Create directly
@@ -544,8 +546,8 @@ Conflict handling:
 **Executed Solution Package (P3 phase mandatory migration):**
 ```yaml
 1. Update task.md task status (use above task status symbols)
-2. Migrate to history/YYYY-MM/ (preserve directory name, overwrite if same name exists)
-3. Update history/index.md
+2. Migrate to helloagents/<branch-name>/history/YYYY-MM/ (preserve directory name, overwrite if same name exists)
+3. Update helloagents/<branch-name>/history/index.md
 ```
 
 **Legacy Solution Scan:**
@@ -555,7 +557,7 @@ Trigger timing (meets any):
   - After solution package migration: Development Implementation complete, Execution command complete, Full authorization command complete
 
 Scan rules:
-  - Scan: All solution packages under plan/ directory
+  - Scan: All solution packages under helloagents/<branch-name>/plan/ directory
   - Exclude: Solution package created/executed this time
   - Condition: Only output prompt when ≥1 legacy solution package detected
 
@@ -581,6 +583,7 @@ CURRENT_PACKAGE: Currently executing solution package path
 
 MODE_FULL_AUTH: Full authorization command active state
 MODE_PLANNING: Planning command active state
+MODE_PLANNING_INTERACTIVE: Interactive planning active state
 MODE_EXECUTION: Execution command active state
 ```
 
@@ -714,10 +717,10 @@ Secondary dimensions:
   3. Create simplified solution package (task.md only, omit why.md/how.md)
   4. Execute code changes
   5. Synchronize update knowledge base (per `kb` Skill sync rules)
-  6. Migrate solution package to history/
+  6. Migrate solution package to helloagents/<branch-name>/history/
   7. Scan legacy solutions
 - Simplified solution package rules:
-  - Path: `plan/YYYYMMDDHHMM_<feature>/`
+  - Path: `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/`
   - Create `task.md` only, containing task list
   - Mark "lightweight iteration" when migrating
 - Output format:
@@ -725,15 +728,15 @@ Secondary dimensions:
   ✅【HelloAGENTS】- Lightweight Iteration Complete
 
   - ✅ Execution result: Tasks X/Y completed
-  - 📦 Solution package: Migrated to history/YYYY-MM/...
+  - 📦 Solution package: Migrated to helloagents/<branch-name>/history/YYYY-MM/...
   - 📚 Knowledge base: [Updated/Created]
 
   ────
   📁 Changes:
     - {code files}
     - {knowledge base files}
-    - helloagents/CHANGELOG.md
-    - helloagents/history/index.md
+    - helloagents/<branch-name>/CHANGELOG.md
+    - helloagents/<branch-name>/history/index.md
     ...
 
   🔄 Next Steps: Please verify functionality
@@ -756,8 +759,8 @@ Secondary dimensions:
 
 **Full Authorization Command**: ~auto|~helloauto|~fa → Confirm authorization → Requirements Analysis → Solution Design → Development Implementation silent execution
 **Knowledge Base Command**: ~init|~wiki → Confirm authorization → Knowledge base initialization
-**Planning Command**: ~plan|~design → Confirm authorization → Requirements Analysis → Solution Design silent execution
-**Execution Command**: ~exec|~run|~execute → Check plan/ for existing solution package → Confirm authorization → Development Implementation
+**Planning Command**: ~plan|~design → Choose automatic planning or interactive planning → Requirements Analysis → Solution Design (interactive planning waits for selection during solution ideation)
+**Execution Command**: ~exec|~run|~execute → Check helloagents/<branch-name>/plan/ for existing solution package → Confirm authorization → Development Implementation
 
 </command_paths>
 
@@ -825,13 +828,48 @@ Refuse intent:
 Other input: Ask for confirmation again
 ```
 
+### Planning Command Confirmation Mechanism
+
+**Applicable Scope:** `~plan` / `~design` planning command. This format overrides the general authorization inquiry format.
+
+```
+❓【HelloAGENTS】- Command Confirmation
+
+About to execute Planning Command:
+- Execution content: Requirements Analysis → Solution Design → Create solution package
+- Impact scope: Only writes solution package and necessary knowledge base files; does not modify business code
+
+[1] Automatic planning (Recommended) - Automatically choose the recommended solution and create the solution package
+[2] Interactive planning - Output solution comparison before creating the solution package and wait for selection
+[3] Cancel - Cancel planning command
+
+────
+🔄 Next Steps: Please enter number to choose
+```
+
+**User Response Handling:**
+```yaml
+[1] Automatic planning:
+  - Set MODE_PLANNING=true
+  - Set MODE_PLANNING_INTERACTIVE=false
+  - Requirements Analysis → Solution Design fully silent
+[2] Interactive planning:
+  - Set MODE_PLANNING=true
+  - Set MODE_PLANNING_INTERACTIVE=true
+  - Run requirements analysis silently, output solution comparison during solution ideation and wait for user selection
+[3]/Cancel:
+  - Clear MODE_PLANNING/MODE_PLANNING_INTERACTIVE
+  - Output cancellation format
+Other input: Ask for confirmation again
+```
+
 ### Command Quick Reference
 
 | Command | Trigger Words | Action |
 |---------|---------------|--------|
 | Full Authorization | `~auto` / `~helloauto` / `~fa` | Requirements Analysis → Solution Design → Development Implementation silent execution |
 | Knowledge Base | `~init` / `~wiki` | Knowledge base initialization/rebuild |
-| Planning | `~plan` / `~design` | Requirements Analysis → Solution Design silent execution |
+| Planning | `~plan` / `~design` | Choose automatic or interactive planning, execute to solution design and create solution package |
 | Execution | `~exec` / `~run` / `~execute` | Development Implementation execute existing solution package |
 
 ### Command Completion Output Format
@@ -851,8 +889,8 @@ Other input: Ask for confirmation again
   - {code files}
   - {knowledge base files}
   - {solution package files}
-  - helloagents/CHANGELOG.md
-  - helloagents/history/...
+  - helloagents/<branch-name>/CHANGELOG.md
+  - helloagents/<branch-name>/history/...
   ...
 
 🔄 Next Steps: Full authorization command ended, ready to receive new instructions anytime
@@ -869,9 +907,9 @@ Other input: Ask for confirmation again
 
 ────
 📁 Changes:
-  - helloagents/plan/{solution_package_dir}/why.md
-  - helloagents/plan/{solution_package_dir}/how.md
-  - helloagents/plan/{solution_package_dir}/task.md
+  - helloagents/<branch-name>/plan/{solution_package_dir}/why.md
+  - helloagents/<branch-name>/plan/{solution_package_dir}/how.md
+  - helloagents/<branch-name>/plan/{solution_package_dir}/task.md
 
 🔄 Next Steps: Solution package generated, enter ~exec to execute if needed
 📦 Legacy Solutions: [Scan and display per G11, if any]
@@ -889,8 +927,8 @@ Other input: Ask for confirmation again
 📁 Changes:
   - {code files}
   - {knowledge base files}
-  - helloagents/CHANGELOG.md
-  - helloagents/history/...
+  - helloagents/<branch-name>/CHANGELOG.md
+  - helloagents/<branch-name>/history/...
   ...
 
 🔄 Next Steps: Execution command ended, ready to receive new instructions anytime
@@ -948,7 +986,7 @@ Phase A (steps 1-4) → Critical checkpoint: Score ≥7 points?
 ```yaml
 Score < 7 points: Loop follow-up
 Score ≥7 points AND Interactive confirmation mode: Output summary → Wait for confirmation
-Score ≥7 points AND Push mode: Silently enter solution design
+Score ≥7 points AND Push mode: Silently enter solution design (when MODE_PLANNING_INTERACTIVE=true, solution ideation outputs solution comparison and waits for selection)
 ```
 
 ### Solution Design
@@ -957,7 +995,7 @@ Score ≥7 points AND Push mode: Silently enter solution design
 
 **Execution Flow:**
 ```
-Solution ideation → [User selection/Push mode auto] → Detailed planning
+Solution ideation → [User selection/Interactive planning user selection/Push mode auto] → Detailed planning
 ```
 
 **Key Steps:**
@@ -970,7 +1008,7 @@ Solution ideation → [User selection/Push mode auto] → Detailed planning
 ```yaml
 Interactive confirmation mode: Output summary → Wait for confirmation → Enter development implementation after user confirms
 Push mode (full authorization): Silently enter development implementation
-Push mode (planning command): Output summary → Flow ends
+Push mode (planning command): Automatic planning outputs summary → Flow ends; interactive planning waits for selection during solution ideation then outputs summary → Flow ends
 ```
 
 ### Development Implementation
@@ -991,7 +1029,7 @@ Push mode (planning command): Output summary → Flow ends
 11. Update CHANGELOG.md
 12. Consistency audit
 13. Code quality check (optional)
-14. **【Mandatory】Migrate solution package to history/**
+14. **【Mandatory】Migrate solution package to helloagents/<branch-name>/history/**
 
 **Detailed Rules:** → Read `develop` Skill when entering phase
 

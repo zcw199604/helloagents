@@ -422,7 +422,7 @@ flowchart TD
 ```markdown
 # Task List: [Feature Name]
 
-Directory: `helloagents/plan/YYYYMMDDHHMM_<feature>/`
+Directory: `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/`
 
 ---
 

@@ -9,28 +9,30 @@ description: Complete knowledge base management rules; read when ~init command o
 
 **File Structure:**
 ```plaintext
-helloagents/              # HelloAGENTS workspace (SSOT)
-├── CHANGELOG.md          # Version history (Keep a Changelog)
-├── project.md            # Technical conventions
-├── wiki/                 # Core documentation
-│   ├── overview.md       # Project overview
-│   ├── arch.md           # Architecture design
-│   ├── api.md            # API manual
-│   ├── data.md           # Data models
-│   └── modules/<module>.md
-├── plan/                 # Change workspace
-│   └── YYYYMMDDHHMM_<feature>/
-│       ├── why.md        # Change proposal
-│       ├── how.md        # Technical design
-│       └── task.md       # Task list
-└── history/              # Completed changes archive
-    ├── index.md
-    └── YYYY-MM/YYYYMMDDHHMM_<feature>/
+helloagents/                       # HelloAGENTS workspace container
+└── <branch-name>/                 # Current branch knowledge base root (SSOT)
+    ├── CHANGELOG.md               # Version history (Keep a Changelog)
+    ├── project.md                 # Technical conventions
+    ├── wiki/                      # Core documentation
+    │   ├── overview.md            # Project overview
+    │   ├── arch.md                # Architecture design
+    │   ├── api.md                 # API manual
+    │   ├── data.md                # Data models
+    │   └── modules/<module>.md
+    ├── plan/                      # Change workspace
+    │   └── YYYYMMDDHHMM_<feature>/
+    │       ├── why.md             # Change proposal
+    │       ├── how.md             # Technical design
+    │       └── task.md            # Task list
+    └── history/                   # Completed changes archive
+        ├── index.md
+        └── YYYY-MM/YYYYMMDDHHMM_<feature>/
 ```
 
 **Path Conventions:**
-- In this ruleset, `plan/`, `wiki/`, `history/` all refer to complete paths under `helloagents/`
-- All knowledge base files MUST be created under the `helloagents/` directory
+- In this ruleset, `helloagents/<branch-name>/` denotes the local knowledge base root for the current branch; `<branch-name>` is the current git branch name or workspace alias
+- In this ruleset, `plan/`, `wiki/`, `history/` all refer to complete paths under `helloagents/<branch-name>/`
+- All knowledge base files MUST be created under the `helloagents/<branch-name>/` directory
 
 ---
 
@@ -66,8 +68,8 @@ helloagents/              # HelloAGENTS workspace (SSOT)
 
 <context_acquisition_rules>
 **Step 1: Check knowledge base first (if exists)**
-- Core files: `project.md`, `wiki/overview.md`, `wiki/arch.md`
-- Select as needed: `wiki/modules/<module>.md`, `wiki/api.md`, `wiki/data.md`
+- Core files: `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/overview.md`, `helloagents/<branch-name>/wiki/arch.md`
+- Select as needed: `helloagents/<branch-name>/wiki/modules/<module>.md`, `helloagents/<branch-name>/wiki/api.md`, `helloagents/<branch-name>/wiki/data.md`
 
 **Step 2: Knowledge base doesn't exist/insufficient info → Comprehensive codebase scan**
 - Use Glob to get file structure
@@ -83,23 +85,23 @@ helloagents/              # HelloAGENTS workspace (SSOT)
 **Trigger Timing:** After code changes, MUST immediately synchronize knowledge base updates
 
 **Step 1 - Module Specification Update:**
-- Read current solution package `plan/YYYYMMDDHHMM_<feature>/why.md` **Core Scenarios** section (read before migration)
+- Read current solution package `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md` **Core Scenarios** section (read before migration)
 - Extract requirements and scenarios (requirements need to mark owning module)
-- Update `wiki/modules/<module>.md` **Specifications** section
+- Update `helloagents/<branch-name>/wiki/modules/<module>.md` **Specifications** section
   - Does not exist → Append
   - Already exists → Update
 
 **Step 2 - Update by Change Type:**
-- API changes → Update `wiki/api.md`
-- Data model changes → Update `wiki/data.md`
-- Architecture changes/new modules → Update `wiki/arch.md`
-- Module index changes → Update `wiki/overview.md`
-- Technical convention changes → Update `project.md`
+- API changes → Update `helloagents/<branch-name>/wiki/api.md`
+- Data model changes → Update `helloagents/<branch-name>/wiki/data.md`
+- Architecture changes/new modules → Update `helloagents/<branch-name>/wiki/arch.md`
+- Module index changes → Update `helloagents/<branch-name>/wiki/overview.md`
+- Technical convention changes → Update `helloagents/<branch-name>/project.md`
 
 **Step 3 - ADR Maintenance (if includes architecture decisions):**
-- Extract ADR information (read from `plan/YYYYMMDDHHMM_<feature>/how.md` **Architecture Decision ADR** section before migration)
-- Append to **Major Architecture Decisions** table in `wiki/arch.md`
-- Link to `history/YYYY-MM/YYYYMMDDHHMM_<feature>/how.md#adr-xxx`
+- Extract ADR information (read from `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md` **Architecture Decision ADR** section before migration)
+- Append to **Major Architecture Decisions** table in `helloagents/<branch-name>/wiki/arch.md`
+- Link to `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/how.md#adr-xxx`
 - **Note:** The history/ link written at this time is a pre-calculated path
 
 **Step 4 - Cleanup:**
@@ -116,7 +118,7 @@ helloagents/              # HelloAGENTS workspace (SSOT)
 
 <kb_missing_handler>
 **STEP 1: Check if core files exist**
-- `CHANGELOG.md`, `project.md`, `wiki/*.md`
+- `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/*.md`
 
 **STEP 2: Knowledge base does not exist**
 Handle by phase:
@@ -127,9 +129,9 @@ Requirements Analysis Phase:
 
 Solution Design/Development Implementation Phase:
   - Comprehensively scan codebase and create complete knowledge base:
-    - Root directory: CHANGELOG.md, project.md
-    - wiki/: overview.md, arch.md, api.md, data.md
-    - wiki/modules/: <module>.md (each module)
+    - Root directory: `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`
+    - `helloagents/<branch-name>/wiki/`: overview.md, arch.md, api.md, data.md
+    - `helloagents/<branch-name>/wiki/modules/`: <module>.md (each module)
     - Large projects (determined per G4) batch process (≤20 modules per batch)
 ```
 
@@ -181,19 +183,19 @@ for each selected solution package:
      Add at top: > **Status:** Not executed (user cleanup)
 
   2. Migrate to history directory:
-     - Move from plan/ to history/YYYY-MM/
+     - Move from `helloagents/<branch-name>/plan/` to `helloagents/<branch-name>/history/YYYY-MM/`
      - YYYY-MM extracted from solution package directory name
      - Name conflict: Force overwrite
 
-  3. Update history index: history/index.md (mark "not executed")
+  3. Update history index: `helloagents/<branch-name>/history/index.md` (mark "not executed")
 ```
 
 **Step 3 - Output migration summary:**
 ```
-✅ Migrated X solution packages to history/:
-  - 202511201300_logout → history/2025-11/202511201300_logout/
-  - 202511201500_settings → history/2025-11/202511201500_settings/
-📦 Remaining Y solution packages kept in plan/:
+✅ Migrated X solution packages to `helloagents/<branch-name>/history/`:
+  - 202511201300_logout → helloagents/<branch-name>/history/2025-11/202511201300_logout/
+  - 202511201500_settings → helloagents/<branch-name>/history/2025-11/202511201500_settings/
+📦 Remaining Y solution packages kept in `helloagents/<branch-name>/plan/`:
   - 202511201400_profile
 ```
 </legacy_plan_migration>
@@ -206,7 +208,7 @@ for each selected solution package:
 - After solution package migration: Development Implementation complete, Execution command complete, Full authorization command complete
 
 **Scan Logic:**
-1. Scan all solution package directories under plan/ directory
+1. Scan all solution package directories under `helloagents/<branch-name>/plan/` directory
 2. Exclude solution package executed this time (read CURRENT_PACKAGE variable)
 3. Clear CURRENT_PACKAGE variable
 4. Remaining solution packages are legacy solutions
@@ -215,14 +217,14 @@ for each selected solution package:
 
 **Output Format:**
 ```
-📦 plan/Legacy Solutions: Detected X legacy solution packages ([list]), do you need to migrate to history?
+📦 `helloagents/<branch-name>/plan/` Legacy Solutions: Detected X legacy solution packages ([list]), do you need to migrate to history?
 ```
 
 List format: YYYYMMDDHHMM_<feature> (one per line, max 5, show "...and X more" if exceeds)
 
 **User Response:**
 - Confirm migration → Execute batch migration flow
-- Refuse/ignore → Keep in plan/ directory
+- Refuse/ignore → Keep in `helloagents/<branch-name>/plan/` directory
 </legacy_plan_scan>
 
 ---
@@ -241,8 +243,8 @@ Strictly follow G6.1 unified output format:
 ────
 📁 Changes:
   - {knowledge base files}
-  - helloagents/CHANGELOG.md
-  - helloagents/project.md
+  - helloagents/<branch-name>/CHANGELOG.md
+  - helloagents/<branch-name>/project.md
   ...
 
 🔄 Next Steps: Knowledge base operation complete, can proceed with other tasks

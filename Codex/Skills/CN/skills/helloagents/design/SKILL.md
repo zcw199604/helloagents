@@ -5,7 +5,7 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
 
 # 方案设计 - 详细规则
 
-**目标:** 构思可行方案并制定详细执行计划，生成 plan/ 目录下的方案包
+**目标:** 构思可行方案并制定详细执行计划，生成 `helloagents/<branch-name>/plan/` 目录下的方案包
 
 **前置条件:** 需求分析已完成（评分≥7分）
 
@@ -13,7 +13,7 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
 
 **执行流程:**
 ```
-方案构思 → [用户确认/推进模式下连续] → 详细规划（创建新方案包）
+方案构思 → [用户确认/交互式规划用户选择/推进模式下连续] → 详细规划（创建新方案包）
 ```
 
 ---
@@ -64,8 +64,8 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
   - 每个切片必须可独立验证、可独立回滚、可独立记录知识库
   - 当前方案包只覆盖一个切片，禁止把多个弱相关切片塞进同一任务清单
   - 未选切片写入 why.md 的"范围外"或"后续计划"，不得写入本次 task.md
-交互确认模式: 如当前切片未明确，输出方案构思选择，让用户选择先执行哪一片
-推进模式: 选择风险最低、改动最小且价值闭环清晰的切片，并在方案包中记录假设
+交互确认模式或 MODE_PLANNING_INTERACTIVE=true: 如当前切片未明确，输出方案构思选择，让用户选择先执行哪一片
+推进模式（不含交互式规划）: 选择风险最低、改动最小且价值闭环清晰的切片，并在方案包中记录假设
 ```
 
 **7. 方案构思**
@@ -101,8 +101,8 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
 - 确定推荐方案和理由
 - 输出格式: 推荐方案标题后加"推荐"标识
   - 例: "方案1（最小变更修复-推荐）" vs "方案2（完整重构）"
-- 交互确认模式: 输出方案对比，询问用户选择
-- 推进模式: 选择推荐方案（不输出对比）
+- 交互确认模式或 MODE_PLANNING_INTERACTIVE=true: 输出方案对比，询问用户选择
+- 推进模式（不含交互式规划）: 选择推荐方案（不输出对比）
 
 **简单任务:**
 - 直接确定唯一可行方案
@@ -135,13 +135,13 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
 
 ```yaml
 复杂任务:
-  交互确认模式:
+  交互确认模式或 MODE_PLANNING_INTERACTIVE=true:
     - 用户选择有效序号(1-N) → 进入详细规划
     - 用户拒绝所有方案 → 输出重新构思询问格式
       - 确认重新构思: 返回方案构思，重新构思
       - 拒绝: 提示"已取消方案设计"，流程终止
       - 其他输入: 再次询问
-  推进模式:
+  推进模式（不含交互式规划）:
     - 选择推荐方案 → 立即静默进入详细规划
 
 简单任务: 直接进入详细规划
@@ -166,7 +166,7 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
 
 **前提:** 用户已选择/确认方案（来自方案构思）
 
-**重要:** 必须创建新方案包，使用当前时间戳，不得复用 plan/ 中的遗留方案
+**重要:** 必须创建新方案包，使用当前时间戳，不得复用 `helloagents/<branch-name>/plan/` 中的遗留方案
 
 ### 动作步骤
 
@@ -175,15 +175,15 @@ description: 方案设计阶段详细规则；进入方案设计时读取；包�
 **1. 创建新方案包目录**
 
 ```yaml
-路径: plan/YYYYMMDDHHMM_<feature>/
+路径: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/
 冲突处理:
-  1. 检查 plan/YYYYMMDDHHMM_<feature>/ 是否存在
+  1. 检查 helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/ 是否存在
   2. 如不存在 → 直接创建
-  3. 如存在 → 使用版本后缀: plan/YYYYMMDDHHMM_<feature>_v2/
+  3. 如存在 → 使用版本后缀: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>_v2/
      (如 _v2 也存在，则递增为 _v3, _v4...)
 示例:
-  - 首次创建: plan/202511181430_login/
-  - 同名冲突: plan/202511181430_login_v2/
+  - 首次创建: helloagents/<branch-name>/plan/202511181430_login/
+  - 同名冲突: helloagents/<branch-name>/plan/202511181430_login_v2/
 ```
 
 **2. 新库/框架文档查询（如需要）**
@@ -224,8 +224,8 @@ TDD例外: 例外任务必须标注 TDD-EXEMPT 和原因
 
 **4. 风险规避措施制定**
 - 基于方案构思风险评估，按G9制定详细规避措施
-- 交互确认模式: 询问用户
-- MODE_FULL_AUTH=true 或 MODE_PLANNING=true: 规避风险
+- 交互确认模式或 MODE_PLANNING_INTERACTIVE=true: 询问用户
+- MODE_FULL_AUTH=true 或 (MODE_PLANNING=true 且 MODE_PLANNING_INTERACTIVE=false): 规避风险
 - 写入 `how.md` 的 安全与性能 章节
 
 **4.5 方案自审门禁**
@@ -280,14 +280,14 @@ TDD例外: 例外任务必须标注 TDD-EXEMPT 和原因
    - 📊 任务清单概要
    - ⚠️ 风险评估（如检测到EHRB）
 3. **文件变更清单:**
-   - `helloagents/plan/YYYYMMDDHHMM_<feature>/why.md`
-   - `helloagents/plan/YYYYMMDDHHMM_<feature>/how.md`
-   - `helloagents/plan/YYYYMMDDHHMM_<feature>/task.md`
+   - `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md`
+   - `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md`
+   - `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/task.md`
 4. **下一步建议:**
    - 交互确认模式/规划命令: 输出多模型审查询问（见"多模型审查询问格式"）
    - 全授权命令: 直接进入开发实施，总结末尾追加多模型审查提示
 5. **遗留方案提醒:**
-   - 按G11扫描plan/目录
+   - 按G11扫描 `helloagents/<branch-name>/plan/` 目录
    - 如检测到遗留方案包（排除本次创建的方案包），按G11规则显示
 
 ### 多模型审查询问格式
@@ -325,7 +325,7 @@ TDD例外: 例外任务必须标注 TDD-EXEMPT 和原因
         - 明确拒绝 → 流程终止
         - Feedback-Delta → 按Feedback-Delta规则处理
         - 其他输入 → 视为新的用户需求，按路由机制重新判定
-      - 规划命令: 输出整体总结 → 停止 → 清除MODE_PLANNING
+      - 规划命令: 输出整体总结 → 停止 → 清除MODE_PLANNING/MODE_PLANNING_INTERACTIVE
 
 推进模式:
   - 全授权命令: 完成方案设计 → 跳过多模型审查询问 → 立即静默进入开发实施
@@ -334,5 +334,5 @@ TDD例外: 例外任务必须标注 TDD-EXEMPT 和原因
 关键约束（只有以下3种情况可以进入开发实施）：
   1. 方案设计完成后用户明确确认（含多模型审查后确认）
   2. 全授权命令(~auto等)触发且已完成方案设计
-  3. 执行命令(~exec等)触发且plan/中存在方案包
+  3. 执行命令(~exec等)触发且 `helloagents/<branch-name>/plan/` 中存在方案包
 ```

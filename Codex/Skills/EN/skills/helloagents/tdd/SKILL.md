@@ -1,4 +1,4 @@
-﻿---
+---
 name: tdd
 description: Test-driven development quality rules; use when a task involves new features, bug fixes, observable behavior changes, core logic changes, public API/method additions, or test strategy design; defines TDD applicability, RED-GREEN-REFACTOR, exemptions, testing anti-patterns, and completion gates.
 ---

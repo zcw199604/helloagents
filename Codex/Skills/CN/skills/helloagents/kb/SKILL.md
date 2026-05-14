@@ -9,28 +9,30 @@ description: 知识库管理完整规则；~init命令或知识库缺失时读�
 
 **文件结构:**
 ```plaintext
-helloagents/              # HelloAGENTS 工作空间（SSOT）
-├── CHANGELOG.md          # 版本历史（Keep a Changelog）
-├── project.md            # 技术约定
-├── wiki/                 # 核心文档
-│   ├── overview.md       # 项目概述
-│   ├── arch.md           # 架构设计
-│   ├── api.md            # API 手册
-│   ├── data.md           # 数据模型
-│   └── modules/<module>.md
-├── plan/                 # 变更工作区
-│   └── YYYYMMDDHHMM_<feature>/
-│       ├── why.md        # 变更提案
-│       ├── how.md        # 技术设计
-│       └── task.md       # 任务清单
-└── history/              # 已完成变更归档
-    ├── index.md
-    └── YYYY-MM/YYYYMMDDHHMM_<feature>/
+helloagents/                       # HelloAGENTS 工作空间集合
+└── <branch-name>/                 # 当前分支知识库根目录（SSOT）
+    ├── CHANGELOG.md               # 版本历史（Keep a Changelog）
+    ├── project.md                 # 技术约定
+    ├── wiki/                      # 核心文档
+    │   ├── overview.md            # 项目概述
+    │   ├── arch.md                # 架构设计
+    │   ├── api.md                 # API 手册
+    │   ├── data.md                # 数据模型
+    │   └── modules/<module>.md
+    ├── plan/                      # 变更工作区
+    │   └── YYYYMMDDHHMM_<feature>/
+    │       ├── why.md             # 变更提案
+    │       ├── how.md             # 技术设计
+    │       └── task.md            # 任务清单
+    └── history/                   # 已完成变更归档
+        ├── index.md
+        └── YYYY-MM/YYYYMMDDHHMM_<feature>/
 ```
 
 **路径约定:**
-- 本规则集中 `plan/`、`wiki/`、`history/` 均指 `helloagents/` 下的完整路径
-- 所有知识库文件必须在 `helloagents/` 目录下创建
+- 本规则集中 `helloagents/<branch-name>/` 表示当前分支对应的本地知识库根目录；`<branch-name>` 取当前 git 分支名或工作区别名
+- 本规则集中 `plan/`、`wiki/`、`history/` 均指 `helloagents/<branch-name>/` 下的完整路径
+- 所有知识库文件必须在 `helloagents/<branch-name>/` 目录下创建
 
 ---
 
@@ -66,8 +68,8 @@ helloagents/              # HelloAGENTS 工作空间（SSOT）
 
 <context_acquisition_rules>
 **步骤1: 先检查知识库（如存在）**
-- 核心文件: `project.md`, `wiki/overview.md`, `wiki/arch.md`
-- 按需选择: `wiki/modules/<module>.md`, `wiki/api.md`, `wiki/data.md`
+- 核心文件: `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/overview.md`, `helloagents/<branch-name>/wiki/arch.md`
+- 按需选择: `helloagents/<branch-name>/wiki/modules/<module>.md`, `helloagents/<branch-name>/wiki/api.md`, `helloagents/<branch-name>/wiki/data.md`
 
 **步骤2: 知识库不存在/信息不足 → 全面扫描代码库**
 - 使用 Glob 获取文件结构
@@ -83,23 +85,23 @@ helloagents/              # HelloAGENTS 工作空间（SSOT）
 **触发时机:** 代码变更后，必须立即同步更新知识库
 
 **步骤1 - 模块规范更新:**
-- 读取当前方案包 `plan/YYYYMMDDHHMM_<feature>/why.md` 的 **核心场景** 章节（在迁移前读取）
+- 读取当前方案包 `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md` 的 **核心场景** 章节（在迁移前读取）
 - 提取需求和场景（需求需标注所属模块）
-- 更新 `wiki/modules/<module>.md` 的 **规范** 章节
+- 更新 `helloagents/<branch-name>/wiki/modules/<module>.md` 的 **规范** 章节
   - 不存在 → 追加
   - 已存在 → 更新
 
 **步骤2 - 按变更类型更新:**
-- API变更 → 更新 `wiki/api.md`
-- 数据模型变更 → 更新 `wiki/data.md`
-- 架构变更/新增模块 → 更新 `wiki/arch.md`
-- 模块索引变更 → 更新 `wiki/overview.md`
-- 技术约定变更 → 更新 `project.md`
+- API变更 → 更新 `helloagents/<branch-name>/wiki/api.md`
+- 数据模型变更 → 更新 `helloagents/<branch-name>/wiki/data.md`
+- 架构变更/新增模块 → 更新 `helloagents/<branch-name>/wiki/arch.md`
+- 模块索引变更 → 更新 `helloagents/<branch-name>/wiki/overview.md`
+- 技术约定变更 → 更新 `helloagents/<branch-name>/project.md`
 
 **步骤3 - ADR维护（如包含架构决策）:**
-- 提取 ADR 信息（在迁移前从 `plan/YYYYMMDDHHMM_<feature>/how.md` 的 **架构决策 ADR** 章节读取）
-- 在 `wiki/arch.md` 的 **重大架构决策** 表格中追加
-- 链接到 `history/YYYY-MM/YYYYMMDDHHMM_<feature>/how.md#adr-xxx`
+- 提取 ADR 信息（在迁移前从 `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md` 的 **架构决策 ADR** 章节读取）
+- 在 `helloagents/<branch-name>/wiki/arch.md` 的 **重大架构决策** 表格中追加
+- 链接到 `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/how.md#adr-xxx`
 - **注意:** 此时写入的 history/ 链接为预计算路径
 
 **步骤4 - 清理:**
@@ -116,7 +118,7 @@ helloagents/              # HelloAGENTS 工作空间（SSOT）
 
 <kb_missing_handler>
 **STEP 1: 检查核心文件是否存在**
-- `CHANGELOG.md`, `project.md`, `wiki/*.md`
+- `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/*.md`
 
 **STEP 2: 知识库不存在**
 按阶段处理:
@@ -127,9 +129,9 @@ helloagents/              # HelloAGENTS 工作空间（SSOT）
 
 方案设计/开发实施阶段:
   - 全面扫描代码库并创建完整知识库:
-    - 根目录: CHANGELOG.md, project.md
-    - wiki/: overview.md, arch.md, api.md, data.md
-    - wiki/modules/: <module>.md（每个模块）
+    - 根目录: `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`
+    - `helloagents/<branch-name>/wiki/`: overview.md, arch.md, api.md, data.md
+    - `helloagents/<branch-name>/wiki/modules/`: <module>.md（每个模块）
     - 大型项目（按G4判定）分批处理（每批≤20个模块）
 ```
 
@@ -181,19 +183,19 @@ for each 选定的方案包:
      顶部添加: > **状态:** 未执行（用户清理）
 
   2. 迁移至历史记录目录:
-     - 从 plan/ 移动到 history/YYYY-MM/
+     - 从 `helloagents/<branch-name>/plan/` 移动到 `helloagents/<branch-name>/history/YYYY-MM/`
      - YYYY-MM 从方案包目录名提取
      - 同名冲突: 强制覆盖
 
-  3. 更新历史记录索引: history/index.md（标注"未执行"）
+  3. 更新历史记录索引: `helloagents/<branch-name>/history/index.md`（标注"未执行"）
 ```
 
 **步骤3 - 输出迁移摘要:**
 ```
-✅ 已迁移 X 个方案包至 history/:
-  - 202511201300_logout → history/2025-11/202511201300_logout/
-  - 202511201500_settings → history/2025-11/202511201500_settings/
-📦 剩余 Y 个方案包保留在 plan/:
+✅ 已迁移 X 个方案包至 `helloagents/<branch-name>/history/`:
+  - 202511201300_logout → helloagents/<branch-name>/history/2025-11/202511201300_logout/
+  - 202511201500_settings → helloagents/<branch-name>/history/2025-11/202511201500_settings/
+📦 剩余 Y 个方案包保留在 `helloagents/<branch-name>/plan/`:
   - 202511201400_profile
 ```
 </legacy_plan_migration>
@@ -206,7 +208,7 @@ for each 选定的方案包:
 - 方案包迁移后: 开发实施完成、执行命令完成、全授权命令完成
 
 **扫描逻辑:**
-1. 扫描 plan/ 目录下所有方案包目录
+1. 扫描 `helloagents/<branch-name>/plan/` 目录下所有方案包目录
 2. 排除本次已执行的方案包（读取CURRENT_PACKAGE变量）
 3. 清除CURRENT_PACKAGE变量
 4. 剩余方案包即为遗留方案
@@ -215,14 +217,14 @@ for each 选定的方案包:
 
 **输出格式:**
 ```
-📦 plan/遗留方案: 检测到 X 个遗留方案包([列表])，是否需要迁移至历史记录?
+📦 `helloagents/<branch-name>/plan/` 遗留方案: 检测到 X 个遗留方案包([列表])，是否需要迁移至历史记录?
 ```
 
 列表格式: YYYYMMDDHHMM_<feature>（每个一行，最多5个，超过显示"...等X个"）
 
 **用户响应:**
 - 确认迁移 → 执行批量迁移流程
-- 拒绝/忽略 → 保留在 plan/ 目录
+- 拒绝/忽略 → 保留在 `helloagents/<branch-name>/plan/` 目录
 </legacy_plan_scan>
 
 ---
@@ -241,8 +243,8 @@ for each 选定的方案包:
 ────
 📁 变更:
   - {知识库文件}
-  - helloagents/CHANGELOG.md
-  - helloagents/project.md
+  - helloagents/<branch-name>/CHANGELOG.md
+  - helloagents/<branch-name>/project.md
   ...
 
 🔄 下一步: 知识库操作已完成，可进行其他任务

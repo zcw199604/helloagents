@@ -188,7 +188,7 @@ Acceptance Steps:
   - Update task completion status against task.md
   - Run required verification commands or alternative verification
   - Aggregate risks and decide whether to continue, redispatch, execute sequentially, or ask the user
-  - Finally synchronize knowledge base, CHANGELOG.md, and history/index.md by the main agent
+  - Finally synchronize knowledge base, `helloagents/<branch-name>/CHANGELOG.md`, and `helloagents/<branch-name>/history/index.md` by the main agent
 ```
 
 Subagent results are intermediate material only. Final conclusions must be based on main-agent local verification.
@@ -232,11 +232,11 @@ This rule must not introduce new systems such as `.helloagents/`, `requirements.
 Use current HelloAGENTS paths:
 
 ```yaml
-Requirement basis: plan/YYYYMMDDHHMM_<feature>/why.md
-Implementation plan: plan/YYYYMMDDHHMM_<feature>/how.md
-Task list: plan/YYYYMMDDHHMM_<feature>/task.md
-Execution archive: history/YYYY-MM/YYYYMMDDHHMM_<feature>/
-Knowledge base: CHANGELOG.md, project.md, wiki/*
+Requirement basis: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md
+Implementation plan: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md
+Task list: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/task.md
+Execution archive: helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/
+Knowledge base: helloagents/<branch-name>/CHANGELOG.md, helloagents/<branch-name>/project.md, helloagents/<branch-name>/wiki/*
 ```
 
 ---

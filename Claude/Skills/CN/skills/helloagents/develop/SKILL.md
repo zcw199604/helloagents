@@ -5,9 +5,9 @@ description: 开发实施阶段详细规则；进入开发实施时读取；包�
 
 # 开发实施 - 详细规则
 
-**目标:** 按方案包中任务清单执行代码改动，同步更新知识库，迁移到 history/
+**目标:** 按方案包中任务清单执行代码改动，同步更新知识库，迁移到 `helloagents/<branch-name>/history/`
 
-**前提:** `plan/` 目录中存在待执行的方案包
+**前提:** `helloagents/<branch-name>/plan/` 目录中存在待执行的方案包
 
 **备份保护:** 执行前建议创建 Git 备份分支或手动备份代码目录
 
@@ -54,10 +54,10 @@ IF 不满足任何条件:
   - 检查该方案包是否存在且完整
     - 存在且完整 → 使用该方案包，设置CURRENT_PACKAGE = CREATED_PACKAGE
     - 不存在或不完整 → 按G6.2输出错误格式并停止
-  - 忽略plan/中的其他遗留方案包
+  - 忽略 `helloagents/<branch-name>/plan/` 中的其他遗留方案包
 
 交互确认模式/执行命令(MODE_EXECUTION=true):
-  - 扫描plan/目录下所有方案包
+  - 扫描 `helloagents/<branch-name>/plan/` 目录下所有方案包
   - 不存在方案包 → 按G6.2输出错误格式并停止
   - 方案包不完整 → 按G6.2输出错误格式并停止
   - 单个完整方案包 → 设置CURRENT_PACKAGE，继续执行
@@ -72,7 +72,7 @@ IF 不满足任何条件:
     ❌【HelloAGENTS】- 执行错误
 
     错误: 未找到可执行的方案包
-    - 原因: plan/目录为空或不存在
+    - 原因: `helloagents/<branch-name>/plan/` 目录为空或不存在
 
     ────
     🔄 下一步: 请先使用 ~plan 命令创建方案，或进入方案设计阶段
@@ -105,7 +105,7 @@ IF 不满足任何条件:
 
 ### 步骤4: 读取当前方案包
 
-读取 `plan/YYYYMMDDHHMM_<feature>/task.md` 和 `why.md`
+读取 `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/task.md` 和 `why.md`
 
 ### 步骤4.5: 并行子代理适配判断（可选）
 
@@ -309,7 +309,7 @@ TDD门禁（适用时严格执行）:
 🔄 下一步: 请输入序号选择
 ```
 
-### 步骤12: 迁移已执行方案包至history/
+### 步骤12: 迁移已执行方案包至 `helloagents/<branch-name>/history/`
 
 <plan_migration>
 
@@ -325,15 +325,15 @@ TDD门禁（适用时严格执行）:
    - 如有多个失败/跳过任务，可在末尾添加执行总结章节
 
 2. 迁移至历史记录目录:
-   - 将方案包目录从 plan/ 移动到 history/YYYY-MM/ 下
+   - 将方案包目录从 `helloagents/<branch-name>/plan/` 移动到 `helloagents/<branch-name>/history/YYYY-MM/` 下
    - YYYY-MM 从方案包目录名提取（如 202511201200_xxx → 2025-11）
-   - 迁移后完整路径: history/YYYY-MM/YYYYMMDDHHMM_<feature>/
-   - 迁移操作会自动删除 plan/ 下的源目录
-   - 同名冲突处理: 强制覆盖 history/ 中的旧方案包
+   - 迁移后完整路径: `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
+   - 迁移操作会自动删除 `helloagents/<branch-name>/plan/` 下的源目录
+   - 同名冲突处理: 强制覆盖 `helloagents/<branch-name>/history/` 中的旧方案包
 
-3. 更新历史记录索引: `history/index.md`
+3. 更新历史记录索引: `helloagents/<branch-name>/history/index.md`
 
-**警告:** 此操作将导致 plan/ 下的源文件路径失效，请确保步骤8已完成内容读取
+**警告:** 此操作将导致 `helloagents/<branch-name>/plan/` 下的源文件路径失效，请确保步骤8已完成内容读取
 **不可跳过:** 此步骤为本阶段结束的原子性操作
 </plan_migration>
 
@@ -361,7 +361,7 @@ TDD门禁（适用时严格执行）:
 用户选择处理:
   [1] 启动多模型验收:
     - 读取 `multi_model` Skill，按 DEVELOP 阶段协作规则执行:
-      - 外部模型对照 history/ 中已迁移的 task.md 与实际代码改动进行审查
+      - 外部模型对照 `helloagents/<branch-name>/history/` 中已迁移的 task.md 与实际代码改动进行审查
       - 无写入原则: 提示词追加 "OUTPUT: Unified Diff Patch ONLY."
       - 输出风险分级报告（P0 Must Fix / P1 Should Fix / P2 Note）
     - 验收完成后输出阶段完成总结
@@ -415,20 +415,20 @@ TDD门禁（适用时严格执行）:
    - ✅ 执行结果: 任务数量和状态统计
    - 🔍 质量验证: 一致性审计、测试结果
    - 💡 代码质量优化建议（如有）
-   - 📦 迁移信息: 已迁移至 `history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
+   - 📦 迁移信息: 已迁移至 `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
 3. **文件变更清单:**
    ```
    📁 变更:
      - {代码文件}
      - {知识库文件}
-     - helloagents/CHANGELOG.md
-     - helloagents/history/index.md
+     - helloagents/<branch-name>/CHANGELOG.md
+     - helloagents/<branch-name>/history/index.md
      ...
    ```
 4. **下一步建议:**
    - 交互确认模式/执行命令: 输出多模型验收询问（见步骤13"询问格式"）
    - 全授权命令: 总结末尾追加多模型验收提示
-5. **遗留方案提醒:** 按G11扫描 plan/ 目录，如有遗留方案包则显示
+5. **遗留方案提醒:** 按G11扫描 `helloagents/<branch-name>/plan/` 目录，如有遗留方案包则显示
 
 ---
 

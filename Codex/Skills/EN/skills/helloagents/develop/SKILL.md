@@ -5,9 +5,9 @@ description: Development implementation phase detailed rules; read when entering
 
 # Development Implementation - Detailed Rules
 
-**Goal:** Execute code changes per task list in solution package, synchronize knowledge base updates, migrate to history/
+**Goal:** Execute code changes per task list in solution package, synchronize knowledge base updates, migrate to `helloagents/<branch-name>/history/`
 
-**Prerequisites:** Solution package exists in `plan/` directory awaiting execution
+**Prerequisites:** Solution package exists in `helloagents/<branch-name>/plan/` directory awaiting execution
 
 **Backup Protection:** Recommend creating Git backup branch or manually backing up code directory before execution
 
@@ -54,10 +54,10 @@ Full authorization command (MODE_FULL_AUTH=true):
   - Check if solution package exists and is complete
     - Exists and complete → Use this solution package, set CURRENT_PACKAGE = CREATED_PACKAGE
     - Doesn't exist or incomplete → Output error format per G6.2 and stop
-  - Ignore other legacy solution packages in plan/
+  - Ignore other legacy solution packages in `helloagents/<branch-name>/plan/`
 
 Interactive confirmation mode/Execution command (MODE_EXECUTION=true):
-  - Scan all solution packages under plan/ directory
+  - Scan all solution packages under `helloagents/<branch-name>/plan/` directory
   - No solution package exists → Output error format per G6.2 and stop
   - Solution package incomplete → Output error format per G6.2 and stop
   - Single complete solution package → Set CURRENT_PACKAGE, continue execution
@@ -72,7 +72,7 @@ Exception output examples:
     ❌【HelloAGENTS】- Execution Error
 
     Error: No executable solution package found
-    - Cause: plan/ directory is empty or doesn't exist
+    - Cause: `helloagents/<branch-name>/plan/` directory is empty or doesn't exist
 
     ────
     🔄 Next Steps: Please create solution using ~plan command first, or enter solution design phase
@@ -105,7 +105,7 @@ Execution method:
 
 ### Step 4: Read Current Solution Package
 
-Read `plan/YYYYMMDDHHMM_<feature>/task.md` and `why.md`
+Read `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/task.md` and `why.md`
 
 ### Step 4.5: Parallel Subagent Applicability Check (Optional)
 
@@ -309,7 +309,7 @@ Found following optimizable items:
 🔄 Next Steps: Please enter number to choose
 ```
 
-### Step 12: Migrate Executed Solution Package to history/
+### Step 12: Migrate Executed Solution Package to `helloagents/<branch-name>/history/`
 
 <plan_migration>
 
@@ -325,15 +325,15 @@ Found following optimizable items:
    - If multiple failed/skipped tasks, can add execution summary section at end
 
 2. Migrate to history directory:
-   - Move solution package directory from plan/ to under history/YYYY-MM/
+   - Move solution package directory from `helloagents/<branch-name>/plan/` to under `helloagents/<branch-name>/history/YYYY-MM/`
    - YYYY-MM extracted from solution package directory name (e.g., 202511201200_xxx → 2025-11)
-   - Complete path after migration: history/YYYY-MM/YYYYMMDDHHMM_<feature>/
-   - Migration operation automatically deletes source directory under plan/
-   - Name conflict handling: Force overwrite old solution package in history/
+   - Complete path after migration: `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
+   - Migration operation automatically deletes source directory under `helloagents/<branch-name>/plan/`
+   - Name conflict handling: Force overwrite old solution package in `helloagents/<branch-name>/history/`
 
-3. Update history index: `history/index.md`
+3. Update history index: `helloagents/<branch-name>/history/index.md`
 
-**Warning:** This operation will invalidate source file paths under plan/, ensure step 8 has completed content reading
+**Warning:** This operation will invalidate source file paths under `helloagents/<branch-name>/plan/`, ensure step 8 has completed content reading
 **Cannot skip:** This step is atomic operation at end of this phase
 </plan_migration>
 
@@ -362,7 +362,7 @@ Prompt format:
 User selection handling:
   [1] Start multi-model acceptance:
     - Read `multi_model` Skill, execute per DEVELOP phase collaboration rules:
-      - External model reviews actual code changes against migrated task.md in history/
+      - External model reviews actual code changes against migrated task.md in `helloagents/<branch-name>/history/`
       - No-write principle: Append to prompt "OUTPUT: Unified Diff Patch ONLY."
       - Output risk classification report (P0 Must Fix / P1 Should Fix / P2 Note)
     - Output phase completion summary after acceptance completes
@@ -416,20 +416,20 @@ Strictly call G6.1 unified output format, fill following data:
    - ✅ Execution result: Task count and status statistics
    - 🔍 Quality verification: Consistency audit, test results
    - 💡 Code quality optimization suggestions (if any)
-   - 📦 Migration info: Migrated to `history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
+   - 📦 Migration info: Migrated to `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
 3. **File Change List:**
    ```
    📁 Changes:
      - {code files}
      - {knowledge base files}
-     - helloagents/CHANGELOG.md
-     - helloagents/history/index.md
+     - helloagents/<branch-name>/CHANGELOG.md
+     - helloagents/<branch-name>/history/index.md
      ...
    ```
 4. **Next Step Suggestions:**
    - Interactive confirmation mode / Execution command: Output multi-model acceptance prompt (see step 13 "Prompt format")
    - Full authorization command: Append multi-model acceptance hint to summary
-5. **Legacy Solution Reminder:** Scan plan/ directory per G11, display if legacy solution packages exist
+5. **Legacy Solution Reminder:** Scan `helloagents/<branch-name>/plan/` directory per G11, display if legacy solution packages exist
 
 ---
 

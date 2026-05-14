@@ -422,7 +422,7 @@ flowchart TD
 ```markdown
 # 任务清单: [功能名称]
 
-目录: `helloagents/plan/YYYYMMDDHHMM_<feature>/`
+目录: `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/`
 
 ---
 

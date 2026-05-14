@@ -188,7 +188,7 @@ next:
   - 对照 task.md 更新任务完成状态
   - 运行必要验证命令或替代验证
   - 汇总风险并决定是否继续、重派、顺序执行或询问用户
-  - 最终由主代理统一同步知识库、CHANGELOG.md、history/index.md
+  - 最终由主代理统一同步知识库、`helloagents/<branch-name>/CHANGELOG.md`、`helloagents/<branch-name>/history/index.md`
 ```
 
 子代理结果只能作为中间材料。最终结论以主代理本地验证结果为准。
@@ -232,11 +232,11 @@ FAILED 处理:
 统一使用当前 HelloAGENTS 路径:
 
 ```yaml
-需求依据: plan/YYYYMMDDHHMM_<feature>/why.md
-实施方案: plan/YYYYMMDDHHMM_<feature>/how.md
-任务清单: plan/YYYYMMDDHHMM_<feature>/task.md
-执行归档: history/YYYY-MM/YYYYMMDDHHMM_<feature>/
-知识库: CHANGELOG.md, project.md, wiki/*
+需求依据: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md
+实施方案: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md
+任务清单: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/task.md
+执行归档: helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/
+知识库: helloagents/<branch-name>/CHANGELOG.md, helloagents/<branch-name>/project.md, helloagents/<branch-name>/wiki/*
 ```
 
 ---

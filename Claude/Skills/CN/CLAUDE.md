@@ -94,8 +94,9 @@ OUTPUT_LANGUAGE: 简体中文
 - **方案包**: 完整方案单元 (`why.md` + `how.md` + `task.md`)
 
 **路径约定:**
-- 本规则集中 `plan/`、`wiki/`、`history/` 均指 `helloagents/` 下的完整路径
-- 所有知识库文件必须在 `helloagents/` 目录下创建
+- 本规则集中 `helloagents/<branch-name>/` 表示当前分支对应的本地知识库根目录；`<branch-name>` 取当前 git 分支名或工作区别名
+- 本规则集中 `plan/`、`wiki/`、`history/` 均指 `helloagents/<branch-name>/` 下的完整路径
+- 所有知识库文件必须在 `helloagents/<branch-name>/` 目录下创建
 
 ### G3 | 不确定性处理原则
 
@@ -167,7 +168,7 @@ OUTPUT_LANGUAGE: 简体中文
 - **交互确认模式**(默认): 每阶段完成后等待用户确认
 - **推进模式**:
   - 全授权命令(`~auto`): 需求分析→方案设计→开发实施 连续执行
-  - 规划命令(`~plan`): 需求分析→方案设计 连续执行
+  - 规划命令(`~plan`): 默认全自动规划；可在命令确认时选择交互式规划（方案构思处等待方案选择）
 - **单阶段命令**:
   - 知识库命令(`~init`): 知识库管理操作
   - 执行命令(`~exec`): 开发实施阶段执行
@@ -177,7 +178,8 @@ OUTPUT_LANGUAGE: 简体中文
 交互确认模式: 输出阶段总结并等待确认
 推进模式:
   - 全授权命令: 需求分析→方案设计→开发实施 全程静默，开发实施完成后输出整体总结
-  - 规划命令: 需求分析→方案设计 全程静默，方案设计完成后输出整体总结
+  - 规划命令(全自动规划): 需求分析→方案设计 全程静默，方案设计完成后输出整体总结
+  - 规划命令(交互式规划): 需求分析静默，方案构思输出方案对比并等待用户选择，方案设计完成后输出整体总结
   - 评分<7分: 立即输出追问（打破静默）
   - EHRB无法规避: 输出警告并暂停
 ```
@@ -534,7 +536,7 @@ STEP 3: 知识库存在
 
 **创建新方案包(处理同名冲突):**
 ```yaml
-路径: plan/YYYYMMDDHHMM_<feature>/
+路径: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/
 冲突处理:
   1. 检查目录是否存在
   2. 不存在 → 直接创建
@@ -544,8 +546,8 @@ STEP 3: 知识库存在
 **已执行方案包(P3阶段强制迁移):**
 ```yaml
 1. 更新task.md任务状态（使用上述任务状态符号）
-2. 迁移至 history/YYYY-MM/（保持目录名，同名覆盖）
-3. 更新 history/index.md
+2. 迁移至 helloagents/<branch-name>/history/YYYY-MM/（保持目录名，同名覆盖）
+3. 更新 helloagents/<branch-name>/history/index.md
 ```
 
 **遗留方案扫描:**
@@ -555,7 +557,7 @@ STEP 3: 知识库存在
   - 方案包迁移后: 开发实施完成、执行命令完成、全授权命令完成
 
 扫描规则:
-  - 扫描: plan/目录下所有方案包
+  - 扫描: helloagents/<branch-name>/plan/目录下所有方案包
   - 排除: 本次创建/执行的方案包
   - 条件: 检测到≥1个遗留方案包时才输出提示
 
@@ -581,6 +583,7 @@ CURRENT_PACKAGE: 当前执行的方案包路径
 
 MODE_FULL_AUTH: 全授权命令激活状态
 MODE_PLANNING: 规划命令激活状态
+MODE_PLANNING_INTERACTIVE: 交互式规划激活状态
 MODE_EXECUTION: 执行命令激活状态
 ```
 
@@ -714,10 +717,10 @@ MODE_EXECUTION: 执行命令激活状态
   3. 创建简化方案包（仅task.md，省略why.md/how.md）
   4. 执行代码改动
   5. 同步更新知识库（按 `kb` Skill同步规则）
-  6. 迁移方案包至history/
+  6. 迁移方案包至 helloagents/<branch-name>/history/
   7. 扫描遗留方案
 - 简化方案包规则:
-  - 路径: `plan/YYYYMMDDHHMM_<feature>/`
+  - 路径: `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/`
   - 仅创建`task.md`，包含任务清单
   - 迁移时标注"轻量迭代"
 - 输出格式:
@@ -725,15 +728,15 @@ MODE_EXECUTION: 执行命令激活状态
   ✅【HelloAGENTS】- 轻量迭代完成
 
   - ✅ 执行结果: 任务X/Y完成
-  - 📦 方案包: 已迁移至 history/YYYY-MM/...
+  - 📦 方案包: 已迁移至 helloagents/<branch-name>/history/YYYY-MM/...
   - 📚 知识库: [已更新/已创建]
 
   ────
   📁 变更:
     - {代码文件}
     - {知识库文件}
-    - helloagents/CHANGELOG.md
-    - helloagents/history/index.md
+    - helloagents/<branch-name>/CHANGELOG.md
+    - helloagents/<branch-name>/history/index.md
     ...
 
   🔄 下一步: 请验证功能
@@ -756,8 +759,8 @@ MODE_EXECUTION: 执行命令激活状态
 
 **全授权命令**: ~auto|~helloauto|~fa → 确认授权 → 需求分析→方案设计→开发实施 静默执行
 **知识库命令**: ~init|~wiki → 确认授权 → 知识库初始化
-**规划命令**: ~plan|~design → 确认授权 → 需求分析→方案设计 静默执行
-**执行命令**: ~exec|~run|~execute → 检查plan/存在方案包 → 确认授权 → 开发实施
+**规划命令**: ~plan|~design → 选择全自动规划或交互式规划 → 需求分析→方案设计（交互式规划在方案构思处等待选择）
+**执行命令**: ~exec|~run|~execute → 检查 helloagents/<branch-name>/plan/ 存在方案包 → 确认授权 → 开发实施
 
 </command_paths>
 
@@ -825,13 +828,48 @@ MODE_EXECUTION: 执行命令激活状态
 其他输入: 再次询问确认
 ```
 
+### 规划命令确认机制
+
+**适用范围:** `~plan` / `~design` 规划命令。此格式覆盖通用授权询问格式。
+
+```
+❓【HelloAGENTS】- 命令确认
+
+即将执行 规划命令:
+- 执行内容: 需求分析 → 方案设计 → 创建方案包
+- 影响范围: 只写入方案包和必要知识库文件，不修改业务代码
+
+[1] 全自动规划（推荐） - 自动选择推荐方案并创建方案包
+[2] 交互式规划 - 创建方案包前输出方案对比并等待选择
+[3] 取消 - 取消规划命令
+
+────
+🔄 下一步: 请输入序号选择
+```
+
+**用户响应处理:**
+```yaml
+[1] 全自动规划:
+  - 设置 MODE_PLANNING=true
+  - 设置 MODE_PLANNING_INTERACTIVE=false
+  - 需求分析→方案设计 全程静默
+[2] 交互式规划:
+  - 设置 MODE_PLANNING=true
+  - 设置 MODE_PLANNING_INTERACTIVE=true
+  - 需求分析静默执行，方案构思输出方案对比并等待用户选择
+[3]/取消:
+  - 清除 MODE_PLANNING/MODE_PLANNING_INTERACTIVE
+  - 输出取消格式
+其他输入: 再次询问确认
+```
+
 ### 命令速查表
 
 | 命令 | 触发词 | 动作 |
 |------|--------|------|
 | 全授权 | `~auto` / `~helloauto` / `~fa` | 需求分析→方案设计→开发实施 静默执行 |
 | 知识库 | `~init` / `~wiki` | 知识库初始化/重建 |
-| 规划 | `~plan` / `~design` | 需求分析→方案设计 静默执行 |
+| 规划 | `~plan` / `~design` | 可选择全自动规划或交互式规划，执行到方案设计并创建方案包 |
 | 执行 | `~exec` / `~run` / `~execute` | 开发实施 执行已有方案包 |
 
 ### 命令完成输出格式
@@ -851,8 +889,8 @@ MODE_EXECUTION: 执行命令激活状态
   - {代码文件}
   - {知识库文件}
   - {方案包文件}
-  - helloagents/CHANGELOG.md
-  - helloagents/history/...
+  - helloagents/<branch-name>/CHANGELOG.md
+  - helloagents/<branch-name>/history/...
   ...
 
 🔄 下一步: 全授权命令已结束，随时准备接收新指令
@@ -869,9 +907,9 @@ MODE_EXECUTION: 执行命令激活状态
 
 ────
 📁 变更:
-  - helloagents/plan/{方案包目录}/why.md
-  - helloagents/plan/{方案包目录}/how.md
-  - helloagents/plan/{方案包目录}/task.md
+  - helloagents/<branch-name>/plan/{方案包目录}/why.md
+  - helloagents/<branch-name>/plan/{方案包目录}/how.md
+  - helloagents/<branch-name>/plan/{方案包目录}/task.md
 
 🔄 下一步: 方案包已生成，如需执行请输入 ~exec
 📦 遗留方案: [按G11扫描显示，如有]
@@ -889,8 +927,8 @@ MODE_EXECUTION: 执行命令激活状态
 📁 变更:
   - {代码文件}
   - {知识库文件}
-  - helloagents/CHANGELOG.md
-  - helloagents/history/...
+  - helloagents/<branch-name>/CHANGELOG.md
+  - helloagents/<branch-name>/history/...
   ...
 
 🔄 下一步: 执行命令已结束，随时准备接收新指令
@@ -948,7 +986,7 @@ MODE_EXECUTION: 执行命令激活状态
 ```yaml
 评分 < 7分: 循环追问
 评分≥7分 且 交互确认模式: 输出总结→等待确认
-评分≥7分 且 推进模式: 静默进入方案设计
+评分≥7分 且 推进模式: 静默进入方案设计（MODE_PLANNING_INTERACTIVE=true 时方案构思会输出方案对比并等待选择）
 ```
 
 ### 方案设计
@@ -957,7 +995,7 @@ MODE_EXECUTION: 执行命令激活状态
 
 **执行流程:**
 ```
-方案构思 → [用户选择/推进模式自动] → 详细规划
+方案构思 → [用户选择/交互式规划用户选择/推进模式自动] → 详细规划
 ```
 
 **关键步骤:**
@@ -970,7 +1008,7 @@ MODE_EXECUTION: 执行命令激活状态
 ```yaml
 交互确认模式: 输出总结→等待确认→用户确认后进入开发实施
 推进模式(全授权): 静默进入开发实施
-推进模式(规划命令): 输出总结→流程结束
+推进模式(规划命令): 全自动规划输出总结→流程结束；交互式规划在方案构思等待选择后输出总结→流程结束
 ```
 
 ### 开发实施
@@ -991,7 +1029,7 @@ MODE_EXECUTION: 执行命令激活状态
 11. 更新 CHANGELOG.md
 12. 一致性审计
 13. 代码质量检查（可选）
-14. **【强制】迁移方案包至history/**
+14. **【强制】迁移方案包至 helloagents/<branch-name>/history/**
 
 **详细规则:** → 进入阶段时读取 `develop` Skill
 

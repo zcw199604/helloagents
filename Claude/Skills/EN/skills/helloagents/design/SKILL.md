@@ -5,7 +5,7 @@ description: Solution design phase detailed rules; read when entering solution d
 
 # Solution Design - Detailed Rules
 
-**Goal:** Ideate feasible solutions and formulate detailed execution plan, generate solution package under plan/ directory
+**Goal:** Ideate feasible solutions and formulate detailed execution plan, generate solution package under `helloagents/<branch-name>/plan/` directory
 
 **Prerequisites:** Requirements analysis completed (score ≥7 points)
 
@@ -13,7 +13,7 @@ description: Solution design phase detailed rules; read when entering solution d
 
 **Execution Flow:**
 ```
-Solution ideation → [User confirmation/Continuous in push mode] → Detailed planning (create new solution package)
+Solution ideation → [User confirmation/Interactive planning user selection/Continuous in push mode] → Detailed planning (create new solution package)
 ```
 
 ---
@@ -64,8 +64,8 @@ Split principles:
   - Each slice must be independently verifiable, independently rollbackable, and independently documentable in the knowledge base
   - Current solution package covers only one slice; prohibit stuffing weakly related slices into one task list
   - Unselected slices go into why.md "Out of scope" or "Follow-up plan", not current task.md
-Interactive confirmation mode: If current slice is unclear, output solution ideation selection and ask user which slice to execute first
-Push mode: Select the lowest-risk, smallest-change slice with a clear value loop, and record assumptions in the solution package
+Interactive confirmation mode or MODE_PLANNING_INTERACTIVE=true: If current slice is unclear, output solution ideation selection and ask user which slice to execute first
+Push mode (excluding interactive planning): Select the lowest-risk, smallest-change slice with a clear value loop, and record assumptions in the solution package
 ```
 
 **7. Solution Ideation**
@@ -101,8 +101,8 @@ Push mode: Select the lowest-risk, smallest-change slice with a clear value loop
 - Determine recommended solution and reasons
 - Output format: Add "Recommended" identifier after recommended solution title
   - Example: "Solution 1 (Minimal Change Fix - Recommended)" vs "Solution 2 (Complete Refactor)"
-- Interactive confirmation mode: Output solution comparison, ask user to choose
-- Push mode: Choose recommended solution (don't output comparison)
+- Interactive confirmation mode or MODE_PLANNING_INTERACTIVE=true: Output solution comparison, ask user to choose
+- Push mode (excluding interactive planning): Choose recommended solution (don't output comparison)
 
 **Simple Task:**
 - Directly determine sole feasible solution
@@ -135,13 +135,13 @@ Line start: `❓【HelloAGENTS】- Solution Ideation`
 
 ```yaml
 Complex task:
-  Interactive confirmation mode:
+  Interactive confirmation mode or MODE_PLANNING_INTERACTIVE=true:
     - User selects valid number (1-N) → Enter detailed planning
     - User refuses all solutions → Output re-ideation inquiry format
       - Confirm re-ideation: Return to solution ideation, re-ideate
       - Refuse: Prompt "Cancelled solution design", flow terminates
       - Other input: Ask again
-  Push mode:
+  Push mode (excluding interactive planning):
     - Select recommended solution → Immediately silently enter detailed planning
 
 Simple task: Directly enter detailed planning
@@ -166,7 +166,7 @@ All solutions rejected.
 
 **Prerequisite:** User has selected/confirmed solution (from solution ideation)
 
-**Important:** MUST create new solution package, use current timestamp, MUST NOT reuse legacy solutions in plan/
+**Important:** MUST create new solution package, use current timestamp, MUST NOT reuse legacy solutions in `helloagents/<branch-name>/plan/`
 
 ### Action Steps
 
@@ -175,15 +175,15 @@ All solutions rejected.
 **1. Create New Solution Package Directory**
 
 ```yaml
-Path: plan/YYYYMMDDHHMM_<feature>/
+Path: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/
 Conflict handling:
-  1. Check if plan/YYYYMMDDHHMM_<feature>/ exists
+  1. Check if helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/ exists
   2. If not exist → Create directly
-  3. If exists → Use version suffix: plan/YYYYMMDDHHMM_<feature>_v2/
+  3. If exists → Use version suffix: helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>_v2/
      (If _v2 also exists, increment to _v3, _v4...)
 Example:
-  - First creation: plan/202511181430_login/
-  - Name conflict: plan/202511181430_login_v2/
+  - First creation: helloagents/<branch-name>/plan/202511181430_login/
+  - Name conflict: helloagents/<branch-name>/plan/202511181430_login_v2/
 ```
 
 **2. New Library/Framework Documentation Query (if needed)**
@@ -224,8 +224,8 @@ Parallel subagent annotation:
 
 **4. Risk Avoidance Measure Formulation**
 - Based on solution ideation risk assessment, formulate detailed avoidance measures per G9
-- Interactive confirmation mode: Ask user
-- MODE_FULL_AUTH=true OR MODE_PLANNING=true: Avoid risks
+- Interactive confirmation mode or MODE_PLANNING_INTERACTIVE=true: Ask user
+- MODE_FULL_AUTH=true OR (MODE_PLANNING=true AND MODE_PLANNING_INTERACTIVE=false): Avoid risks
 - Write to Security and Performance section of `how.md`
 
 **4.5 Solution Self-Review Gate**
@@ -280,14 +280,14 @@ Strictly call G6.1 unified output format, fill following data:
    - 📊 Task list overview
    - ⚠️ Risk assessment (if EHRB detected)
 3. **File Change List:**
-   - `helloagents/plan/YYYYMMDDHHMM_<feature>/why.md`
-   - `helloagents/plan/YYYYMMDDHHMM_<feature>/how.md`
-   - `helloagents/plan/YYYYMMDDHHMM_<feature>/task.md`
+   - `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md`
+   - `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md`
+   - `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/task.md`
 4. **Next Step Suggestions:**
    - Interactive confirmation mode / Planning command: Output multi-model review prompt (see "Multi-Model Review Prompt Format")
    - Full authorization command: Proceed directly to development implementation, append multi-model review hint to summary
 5. **Legacy Solution Reminder:**
-   - Scan plan/ directory per G11
+   - Scan `helloagents/<branch-name>/plan/` directory per G11
    - If legacy solution packages detected (exclude solution package created this time), display per G11 rules
 
 ### Multi-Model Review Prompt Format
@@ -325,7 +325,7 @@ Interactive confirmation mode / Planning command:
         - Explicit refusal → Flow terminates
         - Feedback-Delta → Handle per Feedback-Delta rules
         - Other input → Treat as new user requirement, re-determine per routing mechanism
-      - Planning command: Output overall summary → Stop → Clear MODE_PLANNING
+      - Planning command: Output overall summary → Stop → Clear MODE_PLANNING/MODE_PLANNING_INTERACTIVE
 
 Push mode:
   - Full authorization command: Complete solution design → Skip multi-model review prompt → Immediately silently enter development implementation
@@ -334,5 +334,5 @@ Push mode:
 Critical constraint (only following 3 situations can enter development implementation):
   1. User explicitly confirms after solution design complete (including confirmation after multi-model review)
   2. Full authorization command (~auto, etc.) triggered and solution design completed
-  3. Execution command (~exec, etc.) triggered and solution package exists in plan/
+  3. Execution command (~exec, etc.) triggered and solution package exists in `helloagents/<branch-name>/plan/`
 ```
