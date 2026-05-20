@@ -213,7 +213,7 @@ for each selected solution package:
 3. Clear CURRENT_PACKAGE variable
 4. Remaining solution packages are legacy solutions
 
-**Output Position:** Auto-inject to end slot of G6.1 output format
+**Output Position:** Auto-inject to end slot of output-format Skill G6.1 output format
 
 **Output Format:**
 ```
@@ -231,7 +231,7 @@ List format: YYYYMMDDHHMM_<feature> (one per line, max 5, show "...and X more" i
 
 ## ~init / ~wiki Command Completion Summary Format
 
-Strictly follow G6.1 unified output format:
+Strictly follow output-format Skill G6.1 unified output format:
 
 ```
 ✅【HelloAGENTS】- Knowledge Base Command Complete

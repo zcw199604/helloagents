@@ -53,17 +53,17 @@ Full authorization command (MODE_FULL_AUTH=true):
   - Read CREATED_PACKAGE variable (solution package path set during solution design phase)
   - Check if solution package exists and is complete
     - Exists and complete → Use this solution package, set CURRENT_PACKAGE = CREATED_PACKAGE
-    - Doesn't exist or incomplete → Output error format per G6.2 and stop
+    - Doesn't exist or incomplete → Output error format per output-format Skill G6.2 and stop
   - Ignore other legacy solution packages in `helloagents/<branch-name>/plan/`
 
 Interactive confirmation mode/Execution command (MODE_EXECUTION=true):
   - Scan all solution packages under `helloagents/<branch-name>/plan/` directory
-  - No solution package exists → Output error format per G6.2 and stop
-  - Solution package incomplete → Output error format per G6.2 and stop
+  - No solution package exists → Output error format per output-format Skill G6.2 and stop
+  - Solution package incomplete → Output error format per output-format Skill G6.2 and stop
   - Single complete solution package → Set CURRENT_PACKAGE, continue execution
   - Multiple solution packages → List inventory, wait for user selection
     - User enters valid number (1-N) → Set CURRENT_PACKAGE, continue execution
-    - User enters cancel/refuse → Output cancellation format per G6.2, flow terminates
+    - User enters cancel/refuse → Output cancellation format per output-format Skill G6.2, flow terminates
     - Invalid input → Ask again
 
 Exception output examples:
@@ -387,7 +387,7 @@ User selection handling:
 ## Development Implementation Output Format
 
 ⚠️ **CRITICAL - Mandatory Requirements:**
-- ALWAYS use G6.1 unified output format
+- ALWAYS use output-format Skill G6.1 unified output format
 - NEVER use free text to replace standard format
 - MUST verify format completeness before output
 
@@ -408,7 +408,7 @@ Detected multiple solution packages, please select execution target:
 
 ### When Phase Complete
 
-Strictly call G6.1 unified output format, fill following data:
+Strictly call output-format Skill G6.1 unified output format, fill following data:
 
 1. **Phase Name:** `Development Implementation`
 2. **Phase Specific Content (≤5 key points):**
@@ -429,7 +429,7 @@ Strictly call G6.1 unified output format, fill following data:
 4. **Next Step Suggestions:**
    - Interactive confirmation mode / Execution command: Output multi-model acceptance prompt (see step 13 "Prompt format")
    - Full authorization command: Append multi-model acceptance hint to summary
-5. **Legacy Solution Reminder:** Scan `helloagents/<branch-name>/plan/` directory per G11, display if legacy solution packages exist
+5. **Legacy Solution Reminder:** Scan `helloagents/<branch-name>/plan/` directory per lifecycle Skill G11, display if legacy solution packages exist
 
 ---
 
@@ -443,7 +443,7 @@ After completing all actions (step 12 migration complete):
     - User selects [2] → Output completion summary directly → Development implementation ends
   Full authorization command:
     - Skip step 13 prompt → Output overall summary (with multi-model acceptance hint at end) → Flow ends
-  Variable cleanup: CURRENT_PACKAGE will automatically clean during legacy solution scan (per G11 rules)
+  Variable cleanup: CURRENT_PACKAGE will automatically clean during legacy solution scan (per lifecycle Skill G11 rules)
 
 Exceptional situations (test failures/user raises issues):
   Interactive confirmation mode: Mark in output, wait for user decision

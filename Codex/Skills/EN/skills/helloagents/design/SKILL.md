@@ -266,11 +266,11 @@ Full authorization command handling:
 ## Solution Design Output Format
 
 ⚠️ **CRITICAL - Mandatory Requirements:**
-- ALWAYS use G6.1 unified output format
+- ALWAYS use output-format Skill G6.1 unified output format
 - NEVER use free text to replace standard format
 - MUST verify format completeness before output
 
-Strictly call G6.1 unified output format, fill following data:
+Strictly call output-format Skill G6.1 unified output format, fill following data:
 
 1. **Phase Name:** `Solution Design`
 2. **Phase Specific Content (≤5 key points):**
@@ -287,8 +287,8 @@ Strictly call G6.1 unified output format, fill following data:
    - Interactive confirmation mode / Planning command: Output multi-model review prompt (see "Multi-Model Review Prompt Format")
    - Full authorization command: Proceed directly to development implementation, append multi-model review hint to summary
 5. **Legacy Solution Reminder:**
-   - Scan `helloagents/<branch-name>/plan/` directory per G11
-   - If legacy solution packages detected (exclude solution package created this time), display per G11 rules
+   - Scan `helloagents/<branch-name>/plan/` directory per lifecycle Skill G11
+   - If legacy solution packages detected (exclude solution package created this time), display per lifecycle Skill G11 rules
 
 ### Multi-Model Review Prompt Format
 

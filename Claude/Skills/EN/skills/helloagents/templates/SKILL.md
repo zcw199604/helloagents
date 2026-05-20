@@ -465,7 +465,7 @@ Enable this section only when task groups are independent, have no ordering depe
 - [ ] 5.5 TDD-EXEMPT: [exempt task], reason: [documentation only/no behavior change/no test framework/user constraint/other]
 ```
 
-**Task Status Symbols:** Follow G11 definition
+**Task Status Symbols:** Follow lifecycle Skill G11 definition
 
 ---
 

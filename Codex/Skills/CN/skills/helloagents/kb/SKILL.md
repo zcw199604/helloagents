@@ -213,7 +213,7 @@ for each 选定的方案包:
 3. 清除CURRENT_PACKAGE变量
 4. 剩余方案包即为遗留方案
 
-**输出位置:** 自动注入到 G6.1 输出格式的末尾插槽中
+**输出位置:** 自动注入到 output-format Skill 的 G6.1 输出格式末尾插槽中
 
 **输出格式:**
 ```
@@ -231,7 +231,7 @@ for each 选定的方案包:
 
 ## ~init / ~wiki 命令完成总结格式
 
-严格遵循G6.1统一输出格式:
+严格遵循 output-format Skill 的 G6.1 统一输出格式:
 
 ```
 ✅【HelloAGENTS】- 知识库命令完成

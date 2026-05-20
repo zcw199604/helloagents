@@ -132,8 +132,8 @@ Score <7 points: Stop immediately, output follow-up, wait for response, don't ex
   User choice handling:
     - "Continue with existing requirements": Directly execute Phase B (no need to confirm again)
     - "Cancel":
-      - Interactive confirmation mode: Output cancellation format per G6.2
-      - Push mode: Clear MODE_FULL_AUTH/MODE_PLANNING, output cancellation format per G6.2
+      - Interactive confirmation mode: Output cancellation format per output-format Skill G6.2
+      - Push mode: Clear MODE_FULL_AUTH/MODE_PLANNING, output cancellation format per output-format Skill G6.2
       - Cancellation output example:
         ```
         🚫【HelloAGENTS】- Cancelled
@@ -178,13 +178,13 @@ Deliverables: Project context information (tech stack, module structure, quality
 ## Requirements Analysis Output Format
 
 ⚠️ **CRITICAL - Mandatory Requirements:**
-- ALWAYS use G6.1 unified output format
+- ALWAYS use output-format Skill G6.1 unified output format
 - NEVER use free text to replace standard format
 - MUST verify format completeness before output
 
 **When score ≥7 points (after Phase A+B complete, output):**
 
-Strictly call G6.1 unified output format, fill following data:
+Strictly call output-format Skill G6.1 unified output format, fill following data:
 
 1. **Phase Name:** `Requirements Analysis`
 2. **Phase Specific Content (≤5 key points):**

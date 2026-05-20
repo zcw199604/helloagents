@@ -132,8 +132,8 @@ description: 需求分析阶段详细规则；进入需求分析时读取；包�
   用户选择处理:
     - "以现有需求继续": 直接执行阶段B（无需再次确认）
     - "取消":
-      - 交互确认模式: 按G6.2输出取消格式
-      - 推进模式: 清除 MODE_FULL_AUTH/MODE_PLANNING，按G6.2输出取消格式
+      - 交互确认模式: 按 output-format Skill 的 G6.2 取消格式输出
+      - 推进模式: 清除 MODE_FULL_AUTH/MODE_PLANNING，按 output-format Skill 的 G6.2 取消格式输出
       - 取消输出示例:
         ```
         🚫【HelloAGENTS】- 已取消
@@ -178,13 +178,13 @@ description: 需求分析阶段详细规则；进入需求分析时读取；包�
 ## 需求分析 输出格式
 
 ⚠️ **CRITICAL - 强制要求:**
-- ALWAYS使用G6.1统一输出格式
+- ALWAYS使用 output-format Skill 的 G6.1 统一输出格式
 - NEVER使用自由文本替代规范格式
 - 输出前MUST验证格式完整性
 
 **评分≥7分时（阶段A+B完成后输出）:**
 
-严格调用 G6.1 统一输出格式，填充以下数据：
+严格调用 output-format Skill 的 G6.1 统一输出格式，填充以下数据：
 
 1. **阶段名称:** `需求分析`
 2. **阶段具体内容(≤5条要点):**

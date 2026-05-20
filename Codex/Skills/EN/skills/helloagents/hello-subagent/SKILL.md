@@ -221,7 +221,7 @@ Do not mechanically redispatch the same failed task repeatedly.
 
 Subagent output does not use HelloAGENTS phase completion templates.
 
-User-facing output is generated only by the main agent and must continue to follow `AGENTS.md` G6.1/G6.2/G6.3 format rules.
+User-facing output is generated only by the main agent and must continue to follow output-format Skill G6.1/G6.2/G6.3 format rules.
 
 ---
 
