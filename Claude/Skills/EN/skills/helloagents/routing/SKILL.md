@@ -101,13 +101,13 @@ Secondary dimensions:
   3. Multi-component chains must collect boundary evidence; test pollution must locate the polluter; bad-data issues must add necessary defenses after root cause is confirmed
   4. Verify only one hypothesis at a time; prohibit stacking unverified patches
   5. After 3 consecutive failed fixes or inability to locate root cause → stop expanding changes, re-enter requirements analysis/solution design or request confirmation per G3
-  6. After root cause is clear, enter fine-tuning/lightweight iteration/standard development/complete R&D based on impact scope; if EHRB involved, use complete R&D
+  6. After root cause is clear, enter lightweight iteration / standard development / complete R&D based on impact scope; debugging changes MUST produce a solution package — **downgrade to fine-tuning is prohibited**; if EHRB involved, use complete R&D
 - Output:
   - When reproduction information is missing: use requirements analysis follow-up format
-  - When fix is complete: output using the final actual development mode (fine-tuning/lightweight iteration/development implementation/command complete)
+  - When fix is complete: output using the final actual development mode (lightweight iteration / development implementation / command complete); the solution package path MUST appear in the changes list
 
 **Fine-tuning Mode**
-- Condition (all must meet): Intent=modification type, instruction clearly contains file path, files≤2, lines≤30, no architecture impact, command modifier=none, EHRB=no
+- Condition (all must meet): Intent=modification type, instruction clearly contains file path, files≤2, lines≤30, no architecture impact, command modifier=none, EHRB=no, **debugging signal=none**
 - Action: Directly modify code
 - Knowledge base handling:
   - Knowledge base does not exist: Don't create, prompt "Recommend executing ~init" in output
@@ -169,13 +169,33 @@ Secondary dimensions:
 
 **Standard Development**
 - Condition (all must meet): Intent=modification type, requirements clear, multi-file coordination or files>5, no architecture-level decisions
-- Action: Solution Design → Development Implementation, skip Requirements Analysis scoring
-- Output: Reuse Solution Design and Development Implementation phase output formats (see corresponding Skills)
+- Action: Solution Design → create complete solution package, skip Requirements Analysis scoring
+- Phase boundary:
+  - Interactive confirmation mode: After Solution Design completes, output the solution package and phase summary, then wait for the user to explicitly confirm whether to enter Development Implementation
+  - Push mode is limited to full authorization commands (~auto etc.): Continue to Development Implementation only after Solution Design completes
+- Output: First reuse the Solution Design phase output format; reuse the Development Implementation output format only after the Development Implementation entry hard gate is satisfied
 
 **Complete R&D (default fallback)**
 - Condition (meets any): Requirements ambiguous, involves architecture decisions, involves new modules, involves technology selection, uncertain impact scope, EHRB=yes
-- Action: Requirements Analysis → Solution Design → Development Implementation complete flow
+- Action: Requirements Analysis → Solution Design → create complete solution package
+- Phase boundary:
+  - Interactive confirmation mode: Wait for confirmation to enter Solution Design after Requirements Analysis; wait for confirmation to enter Development Implementation after Solution Design
+  - Planning commands (~plan etc.): Stop after Solution Design creates the solution package; do not enter Development Implementation
+  - Full authorization commands (~auto etc.): May silently enter Development Implementation only after Solution Design completes and creates the solution package
 - Fallback: Default to this path when unable to determine
+
+### Development Implementation Entry Hard Gate
+
+The routing phase must not interpret ordinary development mode, follow-up responses, solution selections, phase confirmations, or new requirement responses as Development Implementation authorization.
+
+**Only the following 3 cases may enter Development Implementation:**
+```yaml
+1. After Solution Design completes, the current user input explicitly confirms entering Development Implementation
+2. A full authorization command (~auto/~helloauto/~fa) was triggered, and Solution Design has completed and created a solution package
+3. An execution command (~exec/~run/~execute) was triggered, and `helloagents/<branch-name>/plan/` contains a complete solution package
+```
+
+If none of the above conditions is met, even when routing selects Standard Development or Complete R&D, the flow may only proceed to Solution Design and create a solution package; it must not modify business code.
 
 </complexity_paths>
 
@@ -273,9 +293,18 @@ Other input: Ask for confirmation again
 - In selection: Previous output was ❓Solution Ideation or ❓Development Implementation (multiple solution packages)
 - In confirmation: Previous output was ✅Phase complete + next steps contain confirmation request
 
-**Follow-up Response**: Context=in follow-up + user supplements → Re-score → Output per original phase rules
-**Selection Response**: Context=in selection + user enters number → Use selected item to continue → Silently enter subsequent flow
-**Confirmation Response**: Context=in confirmation + user confirms → Silently enter next phase; user refuses → Output cancellation format
+**Follow-up Response**: Context=in follow-up + user supplements → Re-score → Output per Requirements Analysis phase transition rules
+  - User supplements for boundary/scope/success criteria only complete requirement information; they do not confirm entering Solution Design or Development Implementation
+  - Interactive confirmation mode: After score ≥7, output the Requirements Analysis summary and wait for confirmation on whether to enter Solution Design
+  - MODE_PLANNING=true: May silently enter Solution Design, but must stop after the solution package is generated and must not enter Development Implementation
+  - MODE_FULL_AUTH=true: May continue to Development Implementation only after Solution Design completes and creates a solution package
+**Selection Response**: Context=in selection + user enters number → Use selected item to continue the current sub-phase
+  - Solution ideation selection: Only enter detailed planning and create the solution package; then follow Solution Design phase transition rules to wait or stop
+  - Development Implementation multi-package selection: Valid only after the Development Implementation entry hard gate is satisfied
+**Confirmation Response**: Context=in confirmation + user confirms → Enter the next phase based on the confirmed object; user refuses → Output cancellation format
+  - Confirming Requirements Analysis completion: Enter Solution Design, not Development Implementation
+  - Confirming Solution Design completion with explicit approval to develop: Only then enter Development Implementation
+  - Other confirmations must not bypass Solution Design or the Development Implementation entry hard gate
 **Feedback Response**: Context≠none + user modification feedback → Determine per Feedback-Delta rules:
   - Major change: Output "⚠️【HelloAGENTS】- Requirement Change" prompt then return to requirements analysis
   - Local increment: Silently apply modifications in current phase, output updated phase completion format after done

@@ -14,6 +14,8 @@
 - 重写 4 份 bootstrap 入口（`Codex/Skills/CN/AGENTS.md`、`Claude/Skills/CN/CLAUDE.md`、`Codex/Skills/EN/AGENTS.md`、`Claude/Skills/EN/CLAUDE.md`），由 1065 行精简至 266 行（约 75% 缩减），仅保留角色定义、最小路由决策树、阶段触发表、Skill 引用表与核心全局约束（G1-G12 简版）
 - bootstrap 中 G6.1-G6.4 输出格式模板、G11 方案包生命周期、G12 状态变量、路由机制详细规则、Windows PowerShell 语法约束、命令完成输出格式全部下沉至对应新 Skill
 - 明确现有 Skill 中的 G6/G11 跨引用指向 `output-format` / `lifecycle` Skill，避免精简入口后仍隐式依赖 bootstrap 内联锚点
+- 收紧 `routing` Skill 的标准开发、完整研发和上下文响应规则，普通追问/方案选择/阶段确认只能推进到方案设计和方案包创建，进入开发实施必须满足显式确认、全授权命令或执行命令入口
+- 收紧 `routing` Skill 的系统化调试出口与微调模式条件：调试类改动必须产出方案包，禁止从系统化调试降级到微调；微调模式条件新增"调试信号=无"硬门禁（4 份 routing/SKILL.md 同步对齐）
 
 ### 移除
 - bootstrap 入口中移除上述已下沉的细节段落
