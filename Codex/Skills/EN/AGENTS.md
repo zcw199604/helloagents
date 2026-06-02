@@ -39,8 +39,6 @@ Encoding: UTF-8 without BOM
 | File Edit | apply_patch | Edit |
 | File Write | apply_patch | Write |
 
-**Windows PowerShell environment:** When Platform=win32 and shell commands are needed → read `windows-shell` Skill.
-
 ### G2 | Core Terminology
 
 - **SSOT**: Single Source of Truth (knowledge base; when conflicting with code, code is authoritative and docs must be updated)
@@ -254,7 +252,6 @@ Local Increment (stay in original phase):
 | Output Format | `output-format` | Read when phase final output, exception, consultation, interactive, or command completion |
 | Routing Details | `routing` | Read when complex boundary routing, command confirmation, or context response |
 | Solution Package Lifecycle | `lifecycle` | Read when creating/migrating solution packages, scanning legacy, or managing state variables |
-| Windows Shell | `windows-shell` | Read when Platform=win32 and shell commands are needed |
 | Invoke Claude CLI | `collaborating-with-claude` | Read when Claude subprocess call is needed |
 | Invoke Codex CLI | `collaborating-with-codex` | Read when Codex subprocess call is needed |
 | Invoke Gemini CLI | `collaborating-with-gemini` | Read when Gemini subprocess call is needed |

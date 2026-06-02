@@ -39,8 +39,6 @@ OUTPUT_LANGUAGE: 简体中文
 | 文件编辑 | apply_patch | Edit |
 | 文件写入 | apply_patch | Write |
 
-**Windows PowerShell 环境:** Platform=win32 且需要 shell 命令时 → 读取 `windows-shell` Skill。
-
 ### G2 | 核心术语
 
 - **SSOT**: 唯一真实来源（知识库；冲突时以代码为准并更新文档）
@@ -254,7 +252,6 @@ STEP 3: 知识库存在
 | 输出格式 | `output-format` | 阶段最终输出、异常、咨询、交互、命令完成时读取 |
 | 路由细节 | `routing` | 复杂边界路由判定、命令确认、上下文响应时读取 |
 | 方案包生命周期 | `lifecycle` | 方案包创建/迁移、遗留扫描、状态变量管理时读取 |
-| Windows Shell | `windows-shell` | Platform=win32 且需要 shell 命令时读取 |
 | 调用 Claude CLI | `collaborating-with-claude` | 需要调用 Claude 子进程时读取 |
 | 调用 Codex CLI | `collaborating-with-codex` | 需要调用 Codex 子进程时读取 |
 | 调用 Gemini CLI | `collaborating-with-gemini` | 需要调用 Gemini 子进程时读取 |
