@@ -1,6 +1,13 @@
 ---
 name: multi_model
 description: 定义多模型协作在 ANALYZE/DESIGN/DEVELOP 各阶段的触发条件、执行规则和约束。多模型审查触发时读取本 Skill。
+invocation: model
+side_effects: external_process
+requires:
+  - collaborating-with-claude
+  - collaborating-with-codex
+  - collaborating-with-gemini
+completion_criteria: 已完成多模型审查、风险分级和主代理裁决。
 ---
 
 # 多模型协作分析与审查规则
@@ -77,6 +84,29 @@ PHASE2_HARD_STOP_CONFIRM = 1:
 
 ---
 
+## 正反例
+
+**应触发:**
+- 用户明确要求 Claude/Codex/Gemini 交叉审查。
+- 方案设计涉及多种架构路线，需要独立模型评估风险。
+- 开发实施完成后需要核对方案包与实际代码是否一致。
+
+**不应触发:**
+- 单文件微调且无高风险信号。
+- 需要把多个独立文件改动并行交给执行者；这属于 `hello-subagent`。
+- 外部模型不可用且本地已有充分证据；记录降级即可。
+
+---
+
+## 完成门禁
+
+- 已说明启用或未启用多模型协作的原因。
+- 每个外部模型调用都有 success、SESSION_ID 或失败原因。
+- 审查结果按 P0/P1/P2 或共识/分歧汇总。
+- 主代理已裁决采纳项；外部模型未直接修改本地文件。
+
+---
+
 ## 分阶段协作规则
 
 ### ANALYZE 阶段
@@ -130,8 +160,11 @@ Hard Stop（可选）:
 ```yaml
 无写入原则:
   - 外部模型仅用于分析/审查，不直接修改本地文件
-  - 提示词必须追加:
+  - 审查/验收任务提示词必须追加:
+    "OUTPUT: Risk report only. Strictly prohibit any actual modifications."
+  - 仅当主代理明确要求外部模型给出补丁建议时，才追加:
     "OUTPUT: Unified Diff Patch ONLY. Strictly prohibit any actual modifications."
+  - 风险报告和 unified diff patch 不得混在同一次外部模型输出契约中
 
 会话连续性:
   - 首次调用保存 SESSION_ID
@@ -141,6 +174,7 @@ Hard Stop（可选）:
   - 协作模式（启用/未启用）
   - 调用摘要（模型、success、SESSION_ID）
   - 共识结论/冲突结论
+  - 风险分级（P0/P1/P2，如适用）
   - 最终建议与下一步
 ```
 

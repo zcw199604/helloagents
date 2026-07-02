@@ -1,11 +1,27 @@
 ---
 name: lifecycle
 description: 方案包生命周期与状态变量管理；创建/迁移方案包、扫描遗留方案、状态变量切换时读取
+invocation: model
+side_effects: may_move_plan_packages
+requires:
+  - output-format
+completion_criteria: 方案包状态、迁移位置、history 索引和遗留扫描均已完成。
 ---
 
 # 方案包生命周期管理 - 详细规则
 
 **适用范围:** 方案包创建（方案设计/轻量迭代）、迁移（开发实施 P3 步骤 12）、遗留扫描（阶段完成时）、状态变量管理。
+
+---
+
+## 职责边界
+
+`lifecycle` 只负责方案包生命周期：创建路径、状态符号、迁移、遗留扫描、状态变量。
+
+不由 `lifecycle` 负责的事项:
+- 知识库内容质量、模块文档同步、ADR 内容维护 → 由 `kb` 负责
+- 开发实施任务执行和质量验证 → 由 `develop` 负责
+- 用户可见输出模板 → 由 `output-format` 负责
 
 ---
 
@@ -75,3 +91,25 @@ MODE_PLANNING: 规划命令激活状态
 MODE_PLANNING_INTERACTIVE: 交互式规划激活状态
 MODE_EXECUTION: 执行命令激活状态
 ```
+
+---
+
+## 正反例
+
+**应触发:**
+- 方案设计完成后创建 `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/`。
+- 开发实施完成后把方案包迁移到 `history/YYYY-MM/`。
+- 阶段完成时扫描 `plan/` 中剩余未执行方案包。
+
+**不应触发:**
+- 只更新 `wiki/modules/*.md` 的内容；这是 `kb` 的职责。
+- 只回答用户某个方案包字段含义；不需要迁移或扫描状态。
+
+---
+
+## 完成门禁
+
+- 方案包路径符合 `helloagents/<branch-name>/plan|history/YYYY-MM/YYYYMMDDHHMM_<feature>/`。
+- `task.md` 中每个任务都有 `[ ]`、`[√]`、`[X]`、`[-]` 或 `[?]` 状态。
+- 迁移后 `history/index.md` 已更新。
+- 遗留扫描已排除本次创建或执行的方案包。

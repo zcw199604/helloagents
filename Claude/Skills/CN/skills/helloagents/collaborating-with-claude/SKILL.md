@@ -1,6 +1,10 @@
 ---
 name: collaborating-with-claude
 description: Delegates coding tasks to Claude CLI for prototyping, debugging, and code review. Use when needing algorithm implementation, bug analysis, or code quality feedback. Supports multi-turn sessions via SESSION_ID.
+invocation: model
+side_effects: external_process
+requires: []
+completion_criteria: 已按约束调用 Claude CLI，保留 SESSION_ID，并返回结构化结果。
 ---
 
 ## Quick Start
