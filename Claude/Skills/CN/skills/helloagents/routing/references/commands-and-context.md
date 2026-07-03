@@ -27,8 +27,21 @@
 
 **用户响应处理:**
 ```yaml
-确认意图: 执行命令定义的[确认后动作]
+确认意图: 按命令类型设置状态变量后，执行命令定义的[确认后动作]
+  全授权命令(~auto|~helloauto|~fa):
+    - 设置 MODE_FULL_AUTH=true
+    - 清除 MODE_EXECUTION/MODE_PLANNING/MODE_PLANNING_INTERACTIVE
+    - 进入 需求分析→方案设计→开发实施 静默执行
+  知识库命令(~init|~wiki):
+    - 清除 MODE_FULL_AUTH/MODE_EXECUTION/MODE_PLANNING/MODE_PLANNING_INTERACTIVE
+    - 执行知识库初始化或重建
+  执行命令(~exec|~run|~execute):
+    - 检查 `helloagents/<branch-name>/plan/` 存在完整方案包
+    - 设置 MODE_EXECUTION=true
+    - 清除 MODE_FULL_AUTH/MODE_PLANNING/MODE_PLANNING_INTERACTIVE
+    - 进入开发实施
 拒绝意图:
+  - 清除本次命令已设置或待设置的 MODE_* 状态
   - 输出"🚫 已取消[命令名称]命令。"
   - 如原始输入包含具体需求，询问是否按标准模式继续
 其他输入: 再次询问确认
@@ -125,4 +138,3 @@
   ```
 
 </context_paths>
-

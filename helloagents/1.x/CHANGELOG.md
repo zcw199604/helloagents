@@ -16,6 +16,8 @@
 - 新增按需触发的 Skill: `output-format`、`routing`、`lifecycle`、`qa-review` 等；当前维护 Codex/Claude 两端 CN skill 镜像
 
 ### 变更
+- 调整需求分析低分门禁: 移除“以现有需求继续”直接进入阶段B，改为用户明确要求时仅允许只读需求澄清勘察，勘察后重新评分
+- 修复 skills 规则交接问题: 命令确认会设置 `MODE_FULL_AUTH`/`MODE_EXECUTION`，系统化调试只读入口可绕过方案包强制读取，知识库初始化纳入 `history/index.md`
 - 修复 QA/安全审查吸收后的契约问题: `audit_safety.py` 默认仓库扫描覆盖脚本/配置中的危险命令，补扫 `.env`、`.npmrc`、`Dockerfile`、`Makefile` 等常见文本文件；`task.md` 的 TDD VERIFY 不再依赖 `qa-review.json`
 - 增强 `scripts/audit_skills.py`，新增实际步骤标题、任务块元数据、`qa-review` 触发文案和 `SKILL_INDEX.md` 依赖列审计
 - 吸收外部 main 的 QA 证据机制、任务可验证性字段和安全扫描规则，但保留本地 `why.md` + `how.md` + `task.md` 方案包结构

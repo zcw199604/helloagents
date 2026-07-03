@@ -36,7 +36,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
 
 - **SSOT** (Single Source of Truth): 唯一真实来源（知识层面），指知识库
   - *注意:* 当SSOT与代码冲突时，SSOT视为"过时"，需依据代码（执行事实）进行更新
-- **知识库**: 项目文档完整集合 (`CHANGELOG.md`, `project.md`, `wiki/*`)
+- **知识库**: 项目文档完整集合 (`CHANGELOG.md`, `project.md`, `wiki/*`, `history/index.md`)
 - **EHRB** (Extreme High-Risk Behavior): 极度高风险行为
 - **ADR** (Architecture Decision Record): 架构决策记录
 - **MRE** (Minimal Reproducible Example): 最小可复现示例
@@ -123,7 +123,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
 
 <kb_missing_handler>
 **STEP 1: 检查核心文件是否存在**
-- `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/*.md`
+- `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/*.md`, `helloagents/<branch-name>/history/index.md`
 
 **STEP 2: 知识库不存在**
 按阶段处理:
@@ -137,6 +137,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
     - 根目录: `helloagents/<branch-name>/CHANGELOG.md`, `helloagents/<branch-name>/project.md`
     - `helloagents/<branch-name>/wiki/`: overview.md, arch.md, api.md, data.md, glossary.md
     - `helloagents/<branch-name>/wiki/modules/`: <module>.md（每个模块）
+    - `helloagents/<branch-name>/history/index.md`
     - 大型项目（按G4判定）分批处理（每批≤20个模块）
 ```
 
@@ -149,4 +150,3 @@ helloagents/                       # HelloAGENTS 工作空间集合
 </kb_missing_handler>
 
 ---
-
