@@ -33,6 +33,19 @@ VALID_SIDE_EFFECTS = {
     "may_move_plan_packages",
     "may_write_tests",
 }
+COMMAND_ALIASES = {
+    "~auto",
+    "~helloauto",
+    "~fa",
+    "~init",
+    "~wiki",
+    "~plan",
+    "~design",
+    "~exec",
+    "~run",
+    "~execute",
+}
+TASK_METADATA_LABELS = ["执行模式", "涉及文件", "完成标准", "验证方式"]
 
 
 def normalized_text(path: Path) -> str:
@@ -176,6 +189,106 @@ def audit_bootstrap_pointer() -> list[str]:
     return errors
 
 
+def require_text(path: Path, snippets: list[str], errors: list[str], label: str | None = None) -> None:
+    text = normalized_text(path)
+    for snippet in snippets:
+        if snippet not in text:
+            errors.append(f"{path}: 缺少语义约束 `{label or snippet}`")
+
+
+def extract_step_count(text: str, pattern: str) -> int | None:
+    match = re.search(pattern, text)
+    if not match:
+        return None
+    return int(match.group(1))
+
+
+def audit_entry_steps(path: Path, expected_count: int | None) -> list[str]:
+    errors: list[str] = []
+    text = normalized_text(path)
+    steps = re.findall(r"^### 步骤(\d+(?:\.\d+)?):", text, flags=re.MULTILINE)
+    main_steps = sorted({int(step) for step in steps if "." not in step})
+    if expected_count is not None:
+        expected = list(range(1, expected_count + 1))
+        if main_steps != expected:
+            errors.append(f"{path}: 实际步骤标题不完整，期望 {expected}，实际 {main_steps}")
+    if "7.5" not in steps:
+        errors.append(f"{path}: 缺少步骤7.5 QA 证据记录")
+    return errors
+
+
+def audit_task_template_metadata(path: Path) -> list[str]:
+    errors: list[str] = []
+    text = normalized_text(path)
+    task_matches = list(re.finditer(r"^- \[ \] ([^\n]+)", text, flags=re.MULTILINE))
+    for index, match in enumerate(task_matches):
+        end = task_matches[index + 1].start() if index + 1 < len(task_matches) else len(text)
+        block = text[match.start():end]
+        for label in TASK_METADATA_LABELS:
+            if f"- {label}:" not in block:
+                errors.append(f"{path}: 任务 `{match.group(1)}` 缺少 `{label}`")
+    verify_match = re.search(r"^- \[ \] 5A\.4 VERIFY:[\s\S]*?(?=^### 5B\.|^## |\Z)", text, flags=re.MULTILINE)
+    if verify_match and "qa-review.json" in verify_match.group(0):
+        errors.append(f"{path}: 5A.4 VERIFY 不应依赖 qa-review.json，QA 证据应由开发步骤7.5生成")
+    return errors
+
+
+def audit_semantic_contracts() -> list[str]:
+    errors: list[str] = []
+    codex_skill_base = CODEX_ROOT / SKILL_TREE
+
+    agents = CODEX_ROOT / "AGENTS.md"
+    routing = codex_skill_base / "routing" / "SKILL.md"
+    commands = codex_skill_base / "routing" / "references" / "commands-and-context.md"
+    for path in [agents, routing, commands]:
+        text = normalized_text(path)
+        for command in sorted(COMMAND_ALIASES):
+            if command not in text:
+                errors.append(f"{path}: 命令别名 `{command}` 未同步")
+
+    bootstrap_count = extract_step_count(
+        normalized_text(agents),
+        r"\|\s*开发实施\s*\|\s*(\d+)\s*步执行",
+    )
+    develop_count = extract_step_count(
+        normalized_text(codex_skill_base / "develop" / "SKILL.md"),
+        r"开发实施入口检查、(\d+)\s*步执行流程",
+    )
+    if bootstrap_count is None or develop_count is None:
+        errors.append("开发实施步骤数语义审计失败: 未能解析 bootstrap 或 develop/SKILL.md")
+    elif bootstrap_count != develop_count:
+        errors.append(f"开发实施步骤数不一致: bootstrap={bootstrap_count}, develop={develop_count}")
+
+    develop_entry = codex_skill_base / "develop" / "references" / "entry-and-steps.md"
+    errors.extend(audit_entry_steps(develop_entry, develop_count))
+
+    index = codex_skill_base / "SKILL_INDEX.md"
+    develop_index_match = re.search(r"^\|\s*`develop`\s*\|.+$", normalized_text(index), flags=re.MULTILINE)
+    if not develop_index_match or "qa-review" not in develop_index_match.group(0):
+        errors.append(f"{index}: develop 依赖列缺少 `qa-review`")
+
+    template = codex_skill_base / "templates" / "references" / "plan-package-templates.md"
+    require_text(template, TASK_METADATA_LABELS, errors, "task.md 任务元数据")
+    require_text(template, ["qa-review.json", "python scripts/audit_safety.py"], errors)
+    errors.extend(audit_task_template_metadata(template))
+
+    design = codex_skill_base / "design" / "references" / "detailed-planning.md"
+    require_text(design, TASK_METADATA_LABELS + ["AFK", "HITL"], errors, "任务可验证性规则")
+
+    qa_review = codex_skill_base / "qa-review" / "SKILL.md"
+    require_text(qa_review, ["步骤7质量检查与测试完成后", "qa-review.json", "task_verification", '"outcome": "clean"'], errors)
+    require_text(develop_entry, ["读取 `qa-review` Skill", "qa-review.json"], errors)
+
+    safety = ROOT / "scripts" / "audit_safety.py"
+    require_text(
+        safety,
+        ["DANGEROUS_PATTERNS", "HIGH_RISK_COMMAND_PATTERNS", "SECRET_PATTERNS", "scan_command_file", "TEXT_FILE_NAMES"],
+        errors,
+    )
+
+    return errors
+
+
 def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -185,6 +298,7 @@ def main() -> int:
         warnings.extend(tree_warnings)
     errors.extend(audit_mirror())
     errors.extend(audit_bootstrap_pointer())
+    errors.extend(audit_semantic_contracts())
 
     if warnings:
         print("WARNINGS:")

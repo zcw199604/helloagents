@@ -35,6 +35,29 @@ python scripts/audit_skills.py
 - `references/*.md` 引用存在。
 - Codex/Claude skill 树内容一致。
 - bootstrap 入口包含索引矩阵指针。
+- 命令别名、开发实施步骤数、任务元数据、QA 证据和安全审计脚本等语义契约一致。
+
+涉及安全规则、命令示例或脚本变更时运行:
+
+```bash
+python scripts/audit_safety.py
+```
+
+安全审计覆盖:
+- 脚本和配置文件中的危险 shell 命令、高风险发布/部署/迁移命令。
+- 常见密钥、私钥、数据库连接串和 token 形态。
+- `package.json` 中危险生命周期脚本。
+- `.env`、`.npmrc`、`Dockerfile`、`Makefile`、`.properties` 等常见文本配置文件。
+
+### QA 证据
+
+`qa-review` Skill 在步骤7质量检查与测试完成后、交付前读取，用于在当前方案包中写入 `qa-review.json`。该文件记录:
+- QA 模式、审查范围和结论。
+- 实际运行的验证命令及结果。
+- 阻断项、警告项和信息项。
+- `task.md` 已完成任务的逐项核对证据。
+
+方案包迁移到 `history/` 时，`qa-review.json` 随方案包一起归档。
 
 ### 文档化追问
 
@@ -51,3 +74,4 @@ python scripts/audit_skills.py
 | 2026-07-02 | 拆薄大型 skill、补索引矩阵、统一元数据、增加审计脚本 |
 | 2026-07-02 | 吸收 grill-with-docs 核心机制：领域语言、文档化追问、ADR 候选 |
 | 2026-07-02 | 修复交叉审查发现的高价值 P1/P2 规则冲突并增强审计脚本 |
+| 2026-07-03 | 吸收外部 main 的 QA 证据、任务可验证性、语义审计和安全扫描机制 |

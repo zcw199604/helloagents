@@ -43,7 +43,7 @@
 2. **阶段具体内容(≤5条要点):**
    - 📚 知识库状态
    - ✅ 执行结果: 任务数量和状态统计
-   - 🔍 质量验证: 一致性审计、测试结果
+   - 🔍 质量验证: 一致性审计、测试结果、QA证据
    - 💡 代码质量优化建议（如有）
    - 📦 迁移信息: 已迁移至 `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
 3. **文件变更清单:**
@@ -51,6 +51,7 @@
    📁 变更:
      - {代码文件}
      - {知识库文件}
+     - helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/qa-review.json
      - helloagents/<branch-name>/CHANGELOG.md
      - helloagents/<branch-name>/history/index.md
      ...

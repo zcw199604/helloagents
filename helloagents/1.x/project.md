@@ -15,5 +15,6 @@
 ## 验证约定
 
 - 修改 skill 后运行 `python scripts/audit_skills.py`。
+- 涉及安全规则、命令示例或脚本变更后运行 `python scripts/audit_safety.py`。
+- `audit_safety.py` 默认仓库扫描必须覆盖脚本/配置文件中的危险命令、高风险发布/部署命令和常见密钥形态。
 - 审计脚本必须保持只读，不创建、修改或删除仓库文件。
-

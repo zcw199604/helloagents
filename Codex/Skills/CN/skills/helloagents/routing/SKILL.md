@@ -16,7 +16,7 @@ completion_criteria: 已完成意图、范围、调试信号、EHRB 信号四项
 
 ## 快速决策流
 
-1. 扫描命令词：`~auto` / `~plan` / `~exec` / `~init`。
+1. 扫描命令词：`~auto` / `~helloauto` / `~fa` / `~plan` / `~design` / `~exec` / `~run` / `~execute` / `~init` / `~wiki`。
 2. 判断是否为上一阶段的确认、选择或反馈。
 3. 判断是否存在 Bug、测试失败、构建失败、运行异常、性能回退或 flaky 信号。
 4. 判断是否存在代码/文档改动意图。

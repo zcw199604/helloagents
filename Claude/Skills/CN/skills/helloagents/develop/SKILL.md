@@ -7,7 +7,8 @@ requires:
   - kb
   - lifecycle
   - output-format
-completion_criteria: 已执行方案包任务、完成验证、同步知识库与 CHANGELOG，并按 lifecycle 迁移方案包或记录无法迁移原因。
+  - qa-review
+completion_criteria: 已执行方案包任务、完成验证、记录 QA 证据、同步知识库与 CHANGELOG，并按 lifecycle 迁移方案包或记录无法迁移原因。
 ---
 
 # 开发实施
@@ -43,6 +44,7 @@ completion_criteria: 已执行方案包任务、完成验证、同步知识库�
 - `kb` 管知识库内容质量、创建、同步和一致性修正。
 - `lifecycle` 管方案包状态符号、迁移算法、遗留方案扫描和状态变量。
 - `output-format` 管用户可见输出模板；本 skill 只提供字段含义。
+- `qa-review` 管交付前质量审查和 QA 证据文件。
 - `hello-subagent` 只在任务可并行且写入范围互斥时编排子代理。
 
 ---
@@ -66,5 +68,6 @@ completion_criteria: 已执行方案包任务、完成验证、同步知识库�
 - 已读取并执行当前方案包的 `why.md`、`how.md`、`task.md`。
 - 所有任务标记为 `[√]`、`[X]`、`[-]` 或 `[?]`，非完成项有备注。
 - 安全检查、相关测试或替代验证已执行并记录结果。
+- 当前方案包已写入 `qa-review.json`，或记录无法写入原因。
 - 知识库与 `CHANGELOG.md` 已同步，或记录缺失/无法同步原因。
 - 已按 `lifecycle` 迁移方案包到 `history/`，或明确说明阻塞原因。
