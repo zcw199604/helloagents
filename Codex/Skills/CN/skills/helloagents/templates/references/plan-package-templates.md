@@ -192,14 +192,14 @@ flowchart TD
   - 执行模式: AFK
   - 涉及文件: [本次改动文件]
   - 完成标准: 未发现新增敏感信息、危险命令或未确认 EHRB 风险
-  - 验证方式: `python scripts/audit_safety.py`
+  - 验证方式: [项目安全审计命令/人工安全核对]（本仓库示例: `python scripts/audit_safety.py`）
 
 ## 4. 文档更新
 - [ ] 4.1 更新 <知识库文件>
   - 执行模式: AFK
   - 涉及文件: `<知识库文件>`
   - 完成标准: 知识库与代码事实一致且链接到本方案包
-  - 验证方式: `python scripts/audit_skills.py`（如适用）或只读核对知识库
+  - 验证方式: [项目文档审计命令]（本仓库示例: `python scripts/audit_skills.py`）或只读核对知识库
 
 ## 5. 测试
 

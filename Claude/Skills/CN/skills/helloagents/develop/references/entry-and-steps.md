@@ -2,7 +2,7 @@
 
 ## 强制前置检查
 
-<p3_entry_gate>
+<develop_entry_gate>
 **说明：** 即使路由判定进入开发实施，此检查仍会验证合法性（双重保险）
 
 **开发实施的唯一合法条件（满足任一即可）：**
@@ -30,7 +30,7 @@ IF 不满足任何条件:
   执行: 将当前用户消息按路由优先级重新判定
   终止: 开发实施流程
 ```
-</p3_entry_gate>
+</develop_entry_gate>
 
 ---
 
@@ -63,6 +63,7 @@ IF 满足条件D - 系统化调试只读入口:
 交互确认模式/执行命令(MODE_EXECUTION=true):
   - 扫描 `helloagents/<branch-name>/plan/` 目录下所有方案包
   - 不存在方案包 → 按 output-format Skill 的 G6.2 错误格式输出并停止
+  - 方案包完整性: `why.md`+`how.md`+`task.md` 齐全，或 `task.md` 顶部标注 `模式: 轻量迭代` 的简化方案包（仅 task.md，按完整处理；执行时跳过 why.md/how.md 读取）
   - 方案包不完整 → 按 output-format Skill 的 G6.2 错误格式输出并停止
   - 单个完整方案包 → 设置CURRENT_PACKAGE，继续执行
   - 多个方案包 → 列出清单，等待用户选择
@@ -276,7 +277,7 @@ TDD门禁（适用时严格执行）:
 ### 步骤10: 一致性审计
 
 <consistency_audit>
-**审计时机:** P3阶段完成知识库操作后立即执行
+**审计时机:** 开发实施阶段完成知识库操作后立即执行
 
 **审计内容:**
 1. **完整性**: 文档涵盖所有模块，必备文件和图表齐全
@@ -291,7 +292,7 @@ TDD门禁（适用时严格执行）:
    → 发现不一致时，必须更新文档以反映代码的客观事实
 
 3. 例外（修正代码）:
-   - 知识库是最近P2/P3方案包（刚设计好的方案）
+   - 知识库内容来自当前会话最近的方案设计/开发实施方案包（刚设计好的方案）
    - 代码有明显错误（Bug）
    - 错误信息指向代码问题
 
@@ -373,7 +374,7 @@ TDD门禁（适用时严格执行）:
 
   开发实施已完成，可进行多模型验收，验证实际代码实现与方案包是否存在出入。
 
-  [1] 启动多模型验收 - 读取 `multi_model` Skill，按 DEVELOP 阶段规则执行一致性复核与风险分级
+  [1] 启动多模型验收 - 读取 `multi_model` Skill，按开发实施阶段规则执行一致性复核与风险分级
   [2] 跳过 - 直接输出完成总结
 
   ────
@@ -381,9 +382,9 @@ TDD门禁（适用时严格执行）:
 
 用户选择处理:
   [1] 启动多模型验收:
-    - 读取 `multi_model` Skill，按 DEVELOP 阶段协作规则执行:
+    - 读取 `multi_model` Skill，按开发实施阶段协作规则执行:
       - 外部模型对照 `helloagents/<branch-name>/history/` 中已迁移的 task.md 与实际代码改动进行审查
-      - 无写入原则: 提示词追加 "OUTPUT: Unified Diff Patch ONLY."
+      - 无写入原则: 验收属审查类任务，提示词追加 "OUTPUT: Risk report only. Strictly prohibit any actual modifications."
       - 输出风险分级报告（P0 Must Fix / P1 Should Fix / P2 Note）
     - 验收完成后输出阶段完成总结
   [2] 直接输出阶段完成总结

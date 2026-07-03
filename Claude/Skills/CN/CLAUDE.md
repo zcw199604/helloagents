@@ -44,7 +44,7 @@ OUTPUT_LANGUAGE: 简体中文
 - **SSOT**: 唯一真实来源（知识库；冲突时以代码为准并更新文档）
 - **知识库**: `helloagents/<branch-name>/CHANGELOG.md`、`project.md`、`wiki/*`
 - **EHRB**: 极度高风险行为
-- **方案包**: `why.md` + `how.md` + `task.md`
+- **方案包**: `why.md` + `how.md` + `task.md`（轻量迭代简化方案包仅含标注 `模式: 轻量迭代` 的 `task.md`）
 
 **路径约定:**
 - `helloagents/<branch-name>/` 表示当前分支对应的本地知识库根目录，`<branch-name>` 取当前 git 分支名或工作区别名

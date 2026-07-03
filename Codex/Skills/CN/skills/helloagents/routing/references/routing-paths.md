@@ -56,11 +56,13 @@
   3. 创建简化方案包（仅 task.md，省略 why.md/how.md）
   4. 执行代码改动
   5. 同步更新知识库（按 `kb` Skill 同步规则）
-  6. 迁移方案包至 helloagents/<branch-name>/history/
-  7. 扫描遗留方案
+  6. 更新 `helloagents/<branch-name>/CHANGELOG.md`（按 G7 确定版本号）
+  7. 迁移方案包至 helloagents/<branch-name>/history/
+  8. 扫描遗留方案
 - 简化方案包规则:
   - 路径: `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/`
   - 仅创建 `task.md`，包含任务清单
+  - `task.md` 顶部必须标注 `模式: 轻量迭代`（供完整性检查和开发实施步骤1识别为合法简化方案包）
   - 迁移时标注"轻量迭代"
 - 输出格式:
   ```

@@ -1,6 +1,6 @@
 ---
 name: multi_model
-description: 定义多模型协作在 ANALYZE/DESIGN/DEVELOP 各阶段的触发条件、执行规则和约束。多模型审查触发时读取本 Skill。
+description: 定义多模型协作在需求分析/方案设计/开发实施各阶段的触发条件、执行规则和约束。多模型审查触发时读取本 Skill。
 invocation: model
 side_effects: external_process
 requires:
@@ -12,7 +12,7 @@ completion_criteria: 已完成多模型审查、风险分级和主代理裁决�
 
 # 多模型协作分析与审查规则
 
-本模块定义多模型协作在 ANALYZE / DESIGN / DEVELOP 以及命令路径（~plan/~exec）中的统一行为。
+本模块定义多模型协作在 需求分析 / 方案设计 / 开发实施 以及命令路径（~plan/~exec）中的统一行为。
 
 ---
 
@@ -21,9 +21,9 @@ completion_criteria: 已完成多模型审查、风险分级和主代理裁决�
 ```yaml
 规则名称: 多模型协作分析与审查规则
 适用范围:
-  - ANALYZE: 项目上下文与技术风险交叉验证
-  - DESIGN: 方案交叉评审与实施计划闸门
-  - DEVELOP: 完成后一致性复核与风险分级
+  - 需求分析: 项目上下文与技术风险交叉验证
+  - 方案设计: 方案交叉评审与实施计划闸门
+  - 开发实施: 完成后一致性复核与风险分级
   - 命令路径: ~plan / ~exec 的多模型复核步骤
 核心目标:
   - 降低单模型偏差风险
@@ -36,11 +36,11 @@ completion_criteria: 已完成多模型审查、风险分级和主代理裁决�
 ## 协作策略开关
 
 ```yaml
-读取配置:
-  - MULTI_MODEL_POLICY（BALANCED / STRICT）
-  - SIMPLE_TASK_NO_COLLAB_CONFIRM（0 / 1）
-  - PHASE2_HARD_STOP_CONFIRM（0 / 1）
-  - FORCE_MM_LIGHTWEIGHT_MIN_FILES（整数，默认2）
+配置项（会话级变量；用户可在对话中显式设置或覆盖，未设置时使用默认值）:
+  - MULTI_MODEL_POLICY（BALANCED / STRICT，默认 BALANCED）
+  - SIMPLE_TASK_NO_COLLAB_CONFIRM（0 / 1，默认 0）
+  - DESIGN_HARD_STOP_CONFIRM（0 / 1，默认 0）
+  - FORCE_MM_LIGHTWEIGHT_MIN_FILES（整数，默认 2）
 
 BALANCED:
   - 按风险触发多模型协作
@@ -52,13 +52,12 @@ STRICT:
 
 强制升级联动:
   - 用户已确认启用多模型协作，且预估改动文件数 >= FORCE_MM_LIGHTWEIGHT_MIN_FILES 时：
-    - R1 快速流程必须升级为 R2 简化流程
-    - 进入 ANALYZE → DESIGN，确保生成/复核方案包
+    - 微调模式必须升级为轻量迭代（或按范围进入标准开发）
+    - 进入 需求分析 → 方案设计，确保生成/复核方案包
 
-PHASE2_HARD_STOP_CONFIRM = 1:
-  - DESIGN 阶段输出最终实施计划后，必须询问:
-    "Shall I proceed with this plan? (Y/N)"
-  - 未收到明确 Y 前，不得继续 DEVELOP 执行
+DESIGN_HARD_STOP_CONFIRM = 1:
+  - 方案设计阶段输出最终实施计划后，必须询问: "是否按此计划继续执行? (是/否)"
+  - 未收到明确"是"前，不得继续开发实施
 ```
 
 ---
@@ -109,19 +108,19 @@ PHASE2_HARD_STOP_CONFIRM = 1:
 
 ## 分阶段协作规则
 
-### ANALYZE 阶段
+### 需求分析阶段
 
 ```yaml
 触发条件:
-  - TASK_COMPLEXITY = complex
+  - 任务复杂度判定为复杂任务（按 design Skill 方案构思的任务复杂度判定）
   - 或用户显式要求多模型交叉验证
 
 执行:
   - 基于分析结果请求外部模型做风险交叉检查
-  - 输出共识项与分歧项，分歧留待 DESIGN 阶段仲裁
+  - 输出共识项与分歧项，分歧留待方案设计阶段仲裁
 ```
 
-### DESIGN 阶段（Phase2）
+### 方案设计阶段
 
 ```yaml
 目标:
@@ -133,10 +132,10 @@ PHASE2_HARD_STOP_CONFIRM = 1:
   - 输出 step-by-step 实施计划与关键风险
 
 Hard Stop（可选）:
-  - PHASE2_HARD_STOP_CONFIRM = 1 时强制 Y/N 闸门
+  - DESIGN_HARD_STOP_CONFIRM = 1 时强制确认闸门
 ```
 
-### DEVELOP 阶段（Phase3/Phase4）
+### 开发实施阶段
 
 ```yaml
 目标:

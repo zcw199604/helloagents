@@ -16,6 +16,8 @@
 - 新增按需触发的 Skill: `output-format`、`routing`、`lifecycle`、`qa-review` 等；当前维护 Codex/Claude 两端 CN skill 镜像
 
 ### 变更
+- 修复 skills 规则矛盾: 步骤13多模型验收统一为"Risk report only"契约、规划命令不再触发多模型审查询问（以 output-and-transition.md 为准）、轻量迭代简化方案包通过 `task.md` 顶部 `模式: 轻量迭代` 标注合法化（routing/kb/develop/G2 四处对齐）、轻量迭代流程补充 CHANGELOG 更新步骤、CURRENT_PACKAGE 清理时机修正为迁移后按 G12 清除
+- 清理 skills 遗留悬空引用: P1/P2/P3 阶段代号统一改为中文阶段名（保留 P0/P1/P2 风险分级）、`p3_entry_gate` 改名 `develop_entry_gate`、multi_model 移除 R1/R2/Phase2-4/TASK_COMPLEXITY 旧术语并将 PHASE2_HARD_STOP_CONFIRM 更名为 DESIGN_HARD_STOP_CONFIRM（补默认值说明）、hello-subagent 委派协议章节重编号为 1-10、模板中本仓库专属审计命令泛化为占位符+本仓库示例
 - 调整需求分析低分门禁: 移除“以现有需求继续”直接进入阶段B，改为用户明确要求时仅允许只读需求澄清勘察，勘察后重新评分
 - 修复 skills 规则交接问题: 命令确认会设置 `MODE_FULL_AUTH`/`MODE_EXECUTION`，系统化调试只读入口可绕过方案包强制读取，知识库初始化纳入 `history/index.md`
 - 修复 QA/安全审查吸收后的契约问题: `audit_safety.py` 默认仓库扫描覆盖脚本/配置中的危险命令，补扫 `.env`、`.npmrc`、`Dockerfile`、`Makefile` 等常见文本文件；`task.md` 的 TDD VERIFY 不再依赖 `qa-review.json`

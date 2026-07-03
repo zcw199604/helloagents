@@ -63,7 +63,7 @@ helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/qa-review.json
   "file_references": [],
   "commands": [
     {
-      "command": "python scripts/audit_skills.py",
+      "command": "[本轮实际执行的验证命令]",
       "result": "passed",
       "note": "输出摘要"
     }

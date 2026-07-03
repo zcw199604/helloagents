@@ -44,6 +44,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
   - **目录结构**: `YYYYMMDDHHMM_<feature>/`
   - **必需文件**: `why.md` + `how.md` + `task.md`
   - **完整性检查**: 必需文件存在、非空、task.md至少1个任务项
+  - **轻量迭代例外**: `task.md` 顶部标注 `模式: 轻量迭代` 的简化方案包仅含 `task.md`，按完整方案包处理（见 routing Skill 轻量迭代规则）
 - **领域语言**: 项目内稳定使用的业务术语、缩写、角色、状态、流程名和禁用叫法，集中记录在 `wiki/glossary.md`
 
 ---
