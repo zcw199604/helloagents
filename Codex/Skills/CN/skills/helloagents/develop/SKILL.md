@@ -21,8 +21,8 @@ completion_criteria: 已执行方案包任务、完成验证、记录 QA 证据�
 
 进入开发实施必须满足任一条件：
 - 方案设计完成后用户明确确认。
-- 全授权命令 `~auto` 激活。
-- 执行命令 `~exec` 激活。
+- 全授权命令 `~auto` 激活，且 `AUTH_WORKFLOW_ID=WORKFLOW_ID`。
+- 执行命令 `~exec` 激活，且 `AUTH_WORKFLOW_ID=WORKFLOW_ID`。
 - 系统化调试模式命中且仍处于只读根因调查阶段。
 
 若不满足，重新按 `routing` Skill 判定，不直接修改代码。
@@ -67,9 +67,10 @@ completion_criteria: 已执行方案包任务、完成验证、记录 QA 证据�
 
 ## 完成门禁
 
-- 已读取并执行当前方案包的 `why.md`、`how.md`、`task.md`。
+- 已读取并执行完整方案包三件套，或合法轻量方案包的 `task.md` 与轻量方案包元数据。
 - 所有任务标记为 `[√]`、`[X]`、`[-]` 或 `[?]`，非完成项有备注。
 - 安全检查、相关测试或替代验证已执行并记录结果。
 - 当前方案包已写入 `qa-review.json`，或记录无法写入原因。
 - 知识库与 `CHANGELOG.md` 已同步，或记录缺失/无法同步原因。
 - 已按 `lifecycle` 迁移方案包到 `history/`，或明确说明阻塞原因。
+- 已执行 `RESET_WORKFLOW_STATE`，命令授权和等待态均未残留。

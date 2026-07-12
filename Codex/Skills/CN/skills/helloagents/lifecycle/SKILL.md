@@ -48,8 +48,15 @@ completion_criteria: 方案包状态、迁移位置、history 索引和遗留扫
 **已执行方案包(开发实施阶段强制迁移):**
 ```yaml
 1. 更新task.md任务状态（使用上述任务状态符号）
-2. 迁移至 helloagents/<branch-name>/history/YYYY-MM/（保持目录名，同名覆盖）
+2. 迁移至 helloagents/<branch-name>/history/YYYY-MM/（no-clobber，同名使用 `_v2`, `_v3` 后缀）
 3. 更新 helloagents/<branch-name>/history/index.md
+
+迁移不变量:
+  - QA 通过后、KB/CHANGELOG 写链接前计算唯一目标并设置 RESOLVED_ARCHIVE_PATH
+  - 目标冲突时递增版本后缀；无法获得唯一目标时停止并保留 plan 源目录
+  - 移动前原子复核目标；若被并发占用，重算变量并先修正所有预写链接
+  - 先完成 QA、知识库、CHANGELOG 和归档前验收，再执行移动
+  - 移动或索引更新失败时保留可恢复证据，不得把流程报告为成功
 ```
 
 **遗留方案扫描:**
@@ -68,7 +75,7 @@ completion_criteria: 方案包状态、迁移位置、history 索引和遗留扫
     - {方案包名称1}
     - {方案包名称2}
     ...
-  是否需要迁移至历史记录?
+  可使用 ~exec 选择执行；如确认不再执行，可明确请求标记为取消后归档。
 ```
 
 </plan_package_lifecycle>
@@ -78,6 +85,10 @@ completion_criteria: 方案包状态、迁移位置、history 索引和遗留扫
 ## G12 | 状态变量管理
 
 ```yaml
+WORKFLOW_ID: 当前工作流唯一标识
+WORKFLOW_STATE: IDLE | ANALYZING | DESIGNING | DEVELOPING | WAITING | TERMINAL
+AUTH_WORKFLOW_ID: 获得命令授权的工作流标识；必须等于 WORKFLOW_ID 才有效
+
 CREATED_PACKAGE: 方案设计阶段创建的方案包路径
   设置: 详细规划完成创建后
   清除: 开发实施步骤1读取后或流程终止
@@ -86,10 +97,50 @@ CURRENT_PACKAGE: 当前执行的方案包路径
   设置: 开发实施步骤1确定方案包后
   清除: 方案包迁移至 history/ 后
 
+RESOLVED_ARCHIVE_PATH: 当前方案包经 no-clobber 解析后的唯一归档目标
+  设置: QA 通过后、知识库和 CHANGELOG 写入任何 history 链接前
+  使用: KB 链接、history 索引、迁移和最终输出必须引用同一值
+  清除: 方案包迁移完成或流程终止
+
 MODE_FULL_AUTH: 全授权命令激活状态
 MODE_PLANNING: 规划命令激活状态
 MODE_PLANNING_INTERACTIVE: 交互式规划激活状态
 MODE_EXECUTION: 执行命令激活状态
+
+PENDING_INTERACTION:
+  NONE | COMMAND_CONFIRM | REQUIREMENT_INPUT | SOLUTION_CHOICE |
+  SOLUTION_REDESIGN | DESIGN_CONFIRM | DEVELOPMENT_CONFIRM | PACKAGE_CHOICE |
+  CONTEXT_CHOICE | MM_REVIEW | QUALITY_DECISION |
+  MM_ACCEPTANCE | TEST_FAILURE_DECISION | QA_RISK_DECISION |
+  PARTIAL_FAILURE_DECISION | EHRB_CONFIRM
+```
+
+### 状态转换规则
+
+- 启动新命令或新需求时生成新的 `WORKFLOW_ID`，并先执行 `RESET_WORKFLOW_STATE` 清除旧授权和等待态。
+- 设置 `MODE_FULL_AUTH` 或 `MODE_EXECUTION` 时同步设置 `AUTH_WORKFLOW_ID = WORKFLOW_ID`；仅布尔值为真不足以授权写入。
+- 每次输出交互提示前设置唯一 `PENDING_INTERACTION`；收到回复后只按该状态消费一次，随后立即清为 `NONE`。
+- 不允许“静默暂存”无法归属的用户消息；新需求显式结束旧等待态并重新路由。
+
+### 统一终态清理
+
+`RESET_WORKFLOW_STATE` 必须在成功、取消、终止、错误和不可恢复失败的 finally 路径执行:
+
+```yaml
+清除:
+  - MODE_FULL_AUTH
+  - MODE_PLANNING
+  - MODE_PLANNING_INTERACTIVE
+  - MODE_EXECUTION
+  - AUTH_WORKFLOW_ID
+  - CREATED_PACKAGE
+  - CURRENT_PACKAGE
+  - RESOLVED_ARCHIVE_PATH
+  - PENDING_INTERACTION
+设置:
+  - WORKFLOW_STATE = IDLE
+约束:
+  - 仅清理流程状态，不删除 plan/history 文件或用户工作区改动
 ```
 
 ---
@@ -113,3 +164,4 @@ MODE_EXECUTION: 执行命令激活状态
 - `task.md` 中每个任务都有 `[ ]`、`[√]`、`[X]`、`[-]` 或 `[?]` 状态。
 - 迁移后 `history/index.md` 已更新。
 - 遗留扫描已排除本次创建或执行的方案包。
+- 所有终态均已执行 `RESET_WORKFLOW_STATE`，不存在跨任务授权或等待态残留。

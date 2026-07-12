@@ -1,0 +1,39 @@
+name: Skill audits
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Compile Python sources
+        run: python -m compileall -q scripts tests
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Audit skills
+        run: python scripts/audit_skills.py
+      - name: Audit safety
+        run: python scripts/audit_safety.py
+      - name: Smoke-test bridge interfaces
+        run: |
+          python scripts/claude_bridge.py --help
+          python scripts/codex_bridge.py --help
+          python scripts/gemini_bridge.py --help
+          python scripts/manage_skills.py --help
+          python Codex/Skills/CN/skills/helloagents/collaborating-with-claude/scripts/bridge.py --help
+          python Codex/Skills/CN/skills/helloagents/collaborating-with-codex/scripts/bridge.py --help
+          python Codex/Skills/CN/skills/helloagents/collaborating-with-gemini/scripts/bridge.py --help

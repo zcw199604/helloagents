@@ -70,8 +70,8 @@ helloagents/                       # HelloAGENTS 工作空间集合
 - 按需选择: `helloagents/<branch-name>/wiki/glossary.md`, `helloagents/<branch-name>/wiki/modules/<module>.md`, `helloagents/<branch-name>/wiki/api.md`, `helloagents/<branch-name>/wiki/data.md`
 
 **步骤2: 知识库不存在/信息不足 → 全面扫描代码库**
-- 使用 Glob 获取文件结构
-- 使用 Grep 搜索关键信息
+- 使用宿主平台的文件枚举能力获取结构（命令行环境优先 `rg --files`）
+- 使用宿主平台的内容搜索能力定位信息（命令行环境优先 `rg`）
 - 获取: 架构、技术栈、模块结构、技术约束
 </context_acquisition_rules>
 
@@ -83,7 +83,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
 **触发时机:** 代码变更后，必须立即同步更新知识库
 
 **步骤1 - 模块规范更新:**
-- 读取当前方案包 `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/why.md` 的 **核心场景** 章节（在迁移前读取）
+- 完整方案包读取 `why.md` 的 **核心场景**；轻量方案包读取 `task.md` 的 **轻量方案包元数据** 中“范围摘要、核心场景、知识库同步”（均在迁移前读取）
 - 提取需求和场景（需求需标注所属模块）
 - 更新 `helloagents/<branch-name>/wiki/modules/<module>.md` 的 **规范** 章节
   - 不存在 → 追加
@@ -98,10 +98,13 @@ helloagents/                       # HelloAGENTS 工作空间集合
 - 领域语言候选/命名约定变更 → 更新 `helloagents/<branch-name>/wiki/glossary.md`
 
 **步骤3 - ADR维护（如包含架构决策）:**
-- 提取 ADR 信息（在迁移前从 `helloagents/<branch-name>/plan/YYYYMMDDHHMM_<feature>/how.md` 的 **架构决策 ADR** 章节读取）
+- 完整方案包从 `how.md` 提取 ADR；轻量方案包从“轻量方案包元数据”的 ADR 字段提取，值为“无”时不新增 ADR
 - 在 `helloagents/<branch-name>/wiki/arch.md` 的 **重大架构决策** 表格中追加
-- 链接到 `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/how.md#adr-xxx`
-- **注意:** 此时写入的 history/ 链接为预计算路径
+- 所有归档链接使用 lifecycle 已解析的 `RESOLVED_ARCHIVE_PATH`，不得自行拼接无后缀路径。
+- 完整方案包链接到 `{RESOLVED_ARCHIVE_PATH}/how.md#adr-xxx`；轻量方案包链接到 `{RESOLVED_ARCHIVE_PATH}/task.md#轻量方案包元数据`。
+- 若步骤12原子复核发现目标被并发占用，先重算 `RESOLVED_ARCHIVE_PATH` 并同步修正本步骤写入的链接，再执行迁移。
+
+**轻量方案包元数据约束:** 缺少范围摘要、核心场景、知识库同步、ADR 或验证策略任一字段时停止同步并报告方案包不完整，不得猜测缺失内容。
 
 **步骤4 - 清理:**
 - 删除过时信息、废弃API、已删除模块

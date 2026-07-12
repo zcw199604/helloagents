@@ -6,6 +6,8 @@
 **适用范围:** 非正常完成的阶段输出（取消、错误、警告、中断等）
 
 **EHRB安全警告:**
+
+输出前设置 `PENDING_INTERACTION=EHRB_CONFIRM`。
 ```
 ⚠️【HelloAGENTS】- 安全警告
 
@@ -60,6 +62,7 @@
 ```
 
 **任务部分失败询问:**
+输出前设置 `PENDING_INTERACTION=PARTIAL_FAILURE_DECISION`；仅非阻断失败可使用本模板，P0/P1 按 QA 门禁处理。
 ```
 ⚠️【HelloAGENTS】- 部分失败
 

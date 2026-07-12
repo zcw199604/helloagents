@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "qa_mode": "deep",
+  "scope": "HelloAGENTS Skill 运行时闭环加固：状态机、轻量方案包、QA/归档门禁、多模型 bridge、安装分发、审计器、知识库与跨平台 CI",
+  "outcome": "clean",
+  "gate_status": "passed",
+  "conclusion": "三轮并行只读复审发现的问题均已修复并定点复核通过；仓库内无剩余 P0/P1，36 项回归测试及全部审计通过。全局安装副本漂移为未授权部署事项，不影响仓库交付门禁。",
+  "findings": [],
+  "file_references": [
+    "Codex/Skills/CN/skills/helloagents",
+    "Claude/Skills/CN/skills/helloagents",
+    "scripts/audit_skills.py",
+    "scripts/audit_safety.py",
+    "scripts/manage_skills.py",
+    "scripts/claude_bridge.py",
+    "scripts/codex_bridge.py",
+    "scripts/gemini_bridge.py",
+    "tests/test_audits.py",
+    ".github/workflows/audit.yml",
+    "helloagents/1.x/CHANGELOG.md",
+    "helloagents/1.x/wiki/modules/skills.md"
+  ],
+  "commands": [
+    {
+      "command": "python -B -m unittest discover -s tests -v",
+      "result": "passed",
+      "note": "36 项测试通过，覆盖状态机、QA schema、进程树超时、只读 argv、安装回滚、安全审计和嵌套知识库。"
+    },
+    {
+      "command": "python -B scripts/audit_skills.py",
+      "result": "passed",
+      "note": "严格 frontmatter、依赖 DAG、QA v1/v2、方案包、知识库、状态顺序、bundled bridge 和双树镜像通过。"
+    },
+    {
+      "command": "python -B scripts/audit_safety.py",
+      "result": "passed",
+      "note": "Markdown shell fence、Python 命令常量传播、危险命令和密钥形态扫描通过。"
+    },
+    {
+      "command": "python -B -m compileall -q scripts tests",
+      "result": "passed",
+      "note": "Python 源码编译通过；生成缓存随后清理。"
+    },
+    {
+      "command": "git diff --no-index --exit-code -- Codex/Skills/CN/skills/helloagents Claude/Skills/CN/skills/helloagents",
+      "result": "passed",
+      "note": "Codex/Claude Skill 树内容一致。"
+    },
+    {"command": "python -B scripts/claude_bridge.py --help", "result": "passed", "note": "Claude bridge CLI 接口烟测通过。"},
+    {"command": "python -B scripts/codex_bridge.py --help", "result": "passed", "note": "Codex bridge CLI 接口烟测通过。"},
+    {"command": "python -B scripts/gemini_bridge.py --help", "result": "passed", "note": "Gemini bridge CLI 接口烟测通过。"},
+    {"command": "python -B scripts/manage_skills.py --help", "result": "passed", "note": "安装工具 CLI 接口烟测通过。"},
+    {
+      "command": "parallel read-only subagent regression reviews",
+      "result": "passed",
+      "note": "工作流语义、Python 工具安全、镜像分发三路复审及最终定点复核均无剩余仓库内 P0/P1。"
+    }
+  ],
+  "task_verification": [
+    {"task": "0.1", "status": "passed", "evidence": "范围限制在仓库内，未写入用户全局安装目录。"},
+    {"task": "1.1", "status": "passed", "evidence": "RED 证据覆盖原始缺陷及复审新增反例。"},
+    {"task": "2.1", "status": "passed", "evidence": "授权、等待态、QA gate、轻量包和归档路径契约闭环。"},
+    {"task": "3.1", "status": "passed", "evidence": "原生 plan 只读、进程树 timeout、fatal/退出码判定和数据门禁完成。"},
+    {"task": "4.1", "status": "passed", "evidence": "bundled bridge、双树镜像、安装漂移检测和联合回滚完成。"},
+    {"task": "5.1", "status": "passed", "evidence": "知识库、CHANGELOG 与 Windows/Linux CI 已同步。"},
+    {"task": "6.1", "status": "passed", "evidence": "三路并行复审、修复和两路定点复核全部完成。"},
+    {"task": "7.1", "status": "passed", "evidence": "Skill 审计、安全审计、镜像比较和 diff 检查通过。"},
+    {"task": "8.1", "status": "passed", "evidence": "RED-GREEN-REFACTOR-VERIFY 证据完整，36 项测试通过。"}
+  ]
+}

@@ -31,9 +31,11 @@ python scripts/audit_skills.py
 ```
 
 审计通过表示:
-- 必需 frontmatter 字段齐全。
-- `references/*.md` 引用存在。
+- frontmatter 字段、类型和重复键合法。
+- `references/*.md` 及普通 Markdown 文件链接存在。
+- `requires` 依赖图无环。
 - Codex/Claude skill 树内容一致。
+- collaborating Skill 的 bundled bridge 与根脚本一致。
 - bootstrap 入口包含索引矩阵指针。
 - 命令别名、开发实施步骤数、任务元数据、QA 证据和安全审计脚本等语义契约一致。
 
@@ -45,19 +47,45 @@ python scripts/audit_safety.py
 
 安全审计覆盖:
 - 脚本和配置文件中的危险 shell 命令、高风险发布/部署/迁移命令。
+- Markdown 可执行 shell fenced block 和 Python 常量 subprocess/os 命令。
 - 常见密钥、私钥、数据库连接串和 token 形态。
 - `package.json` 中危险生命周期脚本。
 - `.env`、`.npmrc`、`Dockerfile`、`Makefile`、`.properties` 等常见文本配置文件。
 
 ### QA 证据
 
-`qa-review` Skill 在步骤7质量检查与测试完成后、交付前读取，用于在当前方案包中写入 `qa-review.json`。该文件记录:
+`qa-review` Skill 在步骤7质量检查与测试完成后、交付前读取，用于在当前方案包中写入 `qa-review.json`。新记录使用 schema v3，并在 `tdd` 中保存分类、决策、目标行为和阶段结果；历史 v1/v2 记录继续可读。该文件记录:
 - QA 模式、审查范围和结论。
 - 实际运行的验证命令及结果。
 - 阻断项、警告项和信息项。
 - `task.md` 已完成任务的逐项核对证据。
+- P0/P1/P2 的 `severity/status` 和可执行 `gate_status`；P0 不允许风险接受，P1 默认阻止归档。
+- `decision=tdd` 时的 RED 失败、GREEN/REFACTOR/VERIFY 通过，或 `decision=exempt` 时的原因与替代验证。
+
+### 显式测试入口
+
+`~test [scope]` 读取 `test` Skill，为指定模块、行为或最近改动补齐测试。它会创建或复用轻量测试方案包，并复用现有开发实施和 QA 门禁。
+
+- 默认只修改测试、测试数据、方案包和 QA 证据。
+- 新功能或可复现缺陷走 TDD；已实现行为的表征测试必须以 `TDD-EXEMPT` 说明无法构造真实 RED 的原因。
+- 测试发现生产缺陷时，记录失败并进入常规方案设计，不自动修改生产代码。
 
 方案包迁移到 `history/` 时，`qa-review.json` 随方案包一起归档。
+
+### 运行时状态与轻量方案包
+
+- 命令授权绑定 `WORKFLOW_ID`；成功、取消、错误和终止统一执行 `RESET_WORKFLOW_STATE`。
+- 交互回复只由 `PENDING_INTERACTION` 消费一次，不再根据上一条文本猜测状态。
+- 轻量方案包必须在 `task.md` 中包含范围、核心场景、知识库同步、ADR 和验证策略；QA 和 KB 使用该元数据分支。
+- history 迁移采用 no-clobber，冲突时增加 `_v2/_v3`，禁止覆盖旧审计证据。
+- no-clobber 目标在知识库写链接前保存为 `RESOLVED_ARCHIVE_PATH`，链接、索引、迁移与最终输出保持一致。
+
+### 外部协作与分发
+
+- 多模型调用前执行 secret/PII/商业敏感信息门禁，默认最小上下文和 sandbox/read-only。
+- bridge 默认 600 秒超时，持续输出也受 deadline 限制；超时终止进程树，并作为 `collaborating-*` Skill bundled resource 分发。
+- Claude/Gemini 审查使用原生 plan 权限模式；任何 fatal 事件或非零退出均不能因部分输出而视为成功。
+- `manage_skills.py --check` 同时检测 Skill 与 bootstrap 漂移；`--install` 校验目标后联合安装，bootstrap 失败会回滚 Skill 树。
 
 ### 文档化追问
 
@@ -78,3 +106,5 @@ python scripts/audit_safety.py
 | 2026-07-03 | 修复命令模式变量、系统化调试只读入口和 `history/index.md` 初始化规则 |
 | 2026-07-03 | 调整需求低分门禁，允许只读代码勘察澄清需求但禁止直接进入方案设计 |
 | 2026-07-03 | 修复 6 处规则矛盾与 3 处遗留悬空: 统一验收输出契约、规划命令审查询问、轻量迭代方案包标注、中文阶段名替换 P1/P2/P3 代号、multi_model 旧术语清理、委派协议章节重编号 |
+| 2026-07-11 | 加固状态授权、轻量包、归档、多模型安全和 bridge 分发，新增语义回归测试与跨平台 CI |
+| 2026-07-11 | 吸收第二轮并行复审：补 QA 可执行门禁、归档路径解析、真实只读 bridge、进程树超时、安装联合回滚和严格 schema 审计 |

@@ -106,6 +106,8 @@
 
 ### 追问输出格式（评分 < 7分时）
 
+输出前设置 `PENDING_INTERACTION=REQUIREMENT_INPUT`。
+
 使用统一输出格式，行首: `❓【HelloAGENTS】- 需求分析`
 
 内容格式: 简要说明(1-2句，含当前评分) + 空行 + 扁平化问题清单(3-5个带序号) + 结束语
@@ -141,8 +143,7 @@
       - 禁止进入方案设计、禁止创建方案包、禁止修改代码或知识库
       - 勘察后必须重新评分；评分≥7分才可进入阶段B，评分<7分继续追问
     - "取消":
-      - 交互确认模式: 按 output-format Skill 的 G6.2 取消格式输出
-      - 推进模式: 清除 MODE_FULL_AUTH/MODE_PLANNING，按 output-format Skill 的 G6.2 取消格式输出
+      - 所有模式: 执行 RESET_WORKFLOW_STATE，按 output-format Skill 的 G6.2 取消格式输出
       - 取消输出示例:
         ```
         🚫【HelloAGENTS】- 已取消

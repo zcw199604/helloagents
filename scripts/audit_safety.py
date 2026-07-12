@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -85,6 +87,7 @@ TEXT_FILE_NAMES = {
 }
 COMMAND_EXTENSIONS = {".bash", ".cmd", ".ps1", ".sh", ".yaml", ".yml", ".zsh"}
 COMMAND_FILE_NAMES = {"Dockerfile", "Jenkinsfile", "Makefile"}
+SHELL_FENCE_LANGUAGES = {"bash", "bat", "batch", "cmd", "console", "powershell", "ps1", "pwsh", "sh", "shell", "zsh"}
 MAX_TEXT_BYTES = 1_000_000
 SKIP_PARTS = {".git", "__pycache__", "node_modules", ".venv", "venv"}
 
@@ -165,6 +168,115 @@ def scan_command_file(path: Path, text: str) -> list[str]:
     return sorted(set(issues))
 
 
+def scan_markdown_commands(path: Path, text: str) -> list[str]:
+    if path.suffix.lower() != ".md":
+        return []
+    issues: list[str] = []
+    fence_pattern = re.compile(
+        r"^(?P<fence>`{3,}|~{3,})(?P<info>[^\r\n]*)\r?\n(?P<body>[\s\S]*?)^(?P=fence)\s*$",
+        re.MULTILINE,
+    )
+    patterns = DANGEROUS_PATTERNS + HIGH_RISK_COMMAND_PATTERNS
+    for match in fence_pattern.finditer(text):
+        info = match.group("info").strip().split(maxsplit=1)
+        if not info:
+            continue
+        language = info[0].lower()
+        if language not in SHELL_FENCE_LANGUAGES:
+            continue
+        for line in iter_effective_command_lines(match.group("body")):
+            issues.extend(scan_patterns(line, patterns))
+    return sorted(set(issues))
+
+
+def _call_name(node: ast.AST) -> str:
+    parts: list[str] = []
+    while isinstance(node, ast.Attribute):
+        parts.append(node.attr)
+        node = node.value
+    if isinstance(node, ast.Name):
+        parts.append(node.id)
+    return ".".join(reversed(parts))
+
+
+def _constant_command(node: ast.AST, constants: dict[str, str] | None = None) -> str | None:
+    if isinstance(node, ast.Name) and constants is not None:
+        return constants.get(node.id)
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, (ast.List, ast.Tuple)):
+        values: list[str] = []
+        for element in node.elts:
+            if not isinstance(element, ast.Constant) or not isinstance(element.value, str):
+                return None
+            values.append(element.value)
+        return shlex.join(values)
+    return None
+
+
+def scan_python_commands(path: Path, text: str) -> list[str]:
+    if path.suffix.lower() != ".py":
+        return []
+    try:
+        tree = ast.parse(text, filename=str(path))
+    except SyntaxError:
+        return []
+    process_calls = {
+        "os.popen",
+        "os.system",
+        "subprocess.call",
+        "subprocess.check_call",
+        "subprocess.check_output",
+        "subprocess.Popen",
+        "subprocess.run",
+    }
+    module_aliases = {"os": "os", "subprocess": "subprocess"}
+    direct_calls: dict[str, str] = {}
+    constants: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for imported in node.names:
+                if imported.name in {"os", "subprocess"}:
+                    module_aliases[imported.asname or imported.name] = imported.name
+        elif isinstance(node, ast.ImportFrom) and node.module in {"os", "subprocess"}:
+            for imported in node.names:
+                direct_calls[imported.asname or imported.name] = f"{node.module}.{imported.name}"
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            value = node.value
+            command = _constant_command(value)
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            if command is not None:
+                for target in targets:
+                    if isinstance(target, ast.Name):
+                        constants[target.id] = command
+
+    issues: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        call_name = _call_name(node.func)
+        if call_name in direct_calls:
+            call_name = direct_calls[call_name]
+        elif "." in call_name:
+            prefix, suffix = call_name.split(".", 1)
+            if prefix in module_aliases:
+                call_name = f"{module_aliases[prefix]}.{suffix}"
+        if call_name not in process_calls:
+            continue
+        command = _constant_command(node.args[0], constants) if node.args else None
+        if command is not None:
+            issues.extend(scan_command(command))
+        shell_keyword = next((keyword for keyword in node.keywords if keyword.arg == "shell"), None)
+        if (
+            shell_keyword
+            and isinstance(shell_keyword.value, ast.Constant)
+            and shell_keyword.value.value is True
+            and command is None
+        ):
+            issues.append("Python 使用 shell=True 执行动态命令")
+    return sorted(set(issues))
+
+
 def scan_package_json(path: Path, text: str) -> list[str]:
     issues: list[str] = []
     if path.name != "package.json":
@@ -195,6 +307,10 @@ def scan_repo(root: Path) -> list[str]:
             issues.append(f"{rel}: {reason}")
         for reason in scan_command_file(path, text):
             issues.append(f"{rel}: {reason}")
+        for reason in scan_markdown_commands(path, text):
+            issues.append(f"{rel}: {reason}")
+        for reason in scan_python_commands(path, text):
+            issues.append(f"{rel}: {reason}")
         for reason in scan_package_json(path, text):
             issues.append(f"{rel}: {reason}")
     return issues
@@ -205,6 +321,11 @@ def self_test() -> list[str]:
         root = Path(tmp)
         (root / "deploy.sh").write_text("npm publish\n", encoding="utf-8")
         (root / ".env").write_text("pass" + "word='hardcoded'\n", encoding="utf-8")
+        (root / "README.md").write_text("```bash\nrm -rf /\n```\n", encoding="utf-8")
+        (root / "danger.py").write_text(
+            'import subprocess\nsubprocess.run(["git", "reset", "--hard"])\n',
+            encoding="utf-8",
+        )
         repo_issues = scan_repo(root)
     checks = {
         "dangerous": scan_command("cmd /c dir"),
@@ -212,6 +333,8 @@ def self_test() -> list[str]:
         "secret": scan_patterns("token='sk-" + "a" * 24 + "'", SECRET_PATTERNS),
         "repo_command": [issue for issue in repo_issues if "包发布命令" in issue],
         "repo_dotenv": [issue for issue in repo_issues if "硬编码密码" in issue],
+        "repo_markdown": [issue for issue in repo_issues if "递归删除关键路径" in issue],
+        "repo_python": [issue for issue in repo_issues if "硬重置" in issue],
     }
     return [name for name, result in checks.items() if not result]
 

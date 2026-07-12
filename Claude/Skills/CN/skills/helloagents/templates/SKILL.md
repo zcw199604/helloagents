@@ -3,9 +3,7 @@ name: templates
 description: 文档模板集合；创建 Wiki、方案包或版本记录时读取。主文件只负责选择模板类别，完整模板按需读取 references。
 invocation: model
 side_effects: read-only
-requires:
-  - kb
-  - lifecycle
+requires: []
 completion_criteria: 已选择正确模板引用文件，并按目标文件类型填充必要章节。
 ---
 

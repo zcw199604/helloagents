@@ -4,6 +4,7 @@ Wraps the Gemini CLI to provide a JSON-based interface for Claude.
 """
 
 import json
+import ctypes
 import os
 import sys
 import queue
@@ -12,8 +13,83 @@ import threading
 import time
 import shutil
 import argparse
+import signal
+from ctypes import wintypes
 from pathlib import Path
 from typing import Generator, List, Optional
+
+
+class _WindowsIoCounters(ctypes.Structure):
+    _fields_ = [(name, ctypes.c_ulonglong) for name in [
+        "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
+        "ReadTransferCount", "WriteTransferCount", "OtherTransferCount",
+    ]]
+
+
+class _WindowsBasicLimits(ctypes.Structure):
+    _fields_ = [
+        ("PerProcessUserTimeLimit", ctypes.c_longlong), ("PerJobUserTimeLimit", ctypes.c_longlong),
+        ("LimitFlags", wintypes.DWORD), ("MinimumWorkingSetSize", ctypes.c_size_t),
+        ("MaximumWorkingSetSize", ctypes.c_size_t), ("ActiveProcessLimit", wintypes.DWORD),
+        ("Affinity", ctypes.c_size_t), ("PriorityClass", wintypes.DWORD),
+        ("SchedulingClass", wintypes.DWORD),
+    ]
+
+
+class _WindowsExtendedLimits(ctypes.Structure):
+    _fields_ = [
+        ("BasicLimitInformation", _WindowsBasicLimits), ("IoInfo", _WindowsIoCounters),
+        ("ProcessMemoryLimit", ctypes.c_size_t), ("JobMemoryLimit", ctypes.c_size_t),
+        ("PeakProcessMemoryUsed", ctypes.c_size_t), ("PeakJobMemoryUsed", ctypes.c_size_t),
+    ]
+
+
+class _WindowsJob:
+    JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000
+    JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS = 9
+
+    def __init__(self) -> None:
+        self.handle = None
+        if os.name != "nt":
+            return
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+        kernel32.SetInformationJobObject.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+        kernel32.SetInformationJobObject.restype = wintypes.BOOL
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        handle = kernel32.CreateJobObjectW(None, None)
+        if not handle:
+            return
+        limits = _WindowsExtendedLimits()
+        limits.BasicLimitInformation.LimitFlags = self.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        if not kernel32.SetInformationJobObject(handle, 9, ctypes.byref(limits), ctypes.sizeof(limits)):
+            kernel32.CloseHandle(handle)
+            return
+        self.handle = handle
+
+    def assign(self, process: subprocess.Popen) -> bool:
+        if self.handle is None:
+            return False
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        kernel32.AssignProcessToJobObject.restype = wintypes.BOOL
+        if not kernel32.AssignProcessToJobObject(self.handle, wintypes.HANDLE(process._handle)):
+            self.close()
+            return False
+        return True
+
+    def close(self) -> None:
+        if self.handle is not None:
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+            kernel32.CloseHandle(self.handle)
+            self.handle = None
+
+    def __del__(self) -> None:
+        try:
+            self.close()
+        except Exception:
+            pass
 
 
 def _get_windows_npm_paths() -> List[Path]:
@@ -75,7 +151,7 @@ def _resolve_executable(name: str, env: dict) -> str:
     return name
 
 
-def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[str, None, None]:
+def run_shell_command(cmd: List[str], cwd: Optional[str] = None, timeout: int = 600) -> Generator[str, None, None]:
     """Execute a command and stream its output line-by-line."""
     env = os.environ.copy()
     _augment_path_env(env)
@@ -103,6 +179,7 @@ def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[st
         # Use a single string to avoid subprocess list escaping on Windows
         popen_cmd = f'"{comspec}" /d /s /c "{cmdline}"'
 
+    windows_job = _WindowsJob()
     process = subprocess.Popen(
         popen_cmd,
         shell=False,
@@ -114,10 +191,49 @@ def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[st
         errors='replace',
         cwd=cwd,
         env=env,
+        start_new_session=os.name != "nt",
+        creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) if os.name == "nt" else 0,
     )
+    windows_job.assign(process)
 
-    output_queue: "queue.Queue[Optional[str]]" = queue.Queue()
+    output_queue: "queue.Queue[Optional[str]]" = queue.Queue(maxsize=1024)
+    stop_event = threading.Event()
+    completed_event = threading.Event()
     GRACEFUL_SHUTDOWN_DELAY = 0.3
+
+    def terminate_process_tree() -> None:
+        if os.name == "nt":
+            if windows_job.handle is not None:
+                windows_job.close()
+                process.wait()
+                return
+            if process.poll() is not None:
+                return
+            subprocess.run(
+                ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        else:
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+                process.wait(timeout=2)
+            except (ProcessLookupError, subprocess.TimeoutExpired):
+                if process.poll() is None:
+                    os.killpg(process.pid, signal.SIGKILL)
+        if process.poll() is None:
+            process.kill()
+        process.wait()
+
+    def enqueue(value: Optional[str]) -> bool:
+        while not stop_event.is_set():
+            try:
+                output_queue.put(value, timeout=0.1)
+                return True
+            except queue.Full:
+                continue
+        return False
 
     def is_turn_completed(line: str) -> bool:
         try:
@@ -130,20 +246,27 @@ def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[st
         if process.stdout:
             for line in iter(process.stdout.readline, ""):
                 stripped = line.strip()
-                output_queue.put(stripped)
+                if not enqueue(stripped):
+                    break
                 if is_turn_completed(stripped):
+                    completed_event.set()
                     time.sleep(GRACEFUL_SHUTDOWN_DELAY)
-                    process.terminate()
+                    terminate_process_tree()
                     break
             process.stdout.close()
-        output_queue.put(None)
+        enqueue(None)
 
-    thread = threading.Thread(target=read_output)
+    thread = threading.Thread(target=read_output, daemon=True)
     thread.start()
+    deadline = time.monotonic() + timeout
 
+    timed_out = False
     while True:
+        if time.monotonic() >= deadline:
+            timed_out = True
+            break
         try:
-            line = output_queue.get(timeout=0.5)
+            line = output_queue.get(timeout=min(0.1, max(0.001, deadline - time.monotonic())))
             if line is None:
                 break
             yield line
@@ -151,12 +274,24 @@ def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[st
             if process.poll() is not None and not thread.is_alive():
                 break
 
-    try:
-        process.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait()
-    thread.join(timeout=5)
+    if timed_out:
+        stop_event.set()
+        terminate_process_tree()
+        thread.join(timeout=1)
+        yield "__HELLOAGENTS_TIMEOUT__"
+        return
+
+    remaining = deadline - time.monotonic()
+    if process.poll() is None:
+        try:
+            process.wait(timeout=max(0.001, remaining))
+        except subprocess.TimeoutExpired:
+            stop_event.set()
+            terminate_process_tree()
+            thread.join(timeout=1)
+            yield "__HELLOAGENTS_TIMEOUT__"
+            return
+    thread.join(timeout=1)
 
     while not output_queue.empty():
         try:
@@ -166,13 +301,20 @@ def run_shell_command(cmd: List[str], cwd: Optional[str] = None) -> Generator[st
         except queue.Empty:
             break
 
+    if process.returncode and not completed_event.is_set():
+        yield f"__HELLOAGENTS_EXIT_CODE__={process.returncode}"
+    windows_job.close()
 
-def windows_escape(prompt):
-    """Windows style string escaping for newlines and special chars in prompt text."""
-    result = prompt.replace('\n', '\\n')
-    result = result.replace('\r', '\\r')
-    result = result.replace('\t', '\\t')
-    return result
+
+def build_command(args: argparse.Namespace) -> List[str]:
+    cmd = ["gemini", "--prompt", args.PROMPT, "-o", "stream-json"]
+    if args.sandbox:
+        cmd.extend(["--sandbox", "--approval-mode", "plan"])
+    if args.model.strip():
+        cmd.extend(["--model", args.model.strip()])
+    if args.SESSION_ID:
+        cmd.extend(["--resume", args.SESSION_ID])
+    return cmd
 
 
 def configure_windows_stdio() -> None:
@@ -193,12 +335,15 @@ def main():
     parser = argparse.ArgumentParser(description="Gemini Bridge")
     parser.add_argument("--PROMPT", required=True, help="Instruction for the task to send to gemini.")
     parser.add_argument("--cd", required=True, type=Path, help="Set the workspace root for gemini before executing the task.")
-    parser.add_argument("--sandbox", action="store_true", default=False, help="Run in sandbox mode. Defaults to `False`.")
+    parser.add_argument("--sandbox", action=argparse.BooleanOptionalAction, default=True, help="Run in sandbox mode. Defaults to `True`; use --no-sandbox only with explicit authorization.")
     parser.add_argument("--SESSION_ID", default="", help="Resume the specified session of the gemini. Defaults to empty string, start a new session.")
     parser.add_argument("--return-all-messages", action="store_true", help="Return all messages (e.g. reasoning, tool calls, etc.) from the gemini session. Set to `False` by default, only the agent's final reply message is returned.")
     parser.add_argument("--model", default="", help="Optional model passthrough to Gemini CLI. No automatic model switching is applied.")
+    parser.add_argument("--timeout", type=int, default=600, help="Maximum runtime in seconds. Defaults to 600.")
 
     args = parser.parse_args()
+    if args.timeout <= 0:
+        parser.error("--timeout must be greater than zero")
 
     cd: Path = args.cd
     if not cd.exists():
@@ -210,19 +355,8 @@ def main():
         return
 
     PROMPT = args.PROMPT
-    if os.name == "nt":
-        PROMPT = windows_escape(PROMPT)
 
-    cmd = ["gemini", "--prompt", PROMPT, "-o", "stream-json"]
-
-    if args.sandbox:
-        cmd.extend(["--sandbox"])
-
-    if args.model.strip():
-        cmd.extend(["--model", args.model.strip()])
-
-    if args.SESSION_ID:
-        cmd.extend(["--resume", args.SESSION_ID])
+    cmd = build_command(args)
 
     all_messages = []
     agent_messages = ""
@@ -230,7 +364,15 @@ def main():
     err_message = ""
     thread_id = None
 
-    for line in run_shell_command(cmd, cwd=str(cd.absolute())):
+    for line in run_shell_command(cmd, cwd=str(cd.absolute()), timeout=args.timeout):
+        if line == "__HELLOAGENTS_TIMEOUT__":
+            success = False
+            err_message += f"\n\n[gemini timeout] exceeded {args.timeout} seconds"
+            break
+        if line.startswith("__HELLOAGENTS_EXIT_CODE__="):
+            success = False
+            err_message += "\n\n[gemini error] process " + line.removeprefix("__HELLOAGENTS_")
+            break
         try:
             line_dict = json.loads(line.strip())
             all_messages.append(line_dict)
@@ -245,6 +387,12 @@ def main():
                 agent_messages = agent_messages + line_dict.get("content", "")
             if line_dict.get("session_id") is not None:
                 thread_id = line_dict.get("session_id")
+            event_type = str(line_dict.get("type", "")).lower()
+            if "error" in event_type or "fail" in event_type or line_dict.get("error"):
+                success = False
+                err_message += "\n\n[gemini error] " + str(
+                    line_dict.get("error") or line_dict.get("message") or line_dict
+                )
 
         except json.JSONDecodeError:
             err_message += "\n\n[json decode error] " + line
@@ -252,6 +400,7 @@ def main():
 
         except Exception as error:
             err_message += "\n\n[unexpected error] " + f"Unexpected error: {error}. Line: {line!r}"
+            success = False
             break
     
     result = {}

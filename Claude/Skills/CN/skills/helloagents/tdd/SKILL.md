@@ -3,8 +3,7 @@ name: tdd
 description: 测试驱动开发质量规则；当任务涉及新功能、Bug修复、可观察行为变更、核心逻辑调整、公共API/方法新增或测试策略设计时使用；定义TDD适用性判定、RED-GREEN-REFACTOR流程、例外条件、测试反模式和完成门禁。
 invocation: model
 side_effects: may_write_tests
-requires:
-  - develop
+requires: []
 completion_criteria: RED/GREEN/REFACTOR/VERIFY 证据完整，或记录 TDD-EXEMPT 原因。
 ---
 
@@ -56,7 +55,14 @@ completion_criteria: RED/GREEN/REFACTOR/VERIFY 证据完整，或记录 TDD-EXEM
 - 修改生产代码前，先完成对应 RED 任务并确认失败原因匹配目标行为。
 - GREEN 阶段只做最小实现，禁止顺手重构或扩大范围。
 - REFACTOR 只能在相关测试通过后执行，重构后必须复测。
-- RED/GREEN/REFACTOR 证据可静默记录到任务备注或最终摘要，不破坏推进模式静默规则。
+- RED/GREEN/REFACTOR 证据可静默记录到任务备注；开发实施步骤7.5必须将最终证据写入 schema v3 `qa-review.json.tdd`，不破坏推进模式静默规则。
+
+## 结构化证据
+
+- 新生成的 QA 记录使用 schema v3，`tdd.classification` 标记 `mandatory`、`recommended`、`exempt` 或 `uncertain`，并记录最小目标行为集合。
+- `tdd.decision=tdd` 时，`red.result` 必须为 `failed`，`green`、`refactor` 与 `verify` 的结果必须为 `passed`；即使无需改动也要将 `refactor.performed=false` 与复测命令写入。
+- `tdd.decision=exempt` 时，必须写入 `exempt_reason` 与 `alternative_verification`。强制适用任务不得直接豁免，应先把适用性重新判定为例外并说明环境或用户约束。
+- 对生产实现早于本次测试的表征测试，可使用 `TDD-EXEMPT`，但理由必须明确说明无法构造真实 RED，不得把直接通过的测试伪装为 RED。
 
 ## RED-GREEN-REFACTOR 规则
 
@@ -136,6 +142,7 @@ VERIFY:
   - GREEN证据记录完整: 测试命令、通过摘要、最小实现说明
   - REFACTOR后相关测试仍通过
   - VERIFY证据记录完整: 测试命令、结果摘要、剩余风险或未覆盖原因
+  - 新生成的 QA schema v3 已记录 `tdd` 阶段证据，或记录 TDD-EXEMPT 与替代验证
   - 未新增不必要mock或test-only生产接口
   - 覆盖正常路径、错误路径和关键边界场景，或记录未覆盖原因
   - 测试保持独立、命名清晰、断言可观察结果

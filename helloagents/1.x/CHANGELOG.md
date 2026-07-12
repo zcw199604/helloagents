@@ -7,6 +7,11 @@
 ## [Unreleased]
 
 ### 新增
+- 新增 `~test [scope]` 受控测试入口和 `test` Skill，支持轻量测试方案包、TDD 分类及默认不扩大为生产修复的边界
+- 新增 QA schema v3 的结构化 `tdd` 证据与审计回归测试，校验 RED/GREEN/REFACTOR/VERIFY 或 TDD-EXEMPT 原因和替代验证
+- 新增 `scripts/manage_skills.py`，支持只读安装漂移检查和带备份的原子安装
+- 新增审计回归测试与 Windows/Linux GitHub Actions，覆盖状态机、轻量包、安全扫描、bridge 和分发契约
+- collaborating Skill 内新增自包含 `scripts/bridge.py` bundled resource
 - 新增 `qa-review` Skill，用于开发实施交付前记录 QA 证据、验证命令、阻断项分级和任务完成核对
 - 新增 `scripts/audit_safety.py` 只读安全审计脚本，扫描危险命令、密钥形态和高风险依赖脚本
 - 新增 `wiki/glossary.md` 领域语言文档，用于沉淀项目术语、同义词/禁用叫法和术语状态
@@ -16,6 +21,19 @@
 - 新增按需触发的 Skill: `output-format`、`routing`、`lifecycle`、`qa-review` 等；当前维护 Codex/Claude 两端 CN skill 镜像
 
 ### 变更
+- `qa-review.json` 新生成记录升级为 schema v3；`audit_skills.py` 保持 v1/v2 兼容并新增 TDD 证据门禁
+- QA 证据升级为 schema v2，新增 P0/P1/P2 处置状态与 `gate_status`，P0 不可跳过、P1 必须显式接受风险后才能归档
+- 归档路径在 KB/CHANGELOG 写链接前解析为 `RESOLVED_ARCHIVE_PATH`，并补齐 `~exec`、测试失败、多模型验收、部分失败等等待态消费路径
+- bridge read-only 改用 Claude/Gemini 原生 plan 权限模式；持续输出不能绕过超时，超时终止进程树，非零退出和 fatal 事件始终判失败
+- `manage_skills.py` 增加 bootstrap 文件名/仓库边界校验和 Skill+bootstrap 联合回滚；标准检查命令同时校验 bootstrap 漂移
+- frontmatter 与 QA JSON 审计增加类型、枚举、任务覆盖校验；安全审计补充 `~~~` fence、变量常量传播和 subprocess 导入别名
+- 命令授权改为绑定 `WORKFLOW_ID`，补齐全部等待交互态，并在所有终态统一执行 `RESET_WORKFLOW_STATE`
+- 轻量方案包增加范围、核心场景、知识库同步、ADR 和验证策略元数据，develop/QA/KB 使用统一分支
+- history 迁移改为 no-clobber；多模型验收移至归档前，P0/P1 阻止未闭环方案归档
+- 多模型协作增加数据出境、secret/PII、宿主感知模型组合和工作区零写入门禁
+- bridge 默认使用有界超时，Gemini 默认 sandbox，Claude read-only 禁止 Bash/Edit/Write，并保留 Windows 多行提示词
+- Skill 审计增加严格 frontmatter、普通 Markdown 链接、依赖 DAG、bundled bridge 与关键状态不变量检查
+- 安全审计增加 Markdown shell fenced block 和 Python AST 进程命令扫描
 - 修复 skills 规则矛盾: 步骤13多模型验收统一为"Risk report only"契约、规划命令不再触发多模型审查询问（以 output-and-transition.md 为准）、轻量迭代简化方案包通过 `task.md` 顶部 `模式: 轻量迭代` 标注合法化（routing/kb/develop/G2 四处对齐）、轻量迭代流程补充 CHANGELOG 更新步骤、CURRENT_PACKAGE 清理时机修正为迁移后按 G12 清除
 - 清理 skills 遗留悬空引用: P1/P2/P3 阶段代号统一改为中文阶段名（保留 P0/P1/P2 风险分级）、`p3_entry_gate` 改名 `develop_entry_gate`、multi_model 移除 R1/R2/Phase2-4/TASK_COMPLEXITY 旧术语并将 PHASE2_HARD_STOP_CONFIRM 更名为 DESIGN_HARD_STOP_CONFIRM（补默认值说明）、hello-subagent 委派协议章节重编号为 1-10、模板中本仓库专属审计命令泛化为占位符+本仓库示例
 - 调整需求分析低分门禁: 移除“以现有需求继续”直接进入阶段B，改为用户明确要求时仅允许只读需求澄清勘察，勘察后重新评分
@@ -50,3 +68,5 @@
 - ADR-002: 抽取 `routing` Skill 但 bootstrap 保留最小路由决策树，避免常驻读取
 - ADR-003: 大型 `SKILL.md` 拆为轻量入口 + `references/`
 - ADR-004: 吸收 `grill-with-docs` 机制而非新增独立流程
+- ADR-005: 使用显式状态机和工作流标识替代跨任务隐式布尔授权
+- ADR-006: bridge 作为 collaborating Skill bundled resource 自包含分发

@@ -38,6 +38,7 @@
   - helloagents/<branch-name>/plan/{方案包目录}/why.md
   - helloagents/<branch-name>/plan/{方案包目录}/how.md
   - helloagents/<branch-name>/plan/{方案包目录}/task.md
+  - {规划期间实际创建或更新的知识库文件，如有}
 
 🔄 下一步: 方案包已生成，如需执行请输入 ~exec
 📦 遗留方案: [按 lifecycle Skill 扫描显示，如有]
@@ -61,6 +62,23 @@
 
 🔄 下一步: 执行命令已结束，随时准备接收新指令
 📦 遗留方案: [按 lifecycle Skill 扫描显示]
+```
+
+**测试命令完成:**
+```
+✅【HelloAGENTS】- 测试命令完成
+
+- ✅ 测试范围: [模块/文件/行为]
+- 🧪 TDD 决策: [tdd / TDD-EXEMPT]，证据已记录到 `qa-review.json`
+- 🔍 验证结果: [测试命令与结果摘要]
+
+────
+📁 变更:
+  - {测试文件}
+  - {方案包与 QA 证据文件}
+  - {知识库文件，如有}
+
+🔄 下一步: [缺陷需修复时进入常规方案设计；否则测试交付已完成]
 ```
 
 **知识库命令完成:** 格式见 kb Skill

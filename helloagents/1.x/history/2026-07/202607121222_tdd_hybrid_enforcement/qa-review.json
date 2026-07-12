@@ -1,0 +1,78 @@
+{
+  "schema_version": 3,
+  "qa_mode": "standard",
+  "scope": "~test 测试入口、QA schema v3 TDD 证据、审计器与双端技能镜像",
+  "outcome": "clean",
+  "gate_status": "passed",
+  "conclusion": "TDD 结构化证据、命令注册和历史 QA 兼容性均已通过本地验证。",
+  "findings": [],
+  "file_references": [
+    "scripts/audit_skills.py",
+    "tests/test_audits.py",
+    "Codex/Skills/CN/skills/helloagents/test/SKILL.md",
+    "Claude/Skills/CN/skills/helloagents/test/SKILL.md"
+  ],
+  "commands": [
+    {
+      "command": "python -m unittest discover -s tests -p test_audits.py -v",
+      "result": "passed",
+      "note": "GREEN 后 39 项回归通过；此前 RED 阶段的 3 个新增断言按预期失败。"
+    },
+    {
+      "command": "python -m unittest discover -s tests -v",
+      "result": "passed",
+      "note": "40 项全量单元测试通过。"
+    },
+    {
+      "command": "python scripts/audit_skills.py",
+      "result": "passed",
+      "note": "双端镜像、命令注册、schema 和语义契约均通过。"
+    },
+    {
+      "command": "python scripts/audit_safety.py",
+      "result": "passed",
+      "note": "未发现新增危险命令、密钥或高风险配置。"
+    }
+  ],
+  "task_verification": [
+    {"task": "0.1", "status": "passed", "evidence": "方案范围、schema v1/v2 兼容和 ADR-007 已在三件套中明确。"},
+    {"task": "1.1", "status": "passed", "evidence": "新增 v3 有效、缺失 tdd 和非法 RED 结果的回归测试；初次执行出现预期失败。"},
+    {"task": "2.1", "status": "passed", "evidence": "qa_json_errors 支持 v3 并验证完整阶段或豁免证据，v1/v2 分支保留。"},
+    {"task": "2.2", "status": "passed", "evidence": "TDD 验证逻辑抽取为 tdd_evidence_errors，GREEN 后测试通过。"},
+    {"task": "3.1", "status": "passed", "evidence": "Codex/Claude 均新增 test Skill，routing 和 bootstrap 注册 ~test [scope]。"},
+    {"task": "3.2", "status": "passed", "evidence": "COMMAND_ALIASES、语义审计和当前契约回归测试覆盖命令注册。"},
+    {"task": "4.1", "status": "passed", "evidence": "qa-review 模板固定 schema v3 并定义 tdd 字段约束。"},
+    {"task": "4.2", "status": "passed", "evidence": "tdd、develop 和方案模板统一说明 QA 证据写入时机。"},
+    {"task": "5.1", "status": "passed", "evidence": "project、skills 模块文档、架构 ADR 和 CHANGELOG 已同步。"},
+    {"task": "5.2", "status": "passed", "evidence": "unittest、skills audit 和 safety audit 均通过。"}
+  ],
+  "tdd": {
+    "classification": "mandatory",
+    "decision": "tdd",
+    "target_behaviors": [
+      "schema v3 QA 记录必须携带可审计的 TDD 证据或明确豁免",
+      "~test 命令必须被路由和技能索引发现"
+    ],
+    "red": {
+      "command": "python -m unittest discover -s tests -p test_audits.py -v",
+      "result": "failed",
+      "summary": "新增断言初次失败：审计器拒绝 schema v3、未注册 ~test、且未拒绝缺失 tdd 的记录。"
+    },
+    "green": {
+      "command": "python -m unittest discover -s tests -p test_audits.py -v",
+      "result": "passed",
+      "summary": "扩展审计器和新增 test Skill 后，39 项测试全部通过。"
+    },
+    "refactor": {
+      "performed": true,
+      "command": "python -m unittest discover -s tests -p test_audits.py -v",
+      "result": "passed",
+      "summary": "将 v3 阶段校验收敛到 tdd_evidence_errors，保持 QA 通用校验和历史分支清晰。"
+    },
+    "verify": {
+      "command": "python -m unittest discover -s tests -v",
+      "result": "passed",
+      "summary": "40 项单元测试、技能审计和安全审计均通过。"
+    }
+  }
+}
