@@ -6,6 +6,14 @@
 
 ## 规范
 
+### 自适应默认流程
+
+- 普通自然语言改动请求按低/中/高风险路由，文件数量只作为范围和验证成本线索。
+- 低风险直接实施；中风险先形成简短内部计划后连续实施；高风险先方案设计并在写入前确认。
+- 用户明确要求修复普通 Bug 时，先复现与定位根因；低/中风险可直接补测试、最小修复和验证。
+- 自适应无方案包路径不生成孤立 `qa-review.json` 或 history 记录，实际验证命令与结果写入最终摘要。
+- EHRB、生产、真实数据、权限、支付、不可逆操作、破坏性公共契约和数据迁移仍保持高风险门禁。
+
 ### 轻量入口
 
 `SKILL.md` 应优先保留:
@@ -29,6 +37,17 @@
 ```bash
 python scripts/audit_skills.py
 ```
+
+### 行为 Eval
+
+`evals/skill_routing_cases.json` 保存代表性提示及预期路由、动作、确认策略、过程产物和风险等级。当前基线至少覆盖咨询、微调、普通 Bug、小改动、中等变更、高风险、命令和上下文八类场景。
+
+```bash
+python scripts/eval_skills.py
+python -m unittest tests.test_skill_evals -v
+```
+
+外部运行器可输出顶层包含 `results` 列表的 JSON，再使用 `python scripts/eval_skills.py --results <path>` 计算路由、动作、确认、产物和风险准确率，以及不必要确认率和漏确认率。
 
 审计通过表示:
 - frontmatter 字段、类型和重复键合法。
@@ -74,8 +93,9 @@ python scripts/audit_safety.py
 
 ### 运行时状态与轻量方案包
 
-- 命令授权绑定 `WORKFLOW_ID`；成功、取消、错误和终止统一执行 `RESET_WORKFLOW_STATE`。
+- 特殊命令授权绑定 `WORKFLOW_ID`；成功、取消、错误和终止统一执行 `RESET_WORKFLOW_STATE`。
 - 交互回复只由 `PENDING_INTERACTION` 消费一次，不再根据上一条文本猜测状态。
+- 用户明确授权的低/中风险普通改动不需要方案包或二次确认；需要恢复执行或审计时仍可创建轻量方案包。
 - 轻量方案包必须在 `task.md` 中包含范围、核心场景、知识库同步、ADR 和验证策略；QA 和 KB 使用该元数据分支。
 - history 迁移采用 no-clobber，冲突时增加 `_v2/_v3`，禁止覆盖旧审计证据。
 - no-clobber 目标在知识库写链接前保存为 `RESOLVED_ARCHIVE_PATH`，链接、索引、迁移与最终输出保持一致。
@@ -108,3 +128,4 @@ python scripts/audit_safety.py
 | 2026-07-03 | 修复 6 处规则矛盾与 3 处遗留悬空: 统一验收输出契约、规划命令审查询问、轻量迭代方案包标注、中文阶段名替换 P1/P2/P3 代号、multi_model 旧术语清理、委派协议章节重编号 |
 | 2026-07-11 | 加固状态授权、轻量包、归档、多模型安全和 bridge 分发，新增语义回归测试与跨平台 CI |
 | 2026-07-11 | 吸收第二轮并行复审：补 QA 可执行门禁、归档路径解析、真实只读 bridge、进程树超时、安装联合回滚和严格 schema 审计 |
+| 2026-07-15 | 新增 36 条路由 eval 基线与评分器，精简 bootstrap，并将普通 Bug/小改动切换为风险自适应路由 |

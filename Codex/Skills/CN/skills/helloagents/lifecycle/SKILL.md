@@ -1,16 +1,16 @@
 ---
 name: lifecycle
-description: 方案包生命周期与状态变量管理；创建/迁移方案包、扫描遗留方案、状态变量切换时读取
+description: 方案包生命周期与状态变量管理；实际创建/迁移方案包、扫描遗留方案或切换状态变量时读取
 invocation: model
 side_effects: may_move_plan_packages
 requires:
   - output-format
-completion_criteria: 方案包状态、迁移位置、history 索引和遗留扫描均已完成。
+completion_criteria: 存在方案包时其状态、迁移位置、history 索引和遗留扫描均已完成；无方案包路径未创建伪生命周期记录。
 ---
 
 # 方案包生命周期管理 - 详细规则
 
-**适用范围:** 方案包创建（方案设计/轻量迭代）、迁移（开发实施步骤12）、遗留扫描（阶段完成时）、状态变量管理。
+**适用范围:** 实际方案包创建、迁移（开发实施步骤12）、遗留扫描和需要跨轮交互的状态变量管理。自适应无方案包改动不触发迁移。
 
 ---
 
@@ -45,7 +45,7 @@ completion_criteria: 方案包状态、迁移位置、history 索引和遗留扫
   3. 存在 → 使用版本后缀 _v2, _v3...
 ```
 
-**已执行方案包(开发实施阶段强制迁移):**
+**已执行方案包(存在时强制迁移):**
 ```yaml
 1. 更新task.md任务状态（使用上述任务状态符号）
 2. 迁移至 helloagents/<branch-name>/history/YYYY-MM/（no-clobber，同名使用 `_v2`, `_v3` 后缀）

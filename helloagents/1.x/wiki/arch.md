@@ -6,20 +6,24 @@
 flowchart TD
   User["用户请求"] --> Bootstrap["AGENTS.md / CLAUDE.md"]
   Bootstrap --> SkillIndex["SKILL_INDEX.md"]
+  Bootstrap --> Risk["低/中/高风险路由"]
   Bootstrap --> Skill["按需 SKILL.md"]
   Skill --> References["references/*.md"]
   Skill --> Scripts["scripts/*.py"]
   Scripts --> Bundled["collaborating-*/scripts/bridge.py"]
   Scripts --> Install["manage_skills.py check/install"]
+  Scripts --> Eval["eval_skills.py + eval cases"]
   Skill --> KB["helloagents/<branch>/wiki"]
 ```
 
 ## 核心原则
 
-- Bootstrap 保持轻量，只保存全局规则、最小路由和 skill 引用表。
+- Bootstrap 保持在 120 行以内，只保存稳定原则、安全边界、自适应路由、命令和 skill 索引。
 - `SKILL.md` 保持可快速加载，长内容通过 progressive disclosure 下沉。
 - Codex 与 Claude 目录保持一致，通过只读审计脚本验证。
-- 工作流授权使用 `WORKFLOW_ID` 绑定，等待态使用单一 `PENDING_INTERACTION`，终态统一清理。
+- 特殊命令授权使用 `WORKFLOW_ID` 绑定；普通低/中风险改动使用用户自然语言中的明确写入授权。
+- 路由以可逆性、外部副作用、公共契约、数据迁移、EHRB 和不确定性为主，文件数仅作为辅助信号。
+- 行为 eval 固化代表性提示的预期路由、动作、确认、产物和风险等级，并支持导入实际结果评分。
 - QA 使用 schema v3 的 `gate_status` 与结构化 `tdd` 证据作为归档门禁，归档引用统一绑定 `RESOLVED_ARCHIVE_PATH`。
 - 外部模型审查先通过数据出境门禁，再使用 CLI 原生 plan 权限模式和终止整个进程树的有界超时。
 
@@ -34,3 +38,4 @@ flowchart TD
 | ADR-005 | 使用显式状态机替代隐式布尔授权 | 2026-07 | 已采纳 | routing, lifecycle, develop | [history/2026-07/202607111100_skill_runtime_hardening/how.md](../history/2026-07/202607111100_skill_runtime_hardening/how.md) |
 | ADR-006 | bridge 作为 Skill 自包含资源分发 | 2026-07 | 已采纳 | collaborating-*, scripts | [history/2026-07/202607111100_skill_runtime_hardening/how.md](../history/2026-07/202607111100_skill_runtime_hardening/how.md) |
 | ADR-007 | 在 QA 证据中承载 TDD 阶段记录 | 2026-07 | 已采纳 | tdd, test, qa-review, audit_skills | [history/2026-07/202607121222_tdd_hybrid_enforcement/how.md](../history/2026-07/202607121222_tdd_hybrid_enforcement/how.md) |
+| ADR-008 | 默认采用风险自适应路由并保留严格命令路径 | 2026-07 | 已采纳 | Bootstrap, routing, develop, eval | [history/2026-07/202607152110_adaptive_skill_routing/how.md](../history/2026-07/202607152110_adaptive_skill_routing/how.md) |

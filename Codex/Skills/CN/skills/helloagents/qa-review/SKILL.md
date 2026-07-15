@@ -4,7 +4,7 @@ description: 统一质量审查、验证命令、阻断修复建议和交付前 
 invocation: model
 side_effects: may_write_plan
 requires: []
-completion_criteria: 已完成范围审查、验证命令记录、发现项分级与归档门禁判定，并在当前方案包中写入 qa-review.json 或记录无法写入原因。
+completion_criteria: 对需要结构化 QA 的任务完成范围审查、验证记录、发现项分级与归档门禁，并在当前方案包写入 qa-review.json。
 ---
 
 # QA Review
@@ -19,10 +19,12 @@ completion_criteria: 已完成范围审查、验证命令记录、发现项分�
 - 步骤7质量检查与测试完成后。
 - `~exec`、`~auto` 或交互确认模式准备报告完成前。
 - 多模型验收前需要先形成主代理本地 QA 证据。
+- 当前任务存在完整/轻量方案包，或用户明确要求结构化 QA 证据。
 
 **不应触发:**
 - 只读咨询、需求分析或方案设计尚未进入实现。
 - 没有方案包且本轮没有代码/文档改动。
+- 自适应无方案包的低/中风险改动；此类任务在最终摘要记录实际验证命令、结果和剩余风险。
 
 ---
 
@@ -124,3 +126,4 @@ helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/qa-review.json
 - 已按 P0/P1/P2 推导并执行 `gate_status`，不存在绕过的本地 QA 阻断项。
 - 新生成的 schema v3 证据已写入可审计的 `tdd` 对象，或明确记录 TDD-EXEMPT 与替代验证。
 - 已写入 `qa-review.json`，或因只读/无方案包等原因明确记录无法写入。
+- 自适应无方案包路径不以缺少 `qa-review.json` 视为失败，由 develop 最终摘要承担验证证据。

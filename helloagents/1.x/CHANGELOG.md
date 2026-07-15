@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### 新增
+- 新增 36 条 Skill 路由 eval 用例、`scripts/eval_skills.py` 数据校验与实际结果评分器，覆盖八类任务和确认误差指标
 - 新增 `~test [scope]` 受控测试入口和 `test` Skill，支持轻量测试方案包、TDD 分类及默认不扩大为生产修复的边界
 - 新增 QA schema v3 的结构化 `tdd` 证据与审计回归测试，校验 RED/GREEN/REFACTOR/VERIFY 或 TDD-EXEMPT 原因和替代验证
 - 新增 `scripts/manage_skills.py`，支持只读安装漂移检查和带备份的原子安装
@@ -21,6 +22,9 @@
 - 新增按需触发的 Skill: `output-format`、`routing`、`lifecycle`、`qa-review` 等；当前维护 Codex/Claude 两端 CN skill 镜像
 
 ### 变更
+- Codex/Claude bootstrap 从 268 行精简到 120 行以内，只保留稳定原则、安全边界、自适应路由、命令入口和 Skill 索引
+- 普通 Bug 与低/中风险小改动改为基于可逆性、外部副作用、公共契约、数据迁移、EHRB 和不确定性的自适应路由，用户明确授权后无需方案包或二次确认即可实施并验证
+- develop、QA、KB 与 lifecycle 增加无方案包自适应分支，高风险/EHRB、破坏性契约和真实数据迁移仍保留方案确认门禁
 - `qa-review.json` 新生成记录升级为 schema v3；`audit_skills.py` 保持 v1/v2 兼容并新增 TDD 证据门禁
 - QA 证据升级为 schema v2，新增 P0/P1/P2 处置状态与 `gate_status`，P0 不可跳过、P1 必须显式接受风险后才能归档
 - 归档路径在 KB/CHANGELOG 写链接前解析为 `RESOLVED_ARCHIVE_PATH`，并补齐 `~exec`、测试失败、多模型验收、部分失败等等待态消费路径

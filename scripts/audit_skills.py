@@ -8,6 +8,11 @@ import re
 import sys
 from pathlib import Path
 
+try:
+    from scripts import eval_skills
+except ModuleNotFoundError:  # 直接执行时 scripts/ 是首个模块搜索路径。
+    import eval_skills
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CODEX_ROOT = ROOT / "Codex" / "Skills" / "CN"
@@ -22,6 +27,7 @@ REQUIRED_FRONTMATTER = {
     "completion_criteria",
 }
 MAX_SKILL_LINES = 220
+MAX_BOOTSTRAP_LINES = 120
 REFERENCE_PATTERN = re.compile(r"((?:\.\./)?(?:[A-Za-z0-9_-]+/)?references/[A-Za-z0-9_.\-/]+\.md)")
 MARKDOWN_LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 VALID_INVOCATION = {"model", "user"}
@@ -546,8 +552,14 @@ def audit_bootstrap_pointer() -> list[str]:
     errors: list[str] = []
     expected = "skills/helloagents/SKILL_INDEX.md"
     for path in [CODEX_ROOT / "AGENTS.md", CLAUDE_ROOT / "CLAUDE.md"]:
-        if expected not in normalized_text(path):
+        text = normalized_text(path)
+        if expected not in text:
             errors.append(f"{path}: 缺少 SKILL_INDEX.md 指针")
+        line_count = len(text.splitlines())
+        if line_count > MAX_BOOTSTRAP_LINES:
+            errors.append(
+                f"{path}: bootstrap {line_count} 行，超过 {MAX_BOOTSTRAP_LINES} 行上限"
+            )
     if normalized_text(CODEX_ROOT / "AGENTS.md") != normalized_text(CLAUDE_ROOT / "CLAUDE.md"):
         errors.append("Codex/Skills/CN/AGENTS.md 与 Claude/Skills/CN/CLAUDE.md 内容不一致")
     return errors
@@ -639,26 +651,61 @@ def audit_semantic_contracts() -> list[str]:
             if command not in text:
                 errors.append(f"{path}: 命令别名 `{command}` 未同步")
 
-    bootstrap_count = extract_step_count(
-        normalized_text(agents),
-        r"\|\s*开发实施\s*\|\s*(\d+)\s*步执行",
-    )
     develop_count = extract_step_count(
         normalized_text(codex_skill_base / "develop" / "SKILL.md"),
         r"开发实施入口检查、(\d+)\s*步执行流程",
     )
-    if bootstrap_count is None or develop_count is None:
-        errors.append("开发实施步骤数语义审计失败: 未能解析 bootstrap 或 develop/SKILL.md")
-    elif bootstrap_count != develop_count:
-        errors.append(f"开发实施步骤数不一致: bootstrap={bootstrap_count}, develop={develop_count}")
+    if develop_count is None:
+        errors.append("开发实施步骤数语义审计失败: 未能解析 develop/SKILL.md")
 
     develop_entry = codex_skill_base / "develop" / "references" / "entry-and-steps.md"
     errors.extend(audit_entry_steps(develop_entry, develop_count))
 
+    routing_decision = codex_skill_base / "routing" / "references" / "routing-decision.md"
+    routing_paths = codex_skill_base / "routing" / "references" / "routing-paths.md"
+    require_text(
+        agents,
+        ["自适应路由", "低风险", "中风险", "高风险", "普通 Bug", "文件数量只作为范围线索"],
+        errors,
+        "精简 bootstrap 风险路由",
+    )
+    forbid_text(agents, ["PENDING_INTERACTION", "WORKFLOW_ID", "<thinking>"], errors)
+    require_text(
+        routing_decision,
+        ["风险等级: 低 | 中 | 高", "可逆性", "外部副作用", "公共契约", "数据迁移"],
+        errors,
+        "风险评估维度",
+    )
+    require_text(
+        routing_paths,
+        ["普通缺陷直接实施", "低风险小改动直接实施", "风险等级=高"],
+        errors,
+        "自适应路由路径",
+    )
+    forbid_text(routing_paths, ["文件≤2", "文件3-5", "文件>5"], errors)
+    require_text(
+        develop_entry,
+        ["条件E - 用户明确授权的自适应开发", "EHRB=无", "自适应开发无方案包旁路"],
+        errors,
+        "自适应开发入口",
+    )
+    require_text(
+        codex_skill_base / "analyze" / "references" / "code-analysis-and-output.md",
+        ["自适应授权模式", "不设置 `DESIGN_CONFIRM`"],
+        errors,
+        "自适应分析阶段转换",
+    )
+    require_text(
+        codex_skill_base / "design" / "references" / "output-and-transition.md",
+        ["自适应授权模式", "不设置 `DEVELOPMENT_CONFIRM`"],
+        errors,
+        "自适应设计阶段转换",
+    )
+
     index = codex_skill_base / "SKILL_INDEX.md"
     develop_index_match = re.search(r"^\|\s*`develop`\s*\|.+$", normalized_text(index), flags=re.MULTILINE)
-    if not develop_index_match or "qa-review" not in develop_index_match.group(0):
-        errors.append(f"{index}: develop 依赖列缺少 `qa-review`")
+    if not develop_index_match or "条件读取" not in develop_index_match.group(0):
+        errors.append(f"{index}: develop 缺少自适应条件依赖说明")
 
     template = codex_skill_base / "templates" / "references" / "plan-package-templates.md"
     require_text(template, TASK_METADATA_LABELS, errors, "task.md 任务元数据")
@@ -731,6 +778,14 @@ def audit_semantic_contracts() -> list[str]:
     return errors
 
 
+def audit_eval_cases() -> list[str]:
+    path = ROOT / "evals" / "skill_routing_cases.json"
+    cases, errors = eval_skills.read_collection(path, "cases")
+    errors.extend(eval_skills.validate_cases(cases))
+    errors.extend(eval_skills.validate_corpus(cases))
+    return [f"{path}: {error}" for error in errors]
+
+
 def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
@@ -742,6 +797,7 @@ def main() -> int:
     errors.extend(audit_bootstrap_pointer())
     errors.extend(audit_bundled_bridges())
     errors.extend(audit_semantic_contracts())
+    errors.extend(audit_eval_cases())
     errors.extend(audit_knowledge_bases())
 
     if warnings:

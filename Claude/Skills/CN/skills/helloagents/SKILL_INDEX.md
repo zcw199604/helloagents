@@ -4,15 +4,15 @@
 
 | Skill | 职责 | 触发条件 | 输入 | 输出 | 依赖 |
 |---|---|---|---|---|---|
-| `routing` | 判定用户消息处理路径 | 命令词、上下文确认、调试信号、复杂边界 | 用户消息、当前阶段状态 | 唯一路由或追问 | `output-format` |
+| `routing` | 按意图、授权和风险判定处理路径 | 命令词、上下文确认、调试信号、改动请求、复杂边界 | 用户消息、当前阶段状态、低/中/高风险因子 | 自适应实施、严格流程、只读路径或追问 | `output-format` |
 | `analyze` | 需求完整性评分与现状分析 | 进入需求分析 | 用户需求、知识库、代码现状 | 评分、缺口、风险、下一阶段建议 | `kb`, `output-format` |
 | `design` | 方案构思与方案包创建 | 需求评分 >= 7 或规划命令 | 需求分析结果、知识库 | `why.md`, `how.md`, `task.md` | `templates`, `lifecycle`, `output-format` |
-| `develop` | 执行方案包并验证 | 用户确认、`~auto` 或 `~exec` | 方案包、代码库、知识库 | 代码/文档改动、验证结果、历史迁移 | `kb`, `lifecycle`, `output-format`, `qa-review` |
+| `develop` | 执行明确授权或方案包并验证 | 低/中风险改动授权、用户确认、`~auto` 或 `~exec` | 用户请求或方案包、代码库、相关知识 | 代码/文档改动与验证；有方案包时条件读取 `kb`、`lifecycle`、`qa-review` | `output-format` |
 | `tdd` | 测试驱动质量门禁 | 新功能、Bug 修复、行为/API 变更 | 可观察行为、测试入口 | RED/GREEN/REFACTOR/VERIFY 证据 | 无（由阶段 Skill 按需读取） |
 | `test` | 显式测试命令 | 用户输入 `~test [scope]` | 指定模块、行为或最近改动 | 测试范围、TDD 决策、QA 证据 | `tdd`, `develop` |
 | `qa-review` | 统一质量审查与 QA 证据记录 | 开发实施验证完成、交付前收口 | 方案包、验证命令、任务完成状态 | `qa-review.json`、阻断项分级、验证摘要 | 无 |
-| `kb` | 知识库创建、同步、审计、领域语言维护 | `~init`、知识库缺失、代码变更后同步、术语候选沉淀 | 代码事实、方案包场景、领域语言候选 | `project.md`, `wiki/*`, `wiki/glossary.md` 同步建议 | `templates` |
-| `lifecycle` | 方案包状态、迁移、遗留扫描 | 方案包创建/执行/阶段完成 | 方案包路径、状态变量 | 迁移结果、history 索引、遗留列表 | `output-format` |
+| `kb` | 知识库创建、同步、审计、领域语言维护 | `~init`、稳定项目知识变化、术语候选沉淀 | 代码事实、方案包场景或自适应范围、领域语言候选 | `project.md`, `wiki/*`, `wiki/glossary.md` 必要同步 | `templates` |
+| `lifecycle` | 方案包状态、迁移、遗留扫描 | 实际方案包创建/执行/阶段完成 | 方案包路径、状态变量 | 迁移结果、history 索引、遗留列表 | `output-format` |
 | `templates` | 模板选择入口 | 创建知识库、方案包、版本记录 | 目标文件类型 | 对应 reference 模板 | 无（纯资源入口） |
 | `output-format` | 用户可见输出模板 | 阶段完成、异常、咨询、交互、命令完成 | 输出场景、变更清单、验证结果 | 规范化 HelloAGENTS 输出 | 无 |
 | `hello-subagent` | 并行子代理编排 | >=2 个独立可验证子任务且写入互斥 | 子任务边界、验证标准 | 子任务包、汇总验收 | `output-format` |

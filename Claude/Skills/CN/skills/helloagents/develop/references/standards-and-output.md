@@ -45,15 +45,15 @@
    - ✅ 执行结果: 任务数量和状态统计
    - 🔍 质量验证: 一致性审计、测试结果、QA证据
    - 💡 代码质量优化建议（如有）
-   - 📦 迁移信息: 已迁移至 `helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/`
+   - 📦 迁移信息: 有方案包时报告归档路径；自适应无方案包时写“不适用”
 3. **文件变更清单:**
    ```
    📁 变更:
      - {代码文件}
      - {知识库文件}
-     - helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/qa-review.json
-     - helloagents/<branch-name>/CHANGELOG.md
-     - helloagents/<branch-name>/history/index.md
+     - {如存在: helloagents/<branch-name>/history/YYYY-MM/YYYYMMDDHHMM_<feature>/qa-review.json}
+     - {如实际更新: helloagents/<branch-name>/CHANGELOG.md}
+     - {如实际迁移: helloagents/<branch-name>/history/index.md}
      ...
    ```
 4. **下一步建议:**
