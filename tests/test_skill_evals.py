@@ -50,6 +50,15 @@ DESIGN_TRANSITION = (
     / "references"
     / "output-and-transition.md"
 )
+HELLOAGENTS_SKILLS = (
+    ROOT / "Codex" / "Skills" / "CN" / "skills" / "helloagents"
+)
+TDD_SKILL = HELLOAGENTS_SKILLS / "tdd" / "SKILL.md"
+DESIGN_PLANNING = (
+    HELLOAGENTS_SKILLS / "design" / "references" / "detailed-planning.md"
+)
+QA_REVIEW = HELLOAGENTS_SKILLS / "qa-review" / "SKILL.md"
+LIFECYCLE = HELLOAGENTS_SKILLS / "lifecycle" / "SKILL.md"
 
 
 class SkillEvalDatasetTests(unittest.TestCase):
@@ -194,6 +203,24 @@ class AdaptiveRoutingContractTests(unittest.TestCase):
 
         self.assertIn("不设置 `DESIGN_CONFIRM`", analyze)
         self.assertIn("不设置 `DEVELOPMENT_CONFIRM`", design)
+
+    def test_engineering_scope_and_context_recovery_are_risk_proportional(self) -> None:
+        bootstrap = CODEX_BOOTSTRAP.read_text(encoding="utf-8")
+        tdd = TDD_SKILL.read_text(encoding="utf-8")
+        design = DESIGN_PLANNING.read_text(encoding="utf-8")
+        develop = DEVELOP_ENTRY.read_text(encoding="utf-8")
+        qa = QA_REVIEW.read_text(encoding="utf-8")
+        lifecycle = LIFECYCLE.read_text(encoding="utf-8")
+
+        self.assertIn("最小充分设计与验证", bootstrap)
+        self.assertIn("上下文恢复与复核边界", bootstrap)
+        self.assertIn("风险驱动的最小充分覆盖", tdd)
+        self.assertIn("不要求机械穷举每类场景", tdd)
+        self.assertIn("验证规模适配", design)
+        self.assertIn("步骤5.4: 最小充分实现约束", develop)
+        self.assertIn("未被本轮触达且已有有效验证证据", qa)
+        self.assertIn("上下文压缩与恢复规则", lifecycle)
+        self.assertIn("不得自动重放", lifecycle)
 
 
 if __name__ == "__main__":
