@@ -14,7 +14,7 @@
 | `kb` | 知识库创建、同步、审计、领域语言维护 | `~init`、稳定项目知识变化、术语候选沉淀 | 代码事实、方案包场景或自适应范围、领域语言候选 | `project.md`, `wiki/*`, `wiki/glossary.md` 必要同步 | `templates` |
 | `lifecycle` | 方案包状态、迁移、遗留扫描 | 实际方案包创建/执行/阶段完成 | 方案包路径、状态变量 | 迁移结果、history 索引、遗留列表 | `output-format` |
 | `templates` | 模板选择入口 | 创建知识库、方案包、版本记录 | 目标文件类型 | 对应 reference 模板 | 无（纯资源入口） |
-| `output-format` | 用户可见输出模板 | 阶段完成、异常、咨询、交互、命令完成 | 输出场景、变更清单、验证结果 | 规范化 HelloAGENTS 输出 | 无 |
+| `output-format` | 正式交付与交互输出约束 | 命令完成、异常、交互或复杂交付 | 输出场景、关键变更、验证结果 | 与任务规模相称的直接回答或规范模板 | 无 |
 | `hello-subagent` | 并行子代理编排 | >=2 个独立可验证子任务且写入互斥 | 子任务边界、验证标准 | 子任务包、汇总验收 | `output-format` |
 | `multi_model` | 多模型审查与交叉验证 | 用户要求或高风险分析/设计/验收 | 方案、代码 diff、审查目标 | 共识/分歧、P0/P1/P2 风险 | 无（按宿主选择 `collaborating-*`） |
 | `collaborating-with-claude` | 调用 Claude CLI | 需要 Claude 子进程 | 提示词、SESSION_ID | 结构化调用结果 | 无 |
@@ -33,6 +33,8 @@
 
 ## 维护门禁
 
+- `skills/helloagents/` 是唯一手工维护的 Skill 源；禁止直接修改 Codex/Claude 分发树。
+- 修改 canonical Skill 或根 bridge 后运行 `python scripts/sync_skills.py --write`，并用 `--check` 确认无漂移。
 - 新增 skill 必须补充本索引矩阵。
 - 新增 frontmatter 字段必须同步更新审计脚本。
-- `Codex/Skills/CN` 与 `Claude/Skills/CN` 的 skill 内容必须保持一致，除非显式记录平台差异。
+- `Codex/Skills/CN/skills/helloagents` 与 `Claude/Skills/CN/skills/helloagents` 是生成分发副本，必须与 canonical 源完全一致。

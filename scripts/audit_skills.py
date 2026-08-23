@@ -15,6 +15,7 @@ except ModuleNotFoundError:  # 直接执行时 scripts/ 是首个模块搜索路
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = ROOT
 CODEX_ROOT = ROOT / "Codex" / "Skills" / "CN"
 CLAUDE_ROOT = ROOT / "Claude" / "Skills" / "CN"
 SKILL_TREE = Path("skills") / "helloagents"
@@ -529,21 +530,20 @@ def audit_tree(root: Path) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
-def audit_mirror() -> list[str]:
+def audit_distributions() -> list[str]:
     errors: list[str] = []
-    codex_files = relative_files(CODEX_ROOT)
-    claude_files = relative_files(CLAUDE_ROOT)
-    codex_keys = set(codex_files)
-    claude_keys = set(claude_files)
-
-    for missing in sorted(codex_keys - claude_keys):
-        errors.append(f"Claude 缺少文件: {missing}")
-    for extra in sorted(claude_keys - codex_keys):
-        errors.append(f"Claude 存在 Codex 没有的文件: {extra}")
-
-    for rel in sorted(codex_keys & claude_keys):
-        if normalized_text(codex_files[rel]) != normalized_text(claude_files[rel]):
-            errors.append(f"Codex/Claude 内容不一致: {rel}")
+    source_files = relative_files(SOURCE_ROOT)
+    for label, root in [("Codex", CODEX_ROOT), ("Claude", CLAUDE_ROOT)]:
+        generated_files = relative_files(root)
+        source_keys = set(source_files)
+        generated_keys = set(generated_files)
+        for missing in sorted(source_keys - generated_keys):
+            errors.append(f"{label} 分发缺少文件: {missing}")
+        for extra in sorted(generated_keys - source_keys):
+            errors.append(f"{label} 分发存在额外文件: {extra}")
+        for rel in sorted(source_keys & generated_keys):
+            if normalized_text(source_files[rel]) != normalized_text(generated_files[rel]):
+                errors.append(f"{label} 分发与 canonical 源不一致: {rel}")
 
     return errors
 
@@ -583,7 +583,7 @@ def audit_bundled_bridges() -> list[str]:
     errors: list[str] = []
     for skill_name, source in BRIDGE_BUNDLES.items():
         source_text = normalized_text(source)
-        for root in [CODEX_ROOT, CLAUDE_ROOT]:
+        for root in [SOURCE_ROOT, CODEX_ROOT, CLAUDE_ROOT]:
             bundled = root / SKILL_TREE / skill_name / "scripts" / "bridge.py"
             if not bundled.exists():
                 errors.append(f"{bundled}: 缺少 bundled bridge")
@@ -640,7 +640,7 @@ def audit_task_template_metadata(path: Path) -> list[str]:
 
 def audit_semantic_contracts() -> list[str]:
     errors: list[str] = []
-    codex_skill_base = CODEX_ROOT / SKILL_TREE
+    codex_skill_base = SOURCE_ROOT / SKILL_TREE
 
     agents = CODEX_ROOT / "AGENTS.md"
     routing = codex_skill_base / "routing" / "SKILL.md"
@@ -789,11 +789,10 @@ def audit_eval_cases() -> list[str]:
 def main() -> int:
     errors: list[str] = []
     warnings: list[str] = []
-    for root in [CODEX_ROOT, CLAUDE_ROOT]:
-        tree_errors, tree_warnings = audit_tree(root)
-        errors.extend(tree_errors)
-        warnings.extend(tree_warnings)
-    errors.extend(audit_mirror())
+    tree_errors, tree_warnings = audit_tree(SOURCE_ROOT)
+    errors.extend(tree_errors)
+    warnings.extend(tree_warnings)
+    errors.extend(audit_distributions())
     errors.extend(audit_bootstrap_pointer())
     errors.extend(audit_bundled_bridges())
     errors.extend(audit_semantic_contracts())

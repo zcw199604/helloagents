@@ -2,7 +2,7 @@
 
 ## 目的
 
-维护 HelloAGENTS 的模块化 skill 体系，降低入口上下文负载，减少职责重叠，并保持 Codex/Claude 双端一致。
+维护 HelloAGENTS 的模块化 skill 体系，降低入口上下文负载，减少职责重叠，并从 canonical 源生成 Codex/Claude 分发副本。
 
 ## 规范
 
@@ -13,6 +13,22 @@
 - 用户明确要求修复普通 Bug 时，先复现与定位根因；低/中风险可直接补测试、最小修复和验证。
 - 自适应无方案包路径不生成孤立 `qa-review.json` 或 history 记录，实际验证命令与结果写入最终摘要。
 - EHRB、生产、真实数据、权限、支付、不可逆操作、破坏性公共契约和数据迁移仍保持高风险门禁。
+
+- 风险等级是当前请求的动态判断，不引入 Light/Heavy 持久模式变量；出现新证据时直接升降风险路径。
+
+### 输出与知识写入
+
+- 普通咨询直接回答，自适应低/中风险路径的分析与内部设计默认静默连续执行。
+- 正式命令、异常、高风险确认和多选交互才强制使用带 `【HelloAGENTS】` 的模板。
+- 写入交付始终说明结果、关键文件、实际验证和剩余风险，但不强制固定栏目或无意义的下一步。
+- 知识库默认不写；只有代码无法表达、未来会复用且缺失会导致错误判断的稳定信息才最小同步。
+
+### Canonical 源与生成分发
+
+- `skills/helloagents/` 是唯一手工维护的 Skill 源。
+- `scripts/claude_bridge.py`、`scripts/codex_bridge.py`、`scripts/gemini_bridge.py` 是 bridge 权威源。
+- `python scripts/sync_skills.py --write` 先刷新 canonical Skill 的 bundled bridge，再生成 Codex/Claude 分发树。
+- `python scripts/sync_skills.py --check`、`audit_skills.py` 和 CI 共同阻止直接修改生成物或遗漏同步。
 
 ### 轻量入口
 
@@ -35,6 +51,8 @@
 修改 skill 后运行:
 
 ```bash
+python scripts/sync_skills.py --write
+python scripts/sync_skills.py --check
 python scripts/audit_skills.py
 ```
 
@@ -53,8 +71,8 @@ python -m unittest tests.test_skill_evals -v
 - frontmatter 字段、类型和重复键合法。
 - `references/*.md` 及普通 Markdown 文件链接存在。
 - `requires` 依赖图无环。
-- Codex/Claude skill 树内容一致。
-- collaborating Skill 的 bundled bridge 与根脚本一致。
+- canonical Skill 源与 Codex/Claude 生成分发树内容一致。
+- canonical 和两端分发的 bundled bridge 与根脚本一致。
 - bootstrap 入口包含索引矩阵指针。
 - 命令别名、开发实施步骤数、任务元数据、QA 证据和安全审计脚本等语义契约一致。
 
@@ -105,7 +123,7 @@ python scripts/audit_safety.py
 - 多模型调用前执行 secret/PII/商业敏感信息门禁，默认最小上下文和 sandbox/read-only。
 - bridge 默认 600 秒超时，持续输出也受 deadline 限制；超时终止进程树，并作为 `collaborating-*` Skill bundled resource 分发。
 - Claude/Gemini 审查使用原生 plan 权限模式；任何 fatal 事件或非零退出均不能因部分输出而视为成功。
-- `manage_skills.py --check` 同时检测 Skill 与 bootstrap 漂移；`--install` 校验目标后联合安装，bootstrap 失败会回滚 Skill 树。
+- `manage_skills.py` 始终从 canonical Skill 源安装；`--check` 同时检测 Skill 与 bootstrap 漂移，`--install` 校验目标后联合安装，bootstrap 失败会回滚 Skill 树。
 
 ### 文档化追问
 
@@ -129,3 +147,4 @@ python scripts/audit_safety.py
 | 2026-07-11 | 加固状态授权、轻量包、归档、多模型安全和 bridge 分发，新增语义回归测试与跨平台 CI |
 | 2026-07-11 | 吸收第二轮并行复审：补 QA 可执行门禁、归档路径解析、真实只读 bridge、进程树超时、安装联合回滚和严格 schema 审计 |
 | 2026-07-15 | 新增 36 条路由 eval 基线与评分器，精简 bootstrap，并将普通 Bug/小改动切换为风险自适应路由 |
+| 2026-08-23 | 收敛 canonical Skill 单一源与生成分发，减轻输出包装，并为知识库增加默认不写的收益门禁 |

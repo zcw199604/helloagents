@@ -18,11 +18,13 @@ from scripts import (
     codex_bridge,
     gemini_bridge,
     manage_skills,
+    sync_skills,
 )
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CODEX_SKILLS = ROOT / "Codex" / "Skills" / "CN" / "skills" / "helloagents"
+SOURCE_SKILLS = ROOT / "skills" / "helloagents"
+CODEX_SKILLS = SOURCE_SKILLS
 
 
 def write_skill(root: Path, name: str, requires: list[str], body: str = "") -> None:
@@ -542,6 +544,12 @@ class RuntimeContractTests(unittest.TestCase):
 
 
 class SkillInstallationTests(unittest.TestCase):
+    def test_generated_distributions_match_canonical_source(self) -> None:
+        self.assertEqual([], sync_skills.check())
+        self.assertTrue(
+            all(source == SOURCE_SKILLS for source, _ in manage_skills.PLATFORMS.values())
+        )
+
     def test_compare_trees_reports_and_clears_drift(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

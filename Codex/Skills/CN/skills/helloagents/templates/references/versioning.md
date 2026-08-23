@@ -16,4 +16,3 @@
 | C/C++ | CMakeLists.txt → project(...VERSION) | 头文件 → #define PROJECT_VERSION |
 
 **用途:** 供 G7 版本管理规则引用，确定各语言项目的版本号文件位置。
-

@@ -7,51 +7,21 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts import eval_skills
+from scripts import eval_skills, manage_skills
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CASES_PATH = ROOT / "evals" / "skill_routing_cases.json"
 CODEX_BOOTSTRAP = ROOT / "Codex" / "Skills" / "CN" / "AGENTS.md"
 CLAUDE_BOOTSTRAP = ROOT / "Claude" / "Skills" / "CN" / "CLAUDE.md"
-ROUTING_ROOT = (
-    ROOT / "Codex" / "Skills" / "CN" / "skills" / "helloagents" / "routing"
-)
-DEVELOP_ENTRY = (
-    ROOT
-    / "Codex"
-    / "Skills"
-    / "CN"
-    / "skills"
-    / "helloagents"
-    / "develop"
-    / "references"
-    / "entry-and-steps.md"
-)
+HELLOAGENTS_SKILLS = ROOT / "skills" / "helloagents"
+ROUTING_ROOT = HELLOAGENTS_SKILLS / "routing"
+DEVELOP_ENTRY = HELLOAGENTS_SKILLS / "develop" / "references" / "entry-and-steps.md"
 ANALYZE_TRANSITION = (
-    ROOT
-    / "Codex"
-    / "Skills"
-    / "CN"
-    / "skills"
-    / "helloagents"
-    / "analyze"
-    / "references"
-    / "code-analysis-and-output.md"
+    HELLOAGENTS_SKILLS / "analyze" / "references" / "code-analysis-and-output.md"
 )
 DESIGN_TRANSITION = (
-    ROOT
-    / "Codex"
-    / "Skills"
-    / "CN"
-    / "skills"
-    / "helloagents"
-    / "design"
-    / "references"
-    / "output-and-transition.md"
-)
-HELLOAGENTS_SKILLS = (
-    ROOT / "Codex" / "Skills" / "CN" / "skills" / "helloagents"
+    HELLOAGENTS_SKILLS / "design" / "references" / "output-and-transition.md"
 )
 TDD_SKILL = HELLOAGENTS_SKILLS / "tdd" / "SKILL.md"
 DESIGN_PLANNING = (
@@ -160,6 +130,17 @@ class SkillEvalDatasetTests(unittest.TestCase):
 
 
 class AdaptiveRoutingContractTests(unittest.TestCase):
+    def test_canonical_skill_tree_is_the_only_authored_source(self) -> None:
+        self.assertTrue((HELLOAGENTS_SKILLS / "SKILL_INDEX.md").exists())
+        for platform_root in [
+            ROOT / "Codex" / "Skills" / "CN" / "skills" / "helloagents",
+            ROOT / "Claude" / "Skills" / "CN" / "skills" / "helloagents",
+        ]:
+            self.assertEqual(
+                [],
+                manage_skills.compare_trees(HELLOAGENTS_SKILLS, platform_root),
+            )
+
     def test_bootstrap_is_small_and_platform_mirrored(self) -> None:
         codex = CODEX_BOOTSTRAP.read_text(encoding="utf-8")
         claude = CLAUDE_BOOTSTRAP.read_text(encoding="utf-8")
@@ -184,6 +165,24 @@ class AdaptiveRoutingContractTests(unittest.TestCase):
         self.assertNotIn("文件3-5", paths)
         self.assertNotIn("文件≤2", paths)
         self.assertNotIn("文件>5", paths)
+        self.assertIn("不引入 Light/Heavy 持久模式变量", paths)
+
+    def test_lightweight_output_and_knowledge_writes_are_the_default(self) -> None:
+        output = (HELLOAGENTS_SKILLS / "output-format" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        qa_output = (
+            HELLOAGENTS_SKILLS / "output-format" / "references" / "qa-output.md"
+        ).read_text(encoding="utf-8")
+        kb = (
+            HELLOAGENTS_SKILLS / "kb" / "references" / "knowledge-base-rules.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn("普通咨询与简短确认不使用阶段包装", output)
+        self.assertIn("直接回答", qa_output)
+        self.assertNotIn("MUST使用 `💡【HelloAGENTS】", qa_output)
+        self.assertIn("写入收益门禁", kb)
+        self.assertIn("默认不写", kb)
 
     def test_ordinary_bug_and_small_change_can_continue_without_second_confirmation(self) -> None:
         paths = (ROUTING_ROOT / "references" / "routing-paths.md").read_text(

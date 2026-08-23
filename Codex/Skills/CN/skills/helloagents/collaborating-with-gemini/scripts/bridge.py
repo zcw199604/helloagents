@@ -424,7 +424,7 @@ def main():
     else:
         result["error"] = err_message
 
-        result["success"] = success
+    result["success"] = success
 
     if args.return_all_messages:
         result["all_messages"] = all_messages

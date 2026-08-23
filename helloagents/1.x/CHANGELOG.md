@@ -7,6 +7,7 @@
 ## [Unreleased]
 
 ### 新增
+- 新增 `skills/helloagents/` canonical Skill 源和 `scripts/sync_skills.py`，统一刷新 bridge 资源并生成 Codex/Claude 分发副本
 - 新增 36 条 Skill 路由 eval 用例、`scripts/eval_skills.py` 数据校验与实际结果评分器，覆盖八类任务和确认误差指标
 - 新增 `~test [scope]` 受控测试入口和 `test` Skill，支持轻量测试方案包、TDD 分类及默认不扩大为生产修复的边界
 - 新增 QA schema v3 的结构化 `tdd` 证据与审计回归测试，校验 RED/GREEN/REFACTOR/VERIFY 或 TDD-EXEMPT 原因和替代验证
@@ -22,6 +23,8 @@
 - 新增按需触发的 Skill: `output-format`、`routing`、`lifecycle`、`qa-review` 等；当前维护 Codex/Claude 两端 CN skill 镜像
 
 ### 变更
+- 风险自适应路由明确不引入 Light/Heavy 持久状态；普通咨询与自适应中间阶段取消强制包装，知识库改为通过写入收益门禁后才最小同步
+- `manage_skills.py` 改为从 canonical 源安装，Skill 审计和 CI 改为校验 canonical、bundled bridge 与两端生成分发的一致性
 - Codex/Claude bootstrap 从 268 行精简到 120 行以内，只保留稳定原则、安全边界、自适应路由、命令入口和 Skill 索引
 - 普通 Bug 与低/中风险小改动改为基于可逆性、外部副作用、公共契约、数据迁移、EHRB 和不确定性的自适应路由，用户明确授权后无需方案包或二次确认即可实施并验证
 - develop、QA、KB 与 lifecycle 增加无方案包自适应分支，高风险/EHRB、破坏性契约和真实数据迁移仍保留方案确认门禁

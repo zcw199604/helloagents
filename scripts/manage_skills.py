@@ -14,9 +14,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SKILL_SOURCE = ROOT / "skills" / "helloagents"
 PLATFORMS = {
-    "codex": (ROOT / "Codex" / "Skills" / "CN" / "skills" / "helloagents", ROOT / "Codex" / "Skills" / "CN" / "AGENTS.md"),
-    "claude": (ROOT / "Claude" / "Skills" / "CN" / "skills" / "helloagents", ROOT / "Claude" / "Skills" / "CN" / "CLAUDE.md"),
+    "codex": (SKILL_SOURCE, ROOT / "Codex" / "Skills" / "CN" / "AGENTS.md"),
+    "claude": (SKILL_SOURCE, ROOT / "Claude" / "Skills" / "CN" / "CLAUDE.md"),
 }
 BOOTSTRAP_NAMES = {"codex": "AGENTS.md", "claude": "CLAUDE.md"}
 
