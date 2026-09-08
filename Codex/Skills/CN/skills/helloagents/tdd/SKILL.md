@@ -55,12 +55,13 @@ completion_criteria: RED/GREEN/REFACTOR/VERIFY 证据完整，或记录 TDD-EXEM
 - 修改生产代码前，先完成对应 RED 任务并确认失败原因匹配目标行为。
 - GREEN 阶段只做最小实现，禁止顺手重构或扩大范围。
 - REFACTOR 只能在相关测试通过后执行，重构后必须复测。
-- RED/GREEN/REFACTOR 证据可静默记录到任务备注；开发实施步骤7.5必须将最终证据写入 schema v3 `qa-review.json.tdd`，不破坏推进模式静默规则。
+- RED/GREEN/REFACTOR 证据按实际步骤保留；有方案包时在开发实施步骤7.5写入 schema v3 `qa-review.json.tdd`，自适应无方案包时在最终摘要记录，不为 TDD 单独创建方案包或 QA 文件。
 
 ## 结构化证据
 
+- 以下 JSON 字段仅适用于有方案包或用户要求结构化 QA 的路径。无方案包的摘要保留目标行为、TDD/豁免依据、实际命令和结果即可。
 - 新生成的 QA 记录使用 schema v3，`tdd.classification` 标记 `mandatory`、`recommended`、`exempt` 或 `uncertain`，并记录最小目标行为集合。
-- `tdd.decision=tdd` 时，`red.result` 必须为 `failed`，`green`、`refactor` 与 `verify` 的结果必须为 `passed`；即使无需改动也要将 `refactor.performed=false` 与复测命令写入。
+- `tdd.decision=tdd` 时，`red.result` 必须为 `failed`，`green`、`refactor` 与 `verify` 的结果必须为 `passed`；无需重构时记录 `refactor.performed=false`，可引用仍有效的 GREEN 结果，不重复运行同一命令凑齐阶段。
 - `tdd.decision=exempt` 时，必须写入 `exempt_reason` 与 `alternative_verification`。强制适用任务不得直接豁免，应先把适用性重新判定为例外并说明环境或用户约束。
 - 对生产实现早于本次测试的表征测试，可使用 `TDD-EXEMPT`，但理由必须明确说明无法构造真实 RED，不得把直接通过的测试伪装为 RED。
 
@@ -84,7 +85,7 @@ REFACTOR:
 
 VERIFY:
   - 优先运行相关最小测试
-  - 条件允许时运行项目既有更广测试套件
+  - 项目要求、受影响契约或新风险需要时运行更广测试套件；证据有效性按 `verification-before-completion` 判断
   - 失败按 develop Skill 的阻断/警告/信息规则处理
 ```
 

@@ -15,4 +15,4 @@
 | .NET | .csproj → \<Version\>/\<AssemblyVersion\> | - |
 | C/C++ | CMakeLists.txt → project(...VERSION) | 头文件 → #define PROJECT_VERSION |
 
-**用途:** 供 G7 版本管理规则引用，确定各语言项目的版本号文件位置。
+**用途:** 仅在需要维护发布记录时，按项目已有版本策略确定各语言项目的版本号文件位置；不因普通内部改动自动升版。

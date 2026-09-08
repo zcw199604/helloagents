@@ -3,8 +3,7 @@ name: kb
 description: 知识库管理完整规则；~init 命令、知识库缺失、知识库同步或一致性审计时读取。详细创建/同步规则按需读取 references。
 invocation: model
 side_effects: may_write_knowledge_base
-requires:
-  - templates
+requires: []
 completion_criteria: 知识库存在性、质量、同步范围和一致性修正均已处理。
 ---
 
@@ -17,6 +16,8 @@ completion_criteria: 知识库存在性、质量、同步范围和一致性修�
 ## 职责边界
 
 `kb` 只负责知识库内容本身：创建、读取、质量检查、同步、审计和过时信息清理。
+
+读取和诊断不预加载 `templates`；实际创建文件且通过写入收益门禁后，才读取对应模板。
 
 不由 `kb` 负责的事项:
 - 方案包状态符号、迁移算法、遗留扫描状态变量 → 由 `lifecycle` 负责
@@ -53,7 +54,7 @@ completion_criteria: 知识库存在性、质量、同步范围和一致性修�
 ## 完成门禁
 
 - 必备知识库文件存在，或已按阶段规则记录缺失/创建。
-- `wiki/glossary.md` 存在；若本次有领域语言候选，已写入或更新术语表。
+- 初始化知识库时 `wiki/glossary.md` 存在；增量维护只在术语通过写入收益门禁时更新，不因候选出现强制创建。
 - 代码变更涉及的模块、API、数据模型、架构或技术约定已同步。
 - 知识库与代码冲突时，已按代码事实修正文档或记录例外原因。
 - 未复制 `lifecycle` 的迁移算法；仅链接迁移后的历史记录。

@@ -120,7 +120,7 @@
       "id": "small-mechanical-six-files",
       "category": "small_change",
       "prompt": "在六个文档示例中机械替换已弃用的命令，没有行为变化。",
-      "expected": {"route": "lightweight_iteration", "action": "implement", "confirmation": "none", "artifacts": "none", "risk": "low"}
+      "expected": {"route": "micro_adjustment", "action": "implement", "confirmation": "none", "artifacts": "none", "risk": "low"}
     },
     {
       "id": "small-add-validation",
@@ -217,6 +217,30 @@
       "category": "context",
       "prompt": "另外把登录也顺手改一下。",
       "expected": {"route": "context_response", "action": "clarify", "confirmation": "clarify", "artifacts": "none", "risk": "medium"}
+    },
+    {
+      "id": "consultation-whole-skill-review",
+      "category": "consultation",
+      "prompt": "检查当前项目全部 skills 是否有优化位置，只给出证据和建议，不修改文件。",
+      "expected": {"route": "consultation", "action": "answer", "confirmation": "none", "artifacts": "none", "risk": "low"}
+    },
+    {
+      "id": "micro-many-files-reviewed",
+      "category": "micro_adjustment",
+      "prompt": "将二十个 Markdown 文件中的同一个拼写错误修正，没有行为变化。已安排一个只读协作审查，不需要方案包。",
+      "expected": {"route": "micro_adjustment", "action": "implement", "confirmation": "none", "artifacts": "none", "risk": "low"}
+    },
+    {
+      "id": "medium-complete-known-cleanup",
+      "category": "medium_change",
+      "prompt": "整体清理刚才确认的六类本地技能规则冲突：范围和修改位置都已明确、可回滚，不涉及外部服务或公共 API。按依赖顺序全部修复并验证，使用内部计划即可。",
+      "expected": {"route": "standard_development", "action": "plan_then_implement", "confirmation": "none", "artifacts": "none", "risk": "medium"}
+    },
+    {
+      "id": "small-single-business-gap",
+      "category": "small_change",
+      "prompt": "修改本地报表导出日期筛选。技术实现和范围都已确定，唯一未知是截止日期是否包含当天，现有代码和文档均无法确定，两个选择会产生不同数据。",
+      "expected": {"route": "lightweight_iteration", "action": "clarify", "confirmation": "clarify", "artifacts": "none", "risk": "medium"}
     }
   ]
 }

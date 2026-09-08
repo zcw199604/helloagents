@@ -69,10 +69,10 @@ helloagents/                       # HelloAGENTS 工作空间集合
 - 核心文件: `helloagents/<branch-name>/project.md`, `helloagents/<branch-name>/wiki/overview.md`, `helloagents/<branch-name>/wiki/arch.md`
 - 按需选择: `helloagents/<branch-name>/wiki/glossary.md`, `helloagents/<branch-name>/wiki/modules/<module>.md`, `helloagents/<branch-name>/wiki/api.md`, `helloagents/<branch-name>/wiki/data.md`
 
-**步骤2: 知识库不存在/信息不足 → 全面扫描代码库**
+**步骤2: 知识库不存在/信息不足 → 定向检查相关代码**
 - 使用宿主平台的文件枚举能力获取结构（命令行环境优先 `rg --files`）
 - 使用宿主平台的内容搜索能力定位信息（命令行环境优先 `rg`）
-- 获取: 架构、技术栈、模块结构、技术约束
+- 获取本次决策缺少的架构、技术栈、模块结构或约束；只有显式全库审计或初始化才扩大扫描。
 </context_acquisition_rules>
 
 ---
@@ -148,7 +148,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
 ```yaml
 需求分析阶段:
   - 只标记问题，不创建知识库
-  - 在总结中提示"知识库缺失，建议先执行 ~init 命令"
+  - 缺失影响当前判断时说明限制，不例行提示初始化
 
 显式 ~init / ~wiki 命令:
   - 全面扫描代码库并创建完整知识库:
@@ -156,7 +156,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
     - `helloagents/<branch-name>/wiki/`: overview.md, arch.md, api.md, data.md, glossary.md
     - `helloagents/<branch-name>/wiki/modules/`: <module>.md（每个模块）
     - `helloagents/<branch-name>/history/index.md`
-    - 大型项目（按G4判定）分批处理（每批≤20个模块）
+    - 按模块边界和可用上下文分批处理，避免单次加载整个大型项目
 
 方案设计/开发实施阶段:
   - 知识库缺失不阻断分析、设计或实施
@@ -170,7 +170,7 @@ helloagents/                       # HelloAGENTS 工作空间集合
 **STEP 3: 知识库存在**
 ```yaml
 执行质量前置检查:
-  重度问题 → 全面扫描并重建（方案设计/开发实施阶段）
+  重度问题 → 报告影响并定向核对；只在已授权重建时扩大扫描和写入，增量任务按写入收益门禁修正相关条目
   轻度问题 → 继续流程
 ```
 </kb_missing_handler>

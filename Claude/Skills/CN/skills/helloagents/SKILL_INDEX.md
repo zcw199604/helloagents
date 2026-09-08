@@ -5,13 +5,14 @@
 | Skill | 职责 | 触发条件 | 输入 | 输出 | 依赖 |
 |---|---|---|---|---|---|
 | `routing` | 按意图、授权和风险判定处理路径 | 命令词、上下文确认、调试信号、改动请求、复杂边界 | 用户消息、当前阶段状态、低/中/高风险因子 | 自适应实施、严格流程、只读路径或追问 | `output-format` |
-| `analyze` | 需求完整性评分与现状分析 | 进入需求分析 | 用户需求、知识库、代码现状 | 评分、缺口、风险、下一阶段建议 | `kb`, `output-format` |
-| `design` | 方案构思与方案包创建 | 需求评分 >= 7 或规划命令 | 需求分析结果、知识库 | `why.md`, `how.md`, `task.md` | `templates`, `lifecycle`, `output-format` |
+| `analyze` | 需求缺口澄清与现状分析 | 关键需求缺口或用户要求现状分析 | 用户需求、相关文档与代码 | 目标、成功标准、缺口、风险；条件读取 `kb` | `output-format` |
+| `design` | 方案构思与方案包创建 | 明确规划请求或需要架构/高风险决策，关键目标已明确 | 需求分析结果、知识库 | `why.md`, `how.md`, `task.md` | `templates`, `lifecycle`, `output-format` |
 | `develop` | 执行明确授权或方案包并验证 | 低/中风险改动授权、用户确认、`~auto` 或 `~exec` | 用户请求或方案包、代码库、相关知识 | 代码/文档改动与验证；有方案包时条件读取 `kb`、`lifecycle`、`qa-review` | `output-format` |
 | `tdd` | 测试驱动质量门禁 | 新功能、Bug 修复、行为/API 变更 | 可观察行为、测试入口 | RED/GREEN/REFACTOR/VERIFY 证据 | 无（由阶段 Skill 按需读取） |
 | `test` | 显式测试命令 | 用户输入 `~test [scope]` | 指定模块、行为或最近改动 | 测试范围、TDD 决策、QA 证据 | `tdd`, `develop` |
-| `qa-review` | 统一质量审查与 QA 证据记录 | 开发实施验证完成、交付前收口 | 方案包、验证命令、任务完成状态 | `qa-review.json`、阻断项分级、验证摘要 | 无 |
-| `kb` | 知识库创建、同步、审计、领域语言维护 | `~init`、稳定项目知识变化、术语候选沉淀 | 代码事实、方案包场景或自适应范围、领域语言候选 | `project.md`, `wiki/*`, `wiki/glossary.md` 必要同步 | `templates` |
+| `qa-review` | 统一质量审查与 QA 证据记录 | 有方案包或用户要求结构化 QA，验证后准备交付 | 方案包、验证命令、任务完成状态 | `qa-review.json`、阻断项分级、验证摘要 | 无 |
+| `verification-before-completion` | 核对完成声明与有效验证证据 | 准备声明完成、修复或验证通过 | 当前变更状态、验证范围、命令和结果 | 证据有效性、准确结论或剩余限制 | 无 |
+| `kb` | 知识库创建、同步、审计、领域语言维护 | `~init`、稳定项目知识变化、术语候选沉淀 | 代码事实、方案包场景或自适应范围、领域语言候选 | `project.md`, `wiki/*`, `wiki/glossary.md` 必要同步；实际创建时条件读取 `templates` | 无 |
 | `lifecycle` | 方案包状态、迁移、遗留扫描 | 实际方案包创建/执行/阶段完成 | 方案包路径、状态变量 | 迁移结果、history 索引、遗留列表 | `output-format` |
 | `templates` | 模板选择入口 | 创建知识库、方案包、版本记录 | 目标文件类型 | 对应 reference 模板 | 无（纯资源入口） |
 | `output-format` | 正式交付与交互输出约束 | 命令完成、异常、交互或复杂交付 | 输出场景、关键变更、验证结果 | 与任务规模相称的直接回答或规范模板 | 无 |
@@ -27,6 +28,7 @@
 - `multi_model` vs `hello-subagent`: `multi_model` 管审查观点，`hello-subagent` 管任务编排。
 - `develop` vs `output-format`: `develop` 管执行字段，`output-format` 管渲染模板。
 - `develop` vs `qa-review`: `develop` 管执行和集成，`qa-review` 管交付前质量证据。
+- `verification-before-completion` vs `tdd`/`qa-review`: 前者统一判断证据有效性和结论范围，后两者分别管理测试方法和结构化记录；不各自要求重复运行命令。
 - `templates` vs 具体阶段 skill: `templates` 只提供模板，阶段 skill 决定何时创建和如何填充。
 
 `requires` 仅表示加载前必须满足的硬依赖，必须形成 DAG；正文中的“读取某 Skill”表示条件性按需依赖，不得反向写入 `requires` 形成环。

@@ -167,6 +167,36 @@ class SafetyAuditTests(unittest.TestCase):
 
 
 class SkillStructureAuditTests(unittest.TestCase):
+    def test_rejects_unresolved_numbered_rules_in_references(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            write_skill(root, "alpha", [], "")
+            skill_base = root / "skills" / "helloagents"
+            (skill_base / "SKILL_INDEX.md").write_text("| `alpha` |\n", encoding="utf-8")
+            references = skill_base / "alpha" / "references"
+            references.mkdir()
+            reference = references / "workflow.md"
+            reference.write_text("# 流程\n按 G4 判定项目规模。\n", encoding="utf-8")
+
+            errors, _ = audit_skills.audit_tree(root)
+
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("workflow.md:2", errors[0])
+        self.assertIn("G4", errors[0])
+
+    def test_numbered_rules_resolve_across_skills_without_matching_identifiers(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            write_skill(root, "alpha", [], "按 G6.1 输出；使用 CONFIG3 和 G6Helper。")
+            write_skill(root, "output", [], "## G6.1 | 输出规则\n按需总结。")
+            (root / "skills" / "helloagents" / "SKILL_INDEX.md").write_text(
+                "| `alpha` |\n| `output` |\n", encoding="utf-8"
+            )
+
+            errors, _ = audit_skills.audit_tree(root)
+
+        self.assertEqual([], errors)
+
     def test_rejects_duplicate_frontmatter_keys(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -119,7 +119,7 @@
 
 **上下文状态判定:**
 - 不从上一条文本猜测状态；以 `PENDING_INTERACTION` 为唯一判定依据。
-- `REQUIREMENT_INPUT`: 需求评分不足追问。
+- `REQUIREMENT_INPUT`: 影响正确性、范围或安全边界的业务缺口追问。
 - `SOLUTION_CHOICE`: 方案构思选择。
 - `SOLUTION_REDESIGN`: 所有方案被拒绝后的重新构思/取消选择。
 - `DESIGN_CONFIRM`: 需求分析后是否进入方案设计。
@@ -134,9 +134,10 @@
 - `COMMAND_CONFIRM` / `EHRB_CONFIRM`: 命令或高风险确认。
 - `CONTEXT_CHOICE`: 当前任务与新任务边界不清时的选择。
 
-**追问响应**: `PENDING_INTERACTION=REQUIREMENT_INPUT` + 用户补充 → 清除等待态 → 重新评分
-  - 用户补充边界/范围/成功标准只用于补足需求信息，不构成进入方案设计或开发实施的确认
-  - 交互确认模式: 评分≥7分后必须输出需求分析总结并等待是否进入方案设计的确认
+**追问响应**: `PENDING_INTERACTION=REQUIREMENT_INPUT` + 用户补充 → 清除等待态 → 核对剩余阻塞性缺口
+  - 补充边界/范围/成功标准不自动增加写入授权，也不取消原有授权
+  - 交互确认模式: 按当前授权直接交付分析或提出必要决定，不因评分重复确认
+  - 自适应授权模式: 低/中风险改动已有授权且关键缺口消除后，连续进入必要设计或实施
   - MODE_PLANNING=true: 可静默进入方案设计，但方案包生成后必须停止，不进入开发实施
   - MODE_FULL_AUTH=true: 可在方案设计完成并创建方案包后继续进入开发实施
 **选择响应**: 根据 `SOLUTION_CHOICE` / `SOLUTION_REDESIGN` / `PACKAGE_CHOICE` / `CONTEXT_CHOICE` / `MM_REVIEW` / `QUALITY_DECISION` 消费序号；状态不匹配时不得套用
@@ -157,7 +158,8 @@
 
 **上下文打断规则:**
 - 特殊命令可打断上下文，但必须先终止旧等待态并重置旧授权
-- 明确新需求（"另外"/"还有"/无关技术需求）→ 新需求响应
+- 同一任务的补充、纠正或状态问题保留原目标与授权；“另外/还有”不单独作为重置依据
+- 用户明确取消、替换当前目标或提出不兼容的新任务 → 新需求响应
 - 模糊边界 → 设置 `PENDING_INTERACTION=CONTEXT_CHOICE` 后输出上下文确认格式:
   ```
   ❓【HelloAGENTS】- 上下文确认

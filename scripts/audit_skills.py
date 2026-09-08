@@ -460,6 +460,24 @@ def index_skill_names(index: Path) -> set[str]:
     return set(re.findall(r"^\|\s*`([^`]+)`\s*\|", text, flags=re.MULTILINE))
 
 
+def numbered_rule_errors(markdown_paths: list[Path]) -> list[str]:
+    """Resolve retained legacy rule IDs against headings in the distributed tree."""
+    documents = {path: normalized_text(path) for path in markdown_paths}
+    rule_id = r"G\d+(?:\.\d+)?"
+    definitions = {
+        match.group(1)
+        for text in documents.values()
+        for match in re.finditer(rf"^#{{1,6}}\s+({rule_id})\s*\|", text, re.MULTILINE)
+    }
+    references = re.compile(rf"(?<![A-Za-z0-9_])({rule_id})(?![A-Za-z0-9_.])")
+    errors: list[str] = []
+    for path, text in documents.items():
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            for rule in sorted(set(references.findall(line)) - definitions):
+                errors.append(f"{path}:{line_number}: 规则引用 `{rule}` 没有对应定义")
+    return errors
+
+
 def audit_tree(root: Path) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -517,7 +535,9 @@ def audit_tree(root: Path) -> tuple[list[str], list[str]]:
         if line_count > MAX_SKILL_LINES:
             warnings.append(f"{skill_path}: SKILL.md {line_count} 行，建议继续拆薄")
 
-    for markdown_path in sorted(skill_base.rglob("*.md")):
+    markdown_paths = sorted(skill_base.rglob("*.md"))
+    errors.extend(numbered_rule_errors(markdown_paths))
+    for markdown_path in markdown_paths:
         for ref in REFERENCE_PATTERN.findall(normalized_text(markdown_path)):
             target = (markdown_path.parent / ref).resolve()
             if not target.exists():

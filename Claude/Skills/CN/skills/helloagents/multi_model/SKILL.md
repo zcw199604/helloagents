@@ -37,7 +37,6 @@ completion_criteria: 已完成多模型审查、风险分级和主代理裁决�
   - MULTI_MODEL_POLICY（BALANCED / STRICT，默认 BALANCED）
   - SIMPLE_TASK_NO_COLLAB_CONFIRM（0 / 1，默认 0）
   - DESIGN_HARD_STOP_CONFIRM（0 / 1，默认 0）
-  - FORCE_MM_LIGHTWEIGHT_MIN_FILES（整数，默认 2）
 
 BALANCED:
   - 按风险触发多模型协作
@@ -47,10 +46,10 @@ STRICT:
   - 默认启用多模型协作
   - simple 任务若跳过协作，按 SIMPLE_TASK_NO_COLLAB_CONFIRM 决定是否必须确认
 
-强制升级联动:
-  - 用户已确认启用多模型协作，且预估改动文件数 >= FORCE_MM_LIGHTWEIGHT_MIN_FILES 时：
-    - 微调模式必须升级为轻量迭代（或按范围进入标准开发）
-    - 进入 需求分析 → 方案设计，确保生成/复核方案包
+协作与风险路径:
+  - 启用协作仅改变分析或审查方式，不因文件数量升级流程或强制生成方案包
+  - 按独立审查能否降低已知风险、接口耦合和决策不确定性判断协作收益
+  - 已有授权在原范围内持续有效；发现新的高风险副作用时按 `routing` 处理
 
 DESIGN_HARD_STOP_CONFIRM = 1:
   - 设置 PENDING_INTERACTION=DEVELOPMENT_CONFIRM
@@ -154,7 +153,7 @@ Hard Stop（可选）:
 处理:
   - P0 阻止归档和成功总结，回到修复、测试与 QA
   - P1 默认阻止归档，只有用户明确接受剩余风险才可继续
-  - P2 写入 QA findings 后可继续
+  - P2 有方案包时写入 QA findings，无方案包时记录到最终摘要后可继续
 ```
 
 ---
