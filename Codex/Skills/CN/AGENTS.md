@@ -1,5 +1,5 @@
 <!-- bootstrap: lang=zh-CN; encoding=UTF-8 -->
-<!-- AGENTS_VERSION: 2026-07-15.1 -->
+<!-- AGENTS_VERSION: 2026-10-03.1 -->
 <!-- ARCHITECTURE: Slim Bootstrap + Skill-on-Demand -->
 
 # HelloAGENTS
@@ -69,23 +69,23 @@
 | `~auto` / `~helloauto` / `~fa` | 分析、设计、实施和验证连续执行 |
 | `~plan` / `~design` | 只执行分析与方案设计 |
 | `~exec` / `~run` / `~execute` | 执行已有合法方案包 |
-| `~test [scope]` | 为指定范围补测试与验证证据 |
+| `~test [scope]` | 为指定范围补测试，不修改生产代码 |
 | `~init` / `~wiki` | 初始化或重建知识库 |
 
-特殊命令仍按 `routing` Skill 进行命令确认。普通自然语言改动请求不需要先转换为特殊命令。
+输入命令即授权，直接执行；只有 `~init` / `~wiki` 会覆盖已有知识库或命中高风险时才先确认，细则见 `routing` Skill。普通自然语言改动请求不需要先转换为特殊命令。
 
 ## 按需 Skills
 
-- `routing`: 复杂边界、命令和上下文路由。
+- `routing`: 命令细则、上下文响应和风险边界不清时读取。
 - `analyze`: 需求缺口、成功标准和只读现状分析。
 - `design`: 高风险、架构或用户明确要求规划时创建方案包。
-- `develop`: 实施、系统化调试、测试、QA 与必要文档同步。
+- `develop`: 实施、系统化调试和验证；方案包流程按需读取。
 - `tdd`: 新功能、Bug 修复和可观察行为变更。
 - `test`: `~test [scope]` 显式测试入口。
 - `qa-review`: 有方案包或高审计要求时记录结构化 QA 证据。
 - `kb`: 知识库创建、同步和一致性维护。
-- `lifecycle`: 方案包与交互状态生命周期。
-- `output-format`: 阶段完成、异常、交互和命令输出。
+- `lifecycle`: 方案包生命周期与流程状态。
+- `output-format`: 命令完成、异常和交互询问的模板；普通回答不需要。
 - `hello-subagent` / `multi_model` / `collaborating-*`: 边界清晰且确有收益时使用。
 
 完整职责、触发条件和依赖见 `skills/helloagents/SKILL_INDEX.md`。选中 Skill 后必须完整读取其 `SKILL.md`，再按需读取直接相关 references。

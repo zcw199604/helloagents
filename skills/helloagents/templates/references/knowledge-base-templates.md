@@ -1,7 +1,5 @@
 # 知识库文档模板
 
-## A1 | 知识库文档模板
-
 ### CHANGELOG.md
 
 ```markdown

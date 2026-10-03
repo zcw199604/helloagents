@@ -1,38 +1,36 @@
 ---
 name: test
-description: 显式测试命令；为指定模块或最近改动补充测试，记录 TDD 或 TDD-EXEMPT 证据，并复用现有 QA 门禁。
+description: 显式测试命令；为指定模块、行为或最近改动补充测试，并在摘要中记录 TDD 或 TDD-EXEMPT 依据。
 invocation: user
-side_effects: may_write_code_and_docs
+side_effects: may_write_tests
 requires:
   - tdd
-  - develop
-completion_criteria: 测试范围、TDD 决策、验证结果和 schema v3 QA 证据均已记录；发现缺陷时未擅自扩大为生产修复。
+completion_criteria: 测试范围、TDD 决策和验证结果已在摘要中记录；发现缺陷时未擅自扩大为生产修复。
 ---
 
 # 测试命令
 
 Trigger: ~test [scope]
 
-**目标:** 提供明确、可追溯的测试补齐入口，而不是把测试工作隐藏在一般实现请求中。
+**目标:** 提供明确的测试补齐入口。它是一次写入范围限于测试的普通改动，按 `develop` 默认流程执行，不创建方案包或 `qa-review.json`。
 
 ## 范围与授权
 
 - `scope` 指定文件、模块、行为或最近改动时，以该范围为准。
-- 未提供 `scope` 时，优先从当前方案包或最近 Git 改动推导；仍无法确定时，按交互格式追问，不猜测测试目标。
-- `~test` 需要命令确认。确认后创建或复用覆盖该范围的轻量方案包，并使用现有 `MODE_EXECUTION` 授权进入开发实施与 QA 门禁。
-- 默认只新增或调整测试、测试数据、方案包和 QA 证据；测试暴露未实现或错误行为时，记录失败并转入常规方案设计，不自动修改生产代码。
+- 未提供 `scope` 时，从最近的 Git 改动或当前任务推导；仍无法确定时追问，不猜测测试目标。
+- 只新增或调整测试和测试数据。测试暴露未实现或错误的生产行为时，记录失败并报告，由用户决定是否修复；不自动修改生产代码。
 
 ## 执行流程
 
-1. 读取 `tdd`，标记 `mandatory`、`recommended`、`exempt` 或 `uncertain` 分类。
-2. 在轻量方案包的验证策略中写明目标行为、测试命令和 TDD 决策。
-3. 新功能或可复现缺陷按 RED → GREEN → REFACTOR → VERIFY 执行；不得把测试直接通过的情况伪装成 RED。
-4. 为已存在生产行为补充表征测试时，可标记 `TDD-EXEMPT`，但必须说明生产实现早于本次测试且记录替代验证。
-5. 开发实施步骤7.5写入 schema v3 `qa-review.json` 的 `tdd` 对象，再按既有 QA 门禁处理。
+1. 读取 `tdd`，判定适用性。
+2. 新功能或可复现缺陷按 RED → GREEN → REFACTOR → VERIFY 执行；不得把直接通过的测试当作 RED。
+3. 为已存在的生产行为补表征测试时标记 `TDD-EXEMPT`，说明生产实现早于本次测试、无法构造真实 RED，并记录替代验证。
+4. 运行新增测试和相关既有测试，按 `verification-before-completion` 核对后输出摘要。
+
+用户同时要求结构化 QA 证据时，按 `qa-review` 的独立输出规则保存。
 
 ## 完成门禁
 
 - 测试目标和范围可复核。
-- `decision=tdd` 时 RED 失败、GREEN/REFACTOR/VERIFY 通过的证据完整。
-- `decision=exempt` 时 `TDD-EXEMPT` 原因和替代验证完整。
-- 未在用户只要求测试时擅自修改生产行为。
+- 摘要包含 TDD 决策或 `TDD-EXEMPT` 原因、实际测试命令和结果。
+- 未在用户只要求测试时修改生产行为。

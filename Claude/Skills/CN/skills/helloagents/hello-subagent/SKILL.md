@@ -3,8 +3,7 @@ name: hello-subagent
 description: 定义 HelloAGENTS 并行子代理编排规则。用于开发实施或多模型协作中，任务可拆分为多个独立、边界清晰、可验证的子任务时读取。
 invocation: model
 side_effects: may_spawn_subagents
-requires:
-  - output-format
+requires: []
 completion_criteria: 已确认任务独立、写入范围互斥，并汇总子代理结构化结果。
 ---
 
@@ -16,7 +15,7 @@ completion_criteria: 已确认任务独立、写入范围互斥，并汇总子�
 
 ## 角色边界
 
-- 主代理控制阶段流程、EHRB 识别、方案包生命周期、最终集成、验证、知识库同步和用户可见输出。
+- 主代理控制流程、EHRB 识别、方案包生命周期、最终集成、验证、知识库同步和用户可见输出。
 - 子代理只处理被派发的单一局部任务，只读取必要上下文，只修改授权范围，并返回结构化结果。
 - 子代理不得推进 HelloAGENTS 阶段、迁移方案包、更新最终知识库状态或直接面向用户输出阶段总结。
 

@@ -44,7 +44,7 @@ completion_criteria: RED/GREEN/REFACTOR/VERIFY 证据完整，或记录 TDD-EXEM
 ### 需求分析
 - 标记 `TDD适用性: 强制 | 建议 | 例外 | 不确定`。
 - 提取可观察行为、失败复现条件、边界场景和验收命令。
-- 缺少可测试成功标准时，作为需求完整性扣分项或追问点。
+- 缺少可测试的成功标准且影响实现或验收时，作为追问点。
 
 ### 方案设计
 - 对每个可测试行为生成 `RED → GREEN → REFACTOR → VERIFY` 任务序列。
@@ -55,7 +55,7 @@ completion_criteria: RED/GREEN/REFACTOR/VERIFY 证据完整，或记录 TDD-EXEM
 - 修改生产代码前，先完成对应 RED 任务并确认失败原因匹配目标行为。
 - GREEN 阶段只做最小实现，禁止顺手重构或扩大范围。
 - REFACTOR 只能在相关测试通过后执行，重构后必须复测。
-- RED/GREEN/REFACTOR 证据按实际步骤保留；有方案包时在开发实施步骤7.5写入 schema v3 `qa-review.json.tdd`，自适应无方案包时在最终摘要记录，不为 TDD 单独创建方案包或 QA 文件。
+- RED/GREEN/REFACTOR 证据按实际步骤保留；有方案包时写入 schema v3 `qa-review.json.tdd`，无方案包时在最终摘要记录，不为 TDD 单独创建方案包或 QA 文件。
 
 ## 结构化证据
 
@@ -86,7 +86,7 @@ REFACTOR:
 VERIFY:
   - 优先运行相关最小测试
   - 项目要求、受影响契约或新风险需要时运行更广测试套件；证据有效性按 `verification-before-completion` 判断
-  - 失败按 develop Skill 的阻断/警告/信息规则处理
+  - 失败按 develop 的验证失败规则处理
 ```
 
 ## 测试设计与覆盖策略

@@ -20,9 +20,9 @@ completion_criteria: 知识库存在性、质量、同步范围和一致性修�
 读取和诊断不预加载 `templates`；实际创建文件且通过写入收益门禁后，才读取对应模板。
 
 不由 `kb` 负责的事项:
-- 方案包状态符号、迁移算法、遗留扫描状态变量 → 由 `lifecycle` 负责
-- 阶段最终输出模板 → 由 `output-format` 负责
-- 开发实施步骤顺序和测试门禁 → 由 `develop` 负责
+- 方案包状态符号、迁移规则、遗留扫描和流程状态 → 由 `lifecycle` 负责
+- 输出模板 → 由 `output-format` 负责
+- 实施流程和验证门禁 → 由 `develop` 负责
 
 ---
 
@@ -31,7 +31,7 @@ completion_criteria: 知识库存在性、质量、同步范围和一致性修�
 | 场景 | 读取文件 |
 |---|---|
 | 知识库架构、术语、质量检查、上下文获取、同步和缺失处理 | `references/knowledge-base-rules.md` |
-| `~init` / `~wiki` 命令完成输出字段 | `references/init-output.md` |
+| `~init` / `~wiki` 命令完成输出 | `../output-format/references/command-output.md` |
 | 具体文件模板 | `../templates/references/knowledge-base-templates.md` |
 
 ---
@@ -46,14 +46,14 @@ completion_criteria: 知识库存在性、质量、同步范围和一致性修�
 
 **不应触发:**
 - 只迁移方案包或扫描遗留方案；这是 `lifecycle`。
-- 只选择阶段输出模板；这是 `output-format`。
+- 只选择输出模板；这是 `output-format`。
 - 只执行方案包任务；这是 `develop`。
 
 ---
 
 ## 完成门禁
 
-- 必备知识库文件存在，或已按阶段规则记录缺失/创建。
+- 必备知识库文件存在，或已按缺失处理规则记录或创建。
 - 初始化知识库时 `wiki/glossary.md` 存在；增量维护只在术语通过写入收益门禁时更新，不因候选出现强制创建。
 - 代码变更涉及的模块、API、数据模型、架构或技术约定已同步。
 - 知识库与代码冲突时，已按代码事实修正文档或记录例外原因。

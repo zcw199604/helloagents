@@ -56,6 +56,18 @@ COMMAND_ALIASES = {
     "~test",
 }
 TASK_METADATA_LABELS = ["执行模式", "涉及文件", "完成标准", "验证方式"]
+PLAN_FLOW_ORDER = ["QA 证据", "解析唯一归档目标", "同步知识库", "迁移方案包"]
+LEGACY_TERMS = [
+    "PENDING_INTERACTION",
+    "WORKFLOW_ID",
+    "WORKFLOW_STATE",
+    "MODE_FULL_AUTH",
+    "MODE_EXECUTION",
+    "MODE_PLANNING",
+    "微调模式",
+    "标准开发",
+    "完整研发",
+]
 BRIDGE_BUNDLES = {
     "collaborating-with-claude": ROOT / "scripts" / "claude_bridge.py",
     "collaborating-with-codex": ROOT / "scripts" / "codex_bridge.py",
@@ -612,34 +624,18 @@ def audit_bundled_bridges() -> list[str]:
     return errors
 
 
-def extract_step_count(text: str, pattern: str) -> int | None:
-    match = re.search(pattern, text)
-    if not match:
-        return None
-    return int(match.group(1))
-
-
-def audit_entry_steps(path: Path, expected_count: int | None) -> list[str]:
-    errors: list[str] = []
+def audit_heading_order(path: Path, headings: list[str]) -> list[str]:
+    """校验编号环节标题存在且按给定顺序出现。"""
     text = normalized_text(path)
-    steps = re.findall(r"^### 步骤(\d+(?:\.\d+)?):", text, flags=re.MULTILINE)
-    main_steps = sorted({int(step) for step in steps if "." not in step})
-    if expected_count is not None:
-        expected = list(range(1, expected_count + 1))
-        if main_steps != expected:
-            errors.append(f"{path}: 实际步骤标题不完整，期望 {expected}，实际 {main_steps}")
-    if "7.5" not in steps:
-        errors.append(f"{path}: 缺少步骤7.5 QA 证据记录")
-    if "7.6" not in steps:
-        errors.append(f"{path}: 缺少步骤7.6 唯一归档目标解析")
-    step_positions = {
-        match.group(1): match.start()
-        for match in re.finditer(r"^### 步骤(\d+(?:\.\d+)?):", text, flags=re.MULTILINE)
-    }
-    if all(step in step_positions for step in ["7.5", "7.6", "8"]):
-        if not step_positions["7.5"] < step_positions["7.6"] < step_positions["8"]:
-            errors.append(f"{path}: 步骤顺序必须满足 7.5 < 7.6 < 8")
-    return errors
+    positions: list[int] = []
+    for heading in headings:
+        match = re.search(rf"^## \d+\. {re.escape(heading)}", text, flags=re.MULTILINE)
+        if not match:
+            return [f"{path}: 缺少环节 `{heading}`"]
+        positions.append(match.start())
+    if positions != sorted(positions):
+        return [f"{path}: 环节顺序必须满足 {' < '.join(headings)}"]
+    return []
 
 
 def audit_task_template_metadata(path: Path) -> list[str]:
@@ -654,139 +650,125 @@ def audit_task_template_metadata(path: Path) -> list[str]:
                 errors.append(f"{path}: 任务 `{match.group(1)}` 缺少 `{label}`")
     verify_match = re.search(r"^- \[ \] 5A\.4 VERIFY:[\s\S]*?(?=^### 5B\.|^## |\Z)", text, flags=re.MULTILINE)
     if verify_match and "qa-review.json" in verify_match.group(0):
-        errors.append(f"{path}: 5A.4 VERIFY 不应依赖 qa-review.json，QA 证据应由开发步骤7.5生成")
+        errors.append(f"{path}: 5A.4 VERIFY 不应依赖 qa-review.json，QA 证据应由方案包流程的 QA 证据环节生成")
     return errors
 
 
 def audit_semantic_contracts() -> list[str]:
     errors: list[str] = []
-    codex_skill_base = SOURCE_ROOT / SKILL_TREE
+    skill_base = SOURCE_ROOT / SKILL_TREE
 
     agents = CODEX_ROOT / "AGENTS.md"
-    routing = codex_skill_base / "routing" / "SKILL.md"
-    commands = codex_skill_base / "routing" / "references" / "commands-and-context.md"
+    routing = skill_base / "routing" / "SKILL.md"
+    commands = skill_base / "routing" / "references" / "commands-and-context.md"
     for path in [agents, routing, commands]:
         text = normalized_text(path)
         for command in sorted(COMMAND_ALIASES):
             if command not in text:
                 errors.append(f"{path}: 命令别名 `{command}` 未同步")
 
-    develop_count = extract_step_count(
-        normalized_text(codex_skill_base / "develop" / "SKILL.md"),
-        r"开发实施入口检查、(\d+)\s*步执行流程",
-    )
-    if develop_count is None:
-        errors.append("开发实施步骤数语义审计失败: 未能解析 develop/SKILL.md")
-
-    develop_entry = codex_skill_base / "develop" / "references" / "entry-and-steps.md"
-    errors.extend(audit_entry_steps(develop_entry, develop_count))
-
-    routing_decision = codex_skill_base / "routing" / "references" / "routing-decision.md"
-    routing_paths = codex_skill_base / "routing" / "references" / "routing-paths.md"
     require_text(
         agents,
         ["自适应路由", "低风险", "中风险", "高风险", "普通 Bug", "文件数量只作为范围线索"],
         errors,
         "精简 bootstrap 风险路由",
     )
-    forbid_text(agents, ["PENDING_INTERACTION", "WORKFLOW_ID", "<thinking>"], errors)
+
+    risk_paths = skill_base / "routing" / "references" / "risk-and-paths.md"
     require_text(
-        routing_decision,
-        ["风险等级: 低 | 中 | 高", "可逆性", "外部副作用", "公共契约", "数据迁移"],
+        risk_paths,
+        [
+            "风险等级: 低 | 中 | 高", "可逆性", "外部副作用", "公共契约", "数据迁移",
+            "低风险：直接实施", "中风险：内部计划后连续实施", "高风险：设计并确认后实施",
+            "不引入 Light/Heavy 持久模式变量",
+        ],
         errors,
-        "风险评估维度",
+        "风险三级路由",
     )
+    forbid_text(risk_paths, ["文件≤2", "文件3-5", "文件>5"], errors)
     require_text(
-        routing_paths,
-        ["普通缺陷直接实施", "低风险小改动直接实施", "风险等级=高"],
+        commands,
+        ["直接执行", "覆盖已有知识库", "合法完整或轻量方案包"],
         errors,
-        "自适应路由路径",
-    )
-    forbid_text(routing_paths, ["文件≤2", "文件3-5", "文件>5"], errors)
-    require_text(
-        develop_entry,
-        ["条件E - 用户明确授权的自适应开发", "EHRB=无", "自适应开发无方案包旁路"],
-        errors,
-        "自适应开发入口",
-    )
-    require_text(
-        codex_skill_base / "analyze" / "references" / "code-analysis-and-output.md",
-        ["自适应授权模式", "不设置 `DESIGN_CONFIRM`"],
-        errors,
-        "自适应分析阶段转换",
-    )
-    require_text(
-        codex_skill_base / "design" / "references" / "output-and-transition.md",
-        ["自适应授权模式", "不设置 `DEVELOPMENT_CONFIRM`"],
-        errors,
-        "自适应设计阶段转换",
+        "命令直接执行与确认条件",
     )
 
-    index = codex_skill_base / "SKILL_INDEX.md"
+    develop = skill_base / "develop" / "SKILL.md"
+    plan_flow = skill_base / "develop" / "references" / "plan-package-flow.md"
+    require_text(
+        develop,
+        [
+            "改动授权", "EHRB", "默认流程不创建方案包",
+            "references/debugging.md", "references/plan-package-flow.md",
+        ],
+        errors,
+        "默认无方案包流程与单一写入入口",
+    )
+    errors.extend(audit_heading_order(plan_flow, PLAN_FLOW_ORDER))
+    require_text(plan_flow, ["读取 `qa-review`", "qa-review.json", "RESOLVED_ARCHIVE_PATH", "禁止覆盖"], errors)
+    forbid_text(plan_flow, ["强制覆盖"], errors)
+    require_text(
+        skill_base / "analyze" / "references" / "code-analysis-and-output.md",
+        ["不再次确认"],
+        errors,
+        "已授权改动的分析不重复确认",
+    )
+    require_text(
+        skill_base / "design" / "references" / "output-and-transition.md",
+        ["不输出阶段总结", "询问是否按此方案执行"],
+        errors,
+        "设计后续处理",
+    )
+
+    index = skill_base / "SKILL_INDEX.md"
     develop_index_match = re.search(r"^\|\s*`develop`\s*\|.+$", normalized_text(index), flags=re.MULTILINE)
     if not develop_index_match or "条件读取" not in develop_index_match.group(0):
-        errors.append(f"{index}: develop 缺少自适应条件依赖说明")
+        errors.append(f"{index}: develop 缺少条件依赖说明")
 
-    template = codex_skill_base / "templates" / "references" / "plan-package-templates.md"
+    template = skill_base / "templates" / "references" / "plan-package-templates.md"
     require_text(template, TASK_METADATA_LABELS, errors, "task.md 任务元数据")
     require_text(template, ["qa-review.json", "python scripts/audit_safety.py"], errors)
     errors.extend(audit_task_template_metadata(template))
 
-    design = codex_skill_base / "design" / "references" / "detailed-planning.md"
+    design = skill_base / "design" / "references" / "detailed-planning.md"
     require_text(design, TASK_METADATA_LABELS + ["AFK", "HITL"], errors, "任务可验证性规则")
 
-    qa_review = codex_skill_base / "qa-review" / "SKILL.md"
+    qa_review = skill_base / "qa-review" / "SKILL.md"
     require_text(
         qa_review,
         [
-            "步骤7质量检查与测试完成后", "qa-review.json", "task_verification",
+            "质量检查与测试完成后", "qa-review.json", "task_verification",
             '"schema_version": 3', '"tdd"', '"outcome": "clean"',
-            '"gate_status": "passed"',
+            '"gate_status": "passed"', "未解决 P0", "未解决 P1",
+            "P1 QA 风险决策询问", "轻量方案包元数据",
         ],
         errors,
     )
-    require_text(develop_entry, ["读取 `qa-review` Skill", "qa-review.json", "P0 阻止归档", "P1 默认阻止归档", "P1 QA风险决策询问格式"], errors)
 
-    test_skill = codex_skill_base / "test" / "SKILL.md"
+    test_skill = skill_base / "test" / "SKILL.md"
     require_text(
         test_skill,
-        ["Trigger: ~test [scope]", "TDD-EXEMPT", "qa-review.json"],
+        ["Trigger: ~test [scope]", "TDD-EXEMPT", "不创建方案包"],
         errors,
         "测试命令契约",
     )
 
-    lifecycle = codex_skill_base / "lifecycle" / "SKILL.md"
-    transition = codex_skill_base / "develop" / "references" / "phase-transition.md"
-    require_text(lifecycle, ["RESET_WORKFLOW_STATE", "AUTH_WORKFLOW_ID", "PENDING_INTERACTION", "RESOLVED_ARCHIVE_PATH", "no-clobber"], errors)
-    require_text(transition, ["RESET_WORKFLOW_STATE", "步骤11.5", "no-clobber"], errors)
-    forbid_text(lifecycle, ["同名覆盖"] , errors)
-    forbid_text(develop_entry, ["强制覆盖"], errors)
-    require_text(qa_review, ["轻量方案包元数据"], errors)
-    require_text(codex_skill_base / "kb" / "references" / "knowledge-base-rules.md", ["轻量方案包元数据", "RESOLVED_ARCHIVE_PATH", "task.md#轻量方案包元数据"], errors)
-    require_text(codex_skill_base / "hello-subagent" / "references" / "delegation-protocol.md", ["完整方案包", "轻量方案包"], errors)
-    require_text(codex_skill_base / "multi_model" / "SKILL.md", ["外部数据门禁", "默认超时 600 秒", "P0 阻止归档"], errors)
+    lifecycle = skill_base / "lifecycle" / "SKILL.md"
     require_text(
         lifecycle,
-        [
-            "COMMAND_CONFIRM", "REQUIREMENT_INPUT", "SOLUTION_CHOICE", "SOLUTION_REDESIGN",
-            "DESIGN_CONFIRM", "DEVELOPMENT_CONFIRM", "PACKAGE_CHOICE", "CONTEXT_CHOICE",
-            "MM_REVIEW", "QUALITY_DECISION", "MM_ACCEPTANCE", "TEST_FAILURE_DECISION",
-            "QA_RISK_DECISION", "PARTIAL_FAILURE_DECISION", "EHRB_CONFIRM",
-        ],
+        ["ACTIVE_COMMAND", "CURRENT_PACKAGE", "PENDING", "RESOLVED_ARCHIVE_PATH", "no-clobber", "终态清理"],
         errors,
-        "完整交互状态枚举",
+        "三项流程状态",
     )
-    interaction_contracts = {
-        codex_skill_base / "analyze" / "references" / "requirement-assessment.md": ["PENDING_INTERACTION=REQUIREMENT_INPUT"],
-        codex_skill_base / "analyze" / "references" / "code-analysis-and-output.md": ["PENDING_INTERACTION=DESIGN_CONFIRM"],
-        codex_skill_base / "design" / "references" / "ideation.md": ["PENDING_INTERACTION=SOLUTION_CHOICE", "PENDING_INTERACTION=SOLUTION_REDESIGN"],
-        codex_skill_base / "design" / "references" / "output-and-transition.md": ["PENDING_INTERACTION=MM_REVIEW", "PENDING_INTERACTION=DEVELOPMENT_CONFIRM"],
-        develop_entry: ["PENDING_INTERACTION=PACKAGE_CHOICE", "PENDING_INTERACTION=TEST_FAILURE_DECISION", "PENDING_INTERACTION=QA_RISK_DECISION", "PENDING_INTERACTION=QUALITY_DECISION", "PENDING_INTERACTION=MM_ACCEPTANCE"],
-        commands: ["PENDING_INTERACTION=COMMAND_CONFIRM", "PENDING_INTERACTION=CONTEXT_CHOICE", "TEST_FAILURE_DECISION` 消费序号", "MM_ACCEPTANCE` 消费序号", "QA_RISK_DECISION` 消费序号"],
-        codex_skill_base / "output-format" / "references" / "exception-output.md": ["PENDING_INTERACTION=EHRB_CONFIRM", "PENDING_INTERACTION=PARTIAL_FAILURE_DECISION"],
-    }
-    for path, snippets in interaction_contracts.items():
-        require_text(path, snippets, errors, "交互提示必须绑定等待态")
+    forbid_text(lifecycle, ["同名覆盖"], errors)
+    require_text(skill_base / "kb" / "references" / "knowledge-base-rules.md", ["轻量方案包元数据", "RESOLVED_ARCHIVE_PATH", "task.md#轻量方案包元数据"], errors)
+    require_text(skill_base / "hello-subagent" / "references" / "delegation-protocol.md", ["完整方案包", "轻量方案包"], errors)
+    require_text(skill_base / "multi_model" / "SKILL.md", ["外部数据门禁", "默认超时 600 秒", "P0 阻止归档"], errors)
+
+    # 防止已移除的第二套状态机和模式命名回流。
+    for path in [agents, *sorted(skill_base.rglob("*.md"))]:
+        forbid_text(path, LEGACY_TERMS, errors)
+    forbid_text(agents, ["<thinking>"], errors)
 
     safety = ROOT / "scripts" / "audit_safety.py"
     require_text(

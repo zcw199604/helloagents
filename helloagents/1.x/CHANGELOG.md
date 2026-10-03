@@ -23,6 +23,13 @@
 - 新增按需触发的 Skill: `output-format`、`routing`、`lifecycle`、`qa-review` 等；当前维护 Codex/Claude 两端 CN skill 镜像
 
 ### 变更
+- `develop` 改为默认无方案包的 6 步流程，方案包环节和调试规则拆到按需读取的 `plan-package-flow.md` 与 `debugging.md`；写入入口、调试、P0/P1/P2 门禁等规则各只保留一处定义
+- 特殊命令输入即授权并直接执行，只有 `~init` / `~wiki` 覆盖已有知识库、命中 EHRB 或缺少必要对象时才先确认；`~plan` 默认采用推荐方案
+- `~test [scope]` 改走默认流程，不再创建轻量方案包和 `qa-review.json`
+- 流程状态收敛为 `ACTIVE_COMMAND`、`CURRENT_PACKAGE`、`PENDING` 三项，移除 `WORKFLOW_ID`、`MODE_*` 和等待态枚举
+- 处理路径只按低/中/高风险划分，移除四个模式名；eval 路由取值改为 `direct_change` / `design_first`，命令用例扩充到 6 条
+- 取消代码质量优化询问和例行的多模型审查/验收询问，多模型协作只在用户要求时执行；移除 `multi_model` 的三个会话开关
+- 清理需求评分、旧规则编号、未定义术语和“≤3 文件/任务”等与风险路由冲突的硬规则；`output-format` 不再是其他 Skill 的硬依赖
 - 风险自适应路由明确不引入 Light/Heavy 持久状态；普通咨询与自适应中间阶段取消强制包装，知识库改为通过写入收益门禁后才最小同步
 - `manage_skills.py` 改为从 canonical 源安装，Skill 审计和 CI 改为校验 canonical、bundled bridge 与两端生成分发的一致性
 - Codex/Claude bootstrap 从 268 行精简到 120 行以内，只保留稳定原则、安全边界、自适应路由、命令入口和 Skill 索引

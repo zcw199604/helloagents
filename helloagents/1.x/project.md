@@ -15,14 +15,15 @@
 - 长模板、细则和协议下沉到同目录 `references/`。
 - 新增或修改 skill 时同步更新 `skills/helloagents/SKILL_INDEX.md`。
 - `requires` 只表示硬依赖并必须形成 DAG；条件性 Skill 调用写在正文，不得制造反向依赖环。
-- 特殊命令授权必须绑定当前 `WORKFLOW_ID`，所有终态执行 `RESET_WORKFLOW_STATE`。
+- 输入命令即授权并直接执行；流程状态只有 `ACTIVE_COMMAND`、`CURRENT_PACKAGE`、`PENDING` 三项，所有终态全部清除。
+- 每条规则只在一个 Skill 中定义（见 `SKILL_INDEX.md` 的“单一定义”表），其他 Skill 只引用；`develop` 默认流程不依赖方案包。
 - 普通改动按可逆性、外部副作用、公共契约、数据迁移、EHRB 和不确定性分级；文件数量不作为独立路由门禁。
 - 风险等级只控制当前请求的处理深度，不新增 Light/Heavy 持久状态或第二套路由状态机。
 - 用户明确授权的低/中风险改动可直接实施和验证；无方案包时不生成孤立 QA JSON 或 history 记录。
 - 普通咨询和自适应路径的中间阶段直接表达或静默连续执行，不强制输出阶段包装、内部评分和占位栏目。
 - 知识库默认不写；仅当代码无法表达的稳定信息会被未来任务复用，且不写会导致错误判断时才最小更新。
 - 新生成的 QA 证据使用 schema v3；`tdd` 字段必须记录 RED/GREEN/REFACTOR/VERIFY 或 TDD-EXEMPT，未解决 P0/P1 仍必须通过可执行 `gate_status` 阻止归档。
-- `~test [scope]` 是受控测试入口：默认只修改测试与证据，发现生产缺陷时转入常规方案设计，不自动扩大为修复。
+- `~test [scope]` 是受控测试入口：只修改测试，不创建方案包；发现生产缺陷时报告并由用户决定，不自动扩大为修复。
 - KB、history 索引、迁移和最终输出必须共同使用 lifecycle 解析的 `RESOLVED_ARCHIVE_PATH`。
 
 ## 验证约定

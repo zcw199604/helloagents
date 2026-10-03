@@ -16,7 +16,9 @@ CODEX_BOOTSTRAP = ROOT / "Codex" / "Skills" / "CN" / "AGENTS.md"
 CLAUDE_BOOTSTRAP = ROOT / "Claude" / "Skills" / "CN" / "CLAUDE.md"
 HELLOAGENTS_SKILLS = ROOT / "skills" / "helloagents"
 ROUTING_ROOT = HELLOAGENTS_SKILLS / "routing"
-DEVELOP_ENTRY = HELLOAGENTS_SKILLS / "develop" / "references" / "entry-and-steps.md"
+DEVELOP_SKILL = HELLOAGENTS_SKILLS / "develop" / "SKILL.md"
+DEBUGGING = HELLOAGENTS_SKILLS / "develop" / "references" / "debugging.md"
+RISK_PATHS = ROUTING_ROOT / "references" / "risk-and-paths.md"
 ANALYZE_TRANSITION = (
     HELLOAGENTS_SKILLS / "analyze" / "references" / "code-analysis-and-output.md"
 )
@@ -91,7 +93,7 @@ class SkillEvalDatasetTests(unittest.TestCase):
                 "category": "high_risk",
                 "prompt": "修改生产数据库",
                 "expected": {
-                    "route": "full_research",
+                    "route": "design_first",
                     "action": "plan_and_confirm",
                     "confirmation": "before_write",
                     "artifacts": "full",
@@ -153,15 +155,10 @@ class AdaptiveRoutingContractTests(unittest.TestCase):
         self.assertNotIn("<thinking>", codex)
 
     def test_routing_uses_risk_instead_of_file_count_as_primary_signal(self) -> None:
-        decision = (ROUTING_ROOT / "references" / "routing-decision.md").read_text(
-            encoding="utf-8"
-        )
-        paths = (ROUTING_ROOT / "references" / "routing-paths.md").read_text(
-            encoding="utf-8"
-        )
+        paths = RISK_PATHS.read_text(encoding="utf-8")
 
-        self.assertIn("风险等级: 低 | 中 | 高", decision)
-        self.assertIn("可逆性", decision)
+        self.assertIn("风险等级: 低 | 中 | 高", paths)
+        self.assertIn("可逆性", paths)
         self.assertNotIn("文件3-5", paths)
         self.assertNotIn("文件≤2", paths)
         self.assertNotIn("文件>5", paths)
@@ -171,43 +168,40 @@ class AdaptiveRoutingContractTests(unittest.TestCase):
         output = (HELLOAGENTS_SKILLS / "output-format" / "SKILL.md").read_text(
             encoding="utf-8"
         )
-        qa_output = (
-            HELLOAGENTS_SKILLS / "output-format" / "references" / "qa-output.md"
-        ).read_text(encoding="utf-8")
         kb = (
             HELLOAGENTS_SKILLS / "kb" / "references" / "knowledge-base-rules.md"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("普通咨询与简短确认不使用阶段包装", output)
-        self.assertIn("直接回答", qa_output)
-        self.assertNotIn("MUST使用 `💡【HelloAGENTS】", qa_output)
+        self.assertIn("咨询问答和只读分析:** 直接回答", output)
+        self.assertIn("低/中风险改动完成", output)
+        self.assertNotIn("MUST使用 `💡【HelloAGENTS】", output)
         self.assertIn("写入收益门禁", kb)
         self.assertIn("默认不写", kb)
 
     def test_ordinary_bug_and_small_change_can_continue_without_second_confirmation(self) -> None:
-        paths = (ROUTING_ROOT / "references" / "routing-paths.md").read_text(
-            encoding="utf-8"
-        )
-        entry = DEVELOP_ENTRY.read_text(encoding="utf-8")
+        paths = RISK_PATHS.read_text(encoding="utf-8")
+        develop = DEVELOP_SKILL.read_text(encoding="utf-8")
+        debugging = DEBUGGING.read_text(encoding="utf-8")
 
-        self.assertIn("普通缺陷直接实施", paths)
-        self.assertIn("低风险小改动直接实施", paths)
-        self.assertIn("条件E - 用户明确授权的自适应开发", entry)
-        self.assertIn("EHRB=无", entry)
-        self.assertIn("风险等级=高", paths)
+        self.assertIn("低风险：直接实施", paths)
+        self.assertIn("不需要方案包或二次确认", paths)
+        self.assertIn("高风险在写入或执行副作用前必须确认", paths)
+        self.assertIn("改动授权", develop)
+        self.assertIn("无 EHRB", develop)
+        self.assertIn("不要求方案包或再次确认", debugging)
 
     def test_adaptive_analysis_and_design_do_not_repeat_confirmation(self) -> None:
         analyze = ANALYZE_TRANSITION.read_text(encoding="utf-8")
         design = DESIGN_TRANSITION.read_text(encoding="utf-8")
 
-        self.assertIn("不设置 `DESIGN_CONFIRM`", analyze)
-        self.assertIn("不设置 `DEVELOPMENT_CONFIRM`", design)
+        self.assertIn("不再次确认", analyze)
+        self.assertIn("不输出阶段总结", design)
 
     def test_engineering_scope_and_context_recovery_are_risk_proportional(self) -> None:
         bootstrap = CODEX_BOOTSTRAP.read_text(encoding="utf-8")
         tdd = TDD_SKILL.read_text(encoding="utf-8")
         design = DESIGN_PLANNING.read_text(encoding="utf-8")
-        develop = DEVELOP_ENTRY.read_text(encoding="utf-8")
+        develop = DEVELOP_SKILL.read_text(encoding="utf-8")
         qa = QA_REVIEW.read_text(encoding="utf-8")
         lifecycle = LIFECYCLE.read_text(encoding="utf-8")
 
@@ -216,10 +210,10 @@ class AdaptiveRoutingContractTests(unittest.TestCase):
         self.assertIn("风险驱动的最小充分覆盖", tdd)
         self.assertIn("不要求机械穷举每类场景", tdd)
         self.assertIn("验证规模适配", design)
-        self.assertIn("步骤5.4: 最小充分实现约束", develop)
+        self.assertIn("最小充分实现", develop)
         self.assertIn("未被本轮触达且已有有效验证证据", qa)
-        self.assertIn("上下文压缩与恢复规则", lifecycle)
-        self.assertIn("不得自动重放", lifecycle)
+        self.assertIn("上下文恢复", lifecycle)
+        self.assertIn("不重放", lifecycle)
 
 
 if __name__ == "__main__":

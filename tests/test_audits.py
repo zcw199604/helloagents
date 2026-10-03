@@ -346,14 +346,13 @@ class SkillStructureAuditTests(unittest.TestCase):
 
 
 class RuntimeContractTests(unittest.TestCase):
-    def test_terminal_paths_reset_workflow_state(self) -> None:
+    def test_terminal_paths_clear_flow_state(self) -> None:
         lifecycle = (CODEX_SKILLS / "lifecycle" / "SKILL.md").read_text(encoding="utf-8")
-        transition = (
-            CODEX_SKILLS / "develop" / "references" / "phase-transition.md"
-        ).read_text(encoding="utf-8")
+        develop = (CODEX_SKILLS / "develop" / "SKILL.md").read_text(encoding="utf-8")
 
-        self.assertIn("RESET_WORKFLOW_STATE", lifecycle)
-        self.assertIn("RESET_WORKFLOW_STATE", transition)
+        self.assertIn("终态清理", lifecycle)
+        self.assertIn("不得沿用到下一个任务", lifecycle)
+        self.assertIn("命令授权和等待项未残留到下一个任务", develop)
 
     def test_lightweight_package_has_downstream_metadata_contract(self) -> None:
         qa = (CODEX_SKILLS / "qa-review" / "SKILL.md").read_text(encoding="utf-8")
@@ -366,35 +365,53 @@ class RuntimeContractTests(unittest.TestCase):
 
     def test_history_migration_never_forces_overwrite(self) -> None:
         lifecycle = (CODEX_SKILLS / "lifecycle" / "SKILL.md").read_text(encoding="utf-8")
-        entry = (
-            CODEX_SKILLS / "develop" / "references" / "entry-and-steps.md"
+        plan_flow = (
+            CODEX_SKILLS / "develop" / "references" / "plan-package-flow.md"
         ).read_text(encoding="utf-8")
 
         self.assertNotIn("同名覆盖", lifecycle)
-        self.assertNotIn("强制覆盖", entry)
+        self.assertNotIn("强制覆盖", plan_flow)
         self.assertIn("no-clobber", lifecycle)
+        self.assertIn("禁止覆盖或合并既有归档", plan_flow)
 
     def test_qa_findings_have_an_executable_gate(self) -> None:
         qa = (CODEX_SKILLS / "qa-review" / "SKILL.md").read_text(encoding="utf-8")
-        entry = (
-            CODEX_SKILLS / "develop" / "references" / "entry-and-steps.md"
+        plan_flow = (
+            CODEX_SKILLS / "develop" / "references" / "plan-package-flow.md"
         ).read_text(encoding="utf-8")
 
         self.assertIn('"gate_status": "passed"', qa)
-        self.assertIn("P0 阻止归档", entry)
-        self.assertIn("P1 默认阻止归档", entry)
+        self.assertIn("未解决 P0", qa)
+        self.assertIn("未解决 P1", qa)
+        self.assertIn("门禁未通过时不得进入后续环节", plan_flow)
 
-    def test_all_wait_states_have_consumers(self) -> None:
+    def test_pending_reply_is_consumed_once(self) -> None:
+        lifecycle = (CODEX_SKILLS / "lifecycle" / "SKILL.md").read_text(encoding="utf-8")
         context = (
             CODEX_SKILLS / "routing" / "references" / "commands-and-context.md"
         ).read_text(encoding="utf-8")
-        entry = (
-            CODEX_SKILLS / "develop" / "references" / "entry-and-steps.md"
-        ).read_text(encoding="utf-8")
 
-        self.assertIn("TEST_FAILURE_DECISION` 消费序号", context)
-        self.assertIn("MM_ACCEPTANCE` 消费序号", context)
-        self.assertIn("归档前多模型验收询问格式", entry)
+        self.assertIn("回复只消费一次", lifecycle)
+        self.assertIn("同一时间只有一个", lifecycle)
+        self.assertIn("回复与问题不对应时不套用", context)
+
+    def test_commands_execute_without_second_confirmation(self) -> None:
+        context = (
+            CODEX_SKILLS / "routing" / "references" / "commands-and-context.md"
+        ).read_text(encoding="utf-8")
+        test_skill = (CODEX_SKILLS / "test" / "SKILL.md").read_text(encoding="utf-8")
+
+        self.assertIn("直接执行，不再询问", context)
+        self.assertIn("覆盖已有知识库", context)
+        self.assertIn("任何命令都不绕过高风险确认", context)
+        self.assertIn("不创建方案包", test_skill)
+        self.assertIn("不自动修改生产代码", test_skill)
+
+    def test_removed_state_machine_does_not_return(self) -> None:
+        for path in sorted(CODEX_SKILLS.rglob("*.md")):
+            text = path.read_text(encoding="utf-8")
+            for term in audit_skills.LEGACY_TERMS:
+                self.assertNotIn(term, text, path)
 
     def test_archive_path_is_resolved_before_kb_links(self) -> None:
         lifecycle = (CODEX_SKILLS / "lifecycle" / "SKILL.md").read_text(encoding="utf-8")

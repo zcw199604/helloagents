@@ -27,10 +27,8 @@ EXPECTED_FIELDS = {"route", "action", "confirmation", "artifacts", "risk"}
 ALLOWED_VALUES = {
     "route": {
         "consultation",
-        "micro_adjustment",
-        "lightweight_iteration",
-        "standard_development",
-        "full_research",
+        "direct_change",
+        "design_first",
         "systematic_debugging",
         "command",
         "context_response",
@@ -40,6 +38,7 @@ ALLOWED_VALUES = {
         "implement",
         "diagnose_and_implement",
         "plan_then_implement",
+        "plan_only",
         "plan_and_confirm",
         "confirm_command",
         "clarify",
